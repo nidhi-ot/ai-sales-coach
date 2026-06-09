@@ -28,8 +28,12 @@ def create_app() -> FastAPI:
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
     app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
 
-    @app.get("/api/v1/health", tags=["health"])
+    @app.get("/health", tags=["health"])
     async def healthcheck() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get("/api/v1/health", tags=["health"])
+    async def api_healthcheck() -> dict[str, str]:
         return {"status": "ok"}
 
     return app
