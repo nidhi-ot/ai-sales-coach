@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.routes import auth, realtime, sessions
+from fastapi.middleware.cors import CORSMiddleware
 
 
 def create_app() -> FastAPI:
@@ -8,13 +9,26 @@ def create_app() -> FastAPI:
         title="AI Sales Coach API",
         version="0.1.0",
         description="Backend API for AI Sales Coach.",
+
     )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "https://*.pages.dev",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
     app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
 
-    @app.get("/health", tags=["health"])
+    @app.get("/api/v1/health", tags=["health"])
     async def healthcheck() -> dict[str, str]:
         return {"status": "ok"}
 
