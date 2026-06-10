@@ -22,18 +22,13 @@ async def realtime_status():
 
 @router.post("/token", response_model=EphemeralTokenResponse)
 async def create_ephemeral_token():
-
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="OPENAI_API_KEY not configured"
-        )
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
 
     try:
         async with httpx.AsyncClient() as client:
-
             response = await client.post(
                 "https://api.openai.com/v1/realtime/sessions",
                 headers={
@@ -44,7 +39,7 @@ async def create_ephemeral_token():
                     "model": "gpt-realtime-2",
                     "voice": "alloy",
                     "modalities": ["text", "audio"],
-                    "instructions": "You are a helpful assistant."
+                    "instructions": "You are a helpful assistant.",
                 },
                 timeout=10.0,
             )
@@ -60,7 +55,4 @@ async def create_ephemeral_token():
             )
 
     except httpx.HTTPError as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"OpenAI API error: {str(exc)}"
-        )
+        raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(exc)}")
