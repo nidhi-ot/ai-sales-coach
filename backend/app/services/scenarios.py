@@ -196,6 +196,7 @@ FRAMEWORK_DIMENSIONS: dict[str, tuple[str, ...]] = {
 }
 
 
+# get the scenario configuration based on the scenario slug (cold call, hot call etc.)
 def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
     return SCENARIOS[ScenarioSlug(scenario)]
 
