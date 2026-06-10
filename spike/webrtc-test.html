@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Spike</title>
+  </head>
+
+  <body>
+    <h1>OpenAI Realtime WebRTC Test</h1>
+
+    <!-- Button the user clicks to start the test -->
+    <button id="start">Start Call</button>
+
+    <!-- This area shows log messages on the page -->
+    <pre id="log"></pre>
+
+    <script>
+      // Helper function to print messages on the page
+      function log(message) {
+        document.getElementById("log").textContent += message + "\n";
+      }
+
+      // Run this function when the Start Call button is clicked
+      document.getElementById("start").onclick = async () => {
+        try {
+          // Step 1: Ask the browser for microphone permission
+          log("Requesting microphone access...");
+
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+          });
+
+          log("✅ Microphone access granted in browser");
+
+            // Step 2: Ask our backend for a short-lived OpenAI Realtime token
+            // The backend keeps the real OpenAI API key secret.
+            log("Requesting ephemeral token from backend...");
+
+            const tokenRes = await fetch("http://localhost:8000/api/v1/realtime/token", {
+            method: "POST",
+            });
+
+            if (!tokenRes.ok) {
+            const errorText = await tokenRes.text();
+            throw new Error(
+                "Backend token request failed with status " +
+                tokenRes.status +
+                ": " +
+                errorText
+            );
+            }
+
+            const tokenData = await tokenRes.json();
+            const clientSecret = tokenData.client_secret;
+
+            if (!clientSecret) {
+            throw new Error("Backend response did not include client_secret");
+            }
+
+            log("Ephemeral token received: " + clientSecret.slice(0, 20) + "...");
+            console.log("Ephemeral token preview:", clientSecret.slice(0, 20) + "...");
+            
+            // Step 3: Create a WebRTC peer connection
+            // This represents the "call connection"
+            const peerConnection = new RTCPeerConnection();
+
+            log("✅ WebRTC peer connection object created");
+
+            // Step 4: Add microphone audio to the WebRTC connection
+            // This prepares the user's voice to be streamed
+            stream.getTracks().forEach((track) => {
+                peerConnection.addTrack(track, stream);
+            });
+
+            log("✅ Audio streaming confirmed: microphone track added");
+
+            // Step 5: Create a data channel
+            // This is used for non-audio events/messages
+            const dataChannel =
+                peerConnection.createDataChannel("oai-events");
+
+            // This runs when the data channel is fully open
+            // It may not open until connected to a real remote peer like OpenAI
+            dataChannel.onopen = () => {
+                log("✅ Data channel open for events");
+            };
+
+            // This runs when an event/message is received on the data channel
+            dataChannel.onmessage = (event) => {
+                log("Event: " + event.data);
+            };
+
+            log("✅ Data channel created");
+
+            // Print useful debugging information in browser DevTools Console
+            console.log("Stream:", stream);
+            console.log("Peer connection:", peerConnection);
+            console.log("Data channel:", dataChannel);
+
+            // Step 6: Create an SDP offer (call invitation)
+            // SDP describes what this browser wants for the WebRTC connection
+            const offer = await peerConnection.createOffer();
+
+            log("✅ SDP offer created");
+
+            // Step 7: Save the offer as the local browser description
+            // This prepares the browser side of the WebRTC connection
+            await peerConnection.setLocalDescription(offer);
+
+            log("✅ Local description set");
+
+        } catch (error) {
+          // If anything fails, show the error on the page and in console
+          log("❌ Error: " + error.message);
+          console.error(error);
+        }
+      };
+    </script>
+  </body>
+</html>
