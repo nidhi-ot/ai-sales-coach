@@ -73,6 +73,49 @@ Response `201`:
 }
 ```
 
+## Agent
+
+### `POST /api/v1/agent/before-call`
+
+Assembles the system instruction for the AI customer before a live practice call starts.
+
+Request body:
+
+```json
+{
+  "rep_id": "uuid",
+  "business_id": "uuid",
+  "scenario": "cold_call"
+}
+```
+
+Allowed `scenario` values:
+
+- `cold_call`
+- `hot_call`
+- `direktforsaljning`
+- `meeting`
+
+Response `200`:
+
+```json
+{
+  "rep_id": "uuid",
+  "business_id": "uuid",
+  "scenario": {
+    "scenario": "cold_call",
+    "title": "Cold Call",
+    "objective": "string",
+    "success_conditions": []
+  },
+  "profile_version": 1,
+  "weakest_dimension": "objection_handling",
+  "framework": "BANT",
+  "metric_scores": {},
+  "system_instruction": "string"
+}
+```
+
 ## Realtime
 
 ### `GET /api/v1/realtime/status`
