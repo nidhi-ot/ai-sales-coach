@@ -35,8 +35,16 @@
             // The backend keeps the real OpenAI API key secret.
             log("Requesting ephemeral token from backend...");
 
-            const tokenRes = await fetch("http://localhost:8000/api/v1/realtime/token", {
-            method: "POST",
+            const tokenRes = await fetch("http://localhost:8000/api/v1/realtime/session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    scenario: "cold_call",
+                    rep_id: "test-rep",
+                    business_id: "test-business",
+                }),
             });
 
             if (!tokenRes.ok) {
@@ -63,6 +71,13 @@
             // This represents the "call connection"
             const peerConnection = new RTCPeerConnection();
 
+            // Play the AI customer's audio when OpenAI sends it back
+            const remoteAudio = document.createElement("audio");
+            remoteAudio.autoplay = true;
+
+            peerConnection.ontrack = (event) => {
+                remoteAudio.srcObject = event.streams[0];
+            };
             log("✅ WebRTC peer connection object created");
 
             // Step 4: Add microphone audio to the WebRTC connection
@@ -107,6 +122,39 @@
             await peerConnection.setLocalDescription(offer);
 
             log("✅ Local description set");
+
+            // Step 8: Send the browser's offer to OpenAI and get an answer back
+            const realtimeRes = await fetch("https://api.openai.com/v1/realtime/calls", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + clientSecret,
+                    "Content-Type": "application/sdp",
+                },
+                body: offer.sdp,
+            });
+
+            if (!realtimeRes.ok) {
+                const errorText = await realtimeRes.text();
+                throw new Error(
+                    "OpenAI WebRTC connection failed with status " +
+                    realtimeRes.status +
+                    ": " +
+                    errorText
+                );
+            }
+
+            const answerSdp = await realtimeRes.text();
+
+            // Step 9: Save OpenAI's answer as the remote description
+            // This completes the WebRTC connection setup.
+            await peerConnection.setRemoteDescription({
+                type: "answer",
+                sdp: answerSdp,
+            });
+
+            log("✅ Remote description set: connected to OpenAI");
+            log("✅ Connection ready. Say: Hi, I'm calling about your cleaning services");
+
 
         } catch (error) {
           // If anything fails, show the error on the page and in console
