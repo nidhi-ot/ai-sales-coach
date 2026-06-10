@@ -25,7 +25,10 @@ async def create_ephemeral_token():
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
+        raise HTTPException(
+            status_code=500,
+            detail="OPENAI_API_KEY not configured",
+        )
 
     try:
         async with httpx.AsyncClient() as client:
@@ -55,4 +58,7 @@ async def create_ephemeral_token():
             )
 
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(exc)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"OpenAI API error: {str(exc)}",
+        )
