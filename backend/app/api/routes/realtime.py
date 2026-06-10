@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from app.config import settings
 
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+from app.config import settings
 
 router = APIRouter()
 

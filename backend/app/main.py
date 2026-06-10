@@ -1,7 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import auth, realtime, sessions
-from fastapi.middleware.cors import CORSMiddleware
 
 
 def create_app() -> FastAPI:
