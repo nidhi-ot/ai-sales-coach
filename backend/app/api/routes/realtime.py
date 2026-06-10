@@ -63,18 +63,19 @@ async def create_realtime_session(config: SessionConfig):
                         "type": "realtime",
                         "model": "gpt-realtime-2",
                         "audio": {
+                            "input": {
+                                "transcription": {
+                                    "model": "whisper-1",
+                                },
+                                "turn_detection": {
+                                    "type": "semantic_vad",
+                                },
+                            },
                             "output": {
                                 "voice": "alloy",
                             },
                         },
-                        "modalities": ["text", "audio"],
                         "instructions": persona,
-                        "turn_detection": {
-                            "type": "semantic_vad",
-                        },
-                        "input_audio_transcription": {
-                            "model": "whisper-1",
-                        },
                     },
                 },
                 timeout=10.0,
