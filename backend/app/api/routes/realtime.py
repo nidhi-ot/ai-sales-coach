@@ -4,8 +4,10 @@ from uuid import UUID
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
 from app.config import settings
-from app.db.client import create_session as create_db_session, get_latest_profile
+from app.db.client import create_session as create_db_session
+from app.db.client import get_latest_profile
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 
