@@ -1,18 +1,22 @@
 from datetime import datetime, timedelta
+from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
-from app.services.scenarios import get_scenario_persona
+from app.models.agent import ScenarioSlug
+from app.services.context import assemble_call_context
+
+# from app.db.client import get_latest_profile, get_business_profile
 
 router = APIRouter()
 
 class SessionConfig(BaseModel):
-    scenario: str
-    rep_id: str
-    business_id: str
+    scenario: ScenarioSlug
+    rep_id: UUID
+    business_id: UUID
 
 
 class RealtimeSessionResponse(BaseModel):
@@ -31,14 +35,36 @@ class EphemeralTokenResponse(BaseModel):
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
-    persona = get_scenario_persona(config.scenario)
 
-    if persona is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown scenario: {config.scenario}",
-        )
-    
+    # Profile from databse is not used now 
+    # rep_profile = await get_latest_profile(config.rep_id)
+    # business_profile = await get_business_profile(config.business_id)
+
+    #sample rep_profile
+    rep_profile = {
+        "version" : 1,
+        "metric_scores": {
+            "rapport": 4,
+            "needs_discovery": 3,
+            "objection_handling": 2,
+            "closing": 4,
+        },
+        "weakest_dimension": "objection_handling",
+    }
+
+    context = assemble_call_context(
+        rep_profile=rep_profile,
+        business_profile=None,
+        scenario=config.scenario,
+    )
+
+    # Log the selected scenario and objective
+    scenario_config = context["scenario"]
+    print(f"\n📋 Scenario Selected: {scenario_config.title}")
+    print(f"🎯 Objective: {scenario_config.objective}\n")
+
+    instructions = context["system_instruction"]
+
     # Step 2: Read the OpenAI API key from backend settings.
     openai_api_key = settings.openai_api_key
 
@@ -75,7 +101,7 @@ async def create_realtime_session(config: SessionConfig):
                                 "voice": "alloy",
                             },
                         },
-                        "instructions": persona,
+                        "instructions": instructions,
                     },
                 },
                 timeout=10.0,

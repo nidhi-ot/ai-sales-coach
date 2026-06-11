@@ -7,17 +7,37 @@
   <body>
     <h1>OpenAI Realtime WebRTC Test</h1>
 
-    <!-- Button the user clicks to start the test -->
+    <!-- Buttons for the user -->
     <button id="start">Start Call</button>
+    <button id="downloadLog">Download Log</button>
 
     <!-- This area shows log messages on the page -->
     <pre id="log"></pre>
 
     <script>
-      // Helper function to print messages on the page
+      // Array to store all logs
+      const logMessages = [];
+
+      // Helper function to print messages on the page and store them
       function log(message) {
+        const timestamp = new Date().toISOString();
+        const logEntry = `[${timestamp}] ${message}`;
+        logMessages.push(logEntry);
         document.getElementById("log").textContent += message + "\n";
       }
+      // Function to download logs as a file
+      document.getElementById("downloadLog").onclick = () => {
+        const logContent = logMessages.join("\n");
+        const blob = new Blob([logContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `webrtc-log-${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
 
       // Run this function when the Start Call button is clicked
       document.getElementById("start").onclick = async () => {
@@ -42,8 +62,8 @@
                 },
                 body: JSON.stringify({
                     scenario: "cold_call",
-                    rep_id: "test-rep",
-                    business_id: "test-business",
+                    rep_id: "550e8400-e29b-41d4-a716-446655440000",
+                    business_id: "550e8400-e29b-41d4-a716-446655440001",
                 }),
             });
 
@@ -65,7 +85,7 @@
             }
 
             log("Ephemeral token received: " + clientSecret.slice(0, 20) + "...");
-            console.log("Ephemeral token preview:", clientSecret.slice(0, 20) + "...");
+            // console.log("Ephemeral token preview:", clientSecret.slice(0, 20) + "...");
             
             // Step 3: Create a WebRTC peer connection
             // This represents the "call connection"
@@ -107,9 +127,9 @@
             log("✅ Data channel created");
 
             // Print useful debugging information in browser DevTools Console
-            console.log("Stream:", stream);
-            console.log("Peer connection:", peerConnection);
-            console.log("Data channel:", dataChannel);
+            // console.log("Stream:", stream);
+            // console.log("Peer connection:", peerConnection);
+            // console.log("Data channel:", dataChannel);
 
             // Step 6: Create an SDP offer (call invitation)
             // SDP describes what this browser wants for the WebRTC connection
@@ -159,7 +179,7 @@
         } catch (error) {
           // If anything fails, show the error on the page and in console
           log("❌ Error: " + error.message);
-          console.error(error);
+          // console.error(error);
         }
       };
     </script>
