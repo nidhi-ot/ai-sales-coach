@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
+
 # from app.db.client import get_latest_profile, get_business_profile
 
 router = APIRouter()
