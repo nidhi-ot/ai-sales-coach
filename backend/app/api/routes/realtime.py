@@ -4,7 +4,6 @@ from uuid import UUID
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
 from app.config import settings
 from app.db.client import create_session as create_db_session, get_latest_profile
 from app.models.agent import ScenarioSlug
@@ -36,7 +35,7 @@ class EphemeralTokenResponse(BaseModel):
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
 
-    # Profile from databse is not used now 
+    # Profile from database is not used now.
     # rep_profile = await get_latest_profile(config.rep_id)
     # business_profile = await get_business_profile(config.business_id)
 
@@ -73,7 +72,7 @@ async def create_realtime_session(config: SessionConfig):
             status_code=500,
             detail="OPENAI_API_KEY not configured",
         )
-    
+
     # Create a practice session in Supabase before starting the OpenAI
     # realtime conversation so transcripts and scorecards can attach to it.
     latest_profile = await get_latest_profile(str(config.rep_id))
@@ -140,13 +139,13 @@ async def create_realtime_session(config: SessionConfig):
             # Step 4: Read the temporary client secret from OpenAI's response.
             client_secret = data.get("value")
             openai_session_id = data.get("session", {}).get("id")
-            
+
             if not client_secret or not openai_session_id:
                 raise HTTPException(
                     status_code=502,
                     detail="OpenAI response did not include session credentials",
                 )
-            
+
             # Return both identifiers:
             # - session_id: internal Supabase session record
             # - openai_session_id: OpenAI realtime session
@@ -160,7 +159,7 @@ async def create_realtime_session(config: SessionConfig):
                 expires_at=datetime.now(UTC) + timedelta(minutes=5),
                 model="gpt-realtime-2",
             )
-            
+
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=500,
