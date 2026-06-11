@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, HTTPException
@@ -8,8 +9,6 @@ from app.config import settings
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 # from app.db.client import get_latest_profile, get_business_profile
-
-from uuid import UUID
 
 router = APIRouter()
 
