@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import httpx
@@ -6,10 +6,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
+from app.db.client import create_session as create_db_session, get_latest_profile
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
-
-# from app.db.client import get_latest_profile, get_business_profile
 
 router = APIRouter()
 
@@ -22,6 +21,7 @@ class SessionConfig(BaseModel):
 class RealtimeSessionResponse(BaseModel):
     client_secret: str
     session_id: str
+    openai_session_id: str  #
     expires_at: datetime
     model: str
 
@@ -73,6 +73,28 @@ async def create_realtime_session(config: SessionConfig):
             status_code=500,
             detail="OPENAI_API_KEY not configured",
         )
+    
+    # Create a practice session in Supabase before starting the OpenAI
+    # realtime conversation so transcripts and scorecards can attach to it.
+    latest_profile = await get_latest_profile(str(config.rep_id))
+    profile_version = latest_profile["version"] if latest_profile else 0
+
+    db_session = await create_db_session(
+        rep_id=str(config.rep_id),
+        business_id=str(config.business_id),
+        scenario=config.scenario.value,
+        profile_version=profile_version,
+    )
+
+    if not db_session:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create Supabase session",
+        )
+
+    # Store the database session ID separately from the OpenAI realtime session
+    # ID. The database ID is used for transcripts, scorecards, and updates.
+    supabase_session_id = db_session["id"]
 
     try:
         async with httpx.AsyncClient() as client:
@@ -124,13 +146,21 @@ async def create_realtime_session(config: SessionConfig):
                     status_code=502,
                     detail="OpenAI response did not include session credentials",
                 )
+            
+            # Return both identifiers:
+            # - session_id: internal Supabase session record
+            # - openai_session_id: OpenAI realtime session
+            # The frontend can use the Supabase ID for persistence and
+            # the OpenAI ID for realtime voice communication.
 
             return RealtimeSessionResponse(
                 client_secret=client_secret,
-                session_id=openai_session_id,
-                expires_at=datetime.utcnow() + timedelta(minutes=5),
+                session_id=supabase_session_id,
+                openai_session_id=openai_session_id,
+                expires_at=datetime.now(UTC) + timedelta(minutes=5),
                 model="gpt-realtime-2",
             )
+            
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=500,
@@ -177,7 +207,7 @@ async def create_ephemeral_token():
 
             return EphemeralTokenResponse(
                 client_secret=data["client_secret"]["value"],
-                expires_at=datetime.utcnow() + timedelta(minutes=5),
+                expires_at=datetime.now(UTC) + timedelta(minutes=5),
                 model="gpt-realtime-2",
             )
 
