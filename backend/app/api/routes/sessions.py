@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.db.client import supabase
+from app.db.client import get_supabase
 
 router = APIRouter()
 
@@ -29,6 +29,8 @@ class TranscriptEntry(BaseModel):
 @router.post("/")
 async def create_session(data: SessionStart):
     """Create new practice session."""
+    supabase = get_supabase()
+
     profile = (
         supabase.table("salesperson_profiles")
         .select("version")
@@ -60,6 +62,8 @@ async def create_session(data: SessionStart):
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark session as completed."""
+    supabase = get_supabase()
+
     result = (
         supabase.table("sessions")
         .update(
@@ -82,6 +86,8 @@ async def end_session(session_id: str, data: SessionEnd):
 @router.post("/{session_id}/transcripts")
 async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
     """Add transcript entry during/after call."""
+    supabase = get_supabase()
+
     result = (
         supabase.table("transcripts")
         .insert(
@@ -101,6 +107,8 @@ async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
 @router.get("/{session_id}/transcripts")
 async def get_transcript(session_id: str):
     """Get full transcript for a session."""
+    supabase = get_supabase()
+
     result = (
         supabase.table("transcripts")
         .select("*")
@@ -115,6 +123,8 @@ async def get_transcript(session_id: str):
 @router.get("/rep/{rep_id}")
 async def get_rep_sessions(rep_id: str, limit: int = 20):
     """Get rep's session history."""
+    supabase = get_supabase()
+
     result = (
         supabase.table("sessions")
         .select("id, scenario, started_at, duration_seconds, status")
