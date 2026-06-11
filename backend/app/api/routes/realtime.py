@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
+from app.db.client import check_supabase_connection
 
 router = APIRouter()
 
@@ -15,6 +16,12 @@ class EphemeralTokenResponse(BaseModel):
     model: str
 
 
+class SupabaseStatusResponse(BaseModel):
+    status: str
+    table: str
+    row_count: int
+
+
 @router.get("/status")
 async def realtime_status():
     return {"status": "ok"}
@@ -22,18 +29,16 @@ async def realtime_status():
 
 @router.post("/token", response_model=EphemeralTokenResponse)
 async def create_ephemeral_token():
-
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
         raise HTTPException(
             status_code=500,
-            detail="OPENAI_API_KEY not configured"
+            detail="OPENAI_API_KEY not configured",
         )
 
     try:
         async with httpx.AsyncClient() as client:
-
             response = await client.post(
                 "https://api.openai.com/v1/realtime/sessions",
                 headers={
@@ -44,7 +49,7 @@ async def create_ephemeral_token():
                     "model": "gpt-realtime-2",
                     "voice": "alloy",
                     "modalities": ["text", "audio"],
-                    "instructions": "You are a helpful assistant."
+                    "instructions": "You are a helpful assistant.",
                 },
                 timeout=10.0,
             )
@@ -62,5 +67,23 @@ async def create_ephemeral_token():
     except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"OpenAI API error: {str(exc)}"
+            detail=f"OpenAI API error: {str(exc)}",
+        )
+
+
+@router.get("/supabase-status", response_model=SupabaseStatusResponse)
+async def supabase_status():
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase environment variables are not configured",
+        )
+
+    try:
+        result = await check_supabase_connection()
+        return SupabaseStatusResponse(**result)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Supabase connection error: {str(exc)}",
         )

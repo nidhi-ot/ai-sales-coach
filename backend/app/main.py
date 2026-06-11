@@ -9,7 +9,6 @@ def create_app() -> FastAPI:
         title="AI Sales Coach API",
         version="0.1.0",
         description="Backend API for AI Sales Coach.",
-
     )
 
     app.add_middleware(
@@ -23,10 +22,21 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-
-    app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-    app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
-    app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
+    app.include_router(
+        auth.router,
+        prefix="/api/v1/auth",
+        tags=["auth"],
+    )
+    app.include_router(
+        sessions.router,
+        prefix="/api/v1/sessions",
+        tags=["sessions"],
+    )
+    app.include_router(
+        realtime.router,
+        prefix="/api/v1/realtime",
+        tags=["realtime"],
+    )
 
     @app.get("/health", tags=["health"])
     async def healthcheck() -> dict[str, str]:

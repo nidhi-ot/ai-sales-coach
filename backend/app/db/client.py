@@ -44,3 +44,15 @@ async def create_session(
     )
 
     return result.data[0]
+
+
+async def check_supabase_connection():
+    """Check that Supabase is reachable with the configured service role."""
+    table_query = supabase.table("business_profiles").select("id").limit(1)
+    result = table_query.execute()
+
+    return {
+        "status": "ok",
+        "table": "business_profiles",
+        "row_count": len(result.data or []),
+    }
