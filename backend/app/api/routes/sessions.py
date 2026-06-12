@@ -5,8 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.db.client import get_supabase
-from app.services.scorecards import create_scorecard_stub #Used to automatically create a scorecard
-# when a practice session is completed
+from app.services.scorecards import create_scorecard_stub
 
 router = APIRouter()
 
@@ -26,6 +25,7 @@ class TranscriptEntry(BaseModel):
     speaker: Literal["rep", "ai_customer"]
     text: str
     timestamp_offset_ms: int
+
 
 class TranscriptBatch(BaseModel):
     """
@@ -96,9 +96,8 @@ async def end_session(session_id: str, data: SessionEnd):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = result.data[0]
-    #Create placeholder scorecard immediately
-        # after session completion.
-        # Detailed scoring will be added in MS3.
+    # Create placeholder scorecard immediately after session completion.
+    # Detailed scoring will be added in MS3.
     try:
         await create_scorecard_stub(
             session_id=session_id,
@@ -147,6 +146,7 @@ async def get_transcript(session_id: str):
 
     return result.data
 
+
 @router.post("/{session_id}/transcripts/batch")
 async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     """
@@ -172,9 +172,7 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     # Single bulk insert instead of many individual inserts
     result = supabase.table("transcripts").insert(inserts).execute()
 
-    return {
-        "inserted": len(result.data)
-    }
+    return {"inserted": len(result.data)}
 
 
 @router.get("/rep/{rep_id}")
