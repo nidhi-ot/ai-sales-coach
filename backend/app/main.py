@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agent, auth, realtime, sessions
+
+from app.api.routes import agent, auth, realtime, sessions,scorecards
 
 
 def create_app() -> FastAPI:
@@ -30,7 +31,8 @@ def create_app() -> FastAPI:
     app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
     app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
-
+    app.include_router(scorecards.router, prefix="/api/v1/scorecards", tags=["scorecards"]) #Register scorecard endpoints
+    
     @app.get("/health", tags=["health"])
     async def healthcheck() -> dict[str, str]:
         return {"status": "ok"}
