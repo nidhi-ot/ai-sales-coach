@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.db.client import create_session as create_db_session
-from app.db.client import get_latest_profile
+from app.db.client import get_latest_profile, get_business_profile
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 
@@ -38,24 +38,24 @@ async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
 
     # Profile from database is not used now.
-    # rep_profile = await get_latest_profile(config.rep_id)
-    # business_profile = await get_business_profile(config.business_id)
+    rep_profile = await get_latest_profile(config.rep_id)
+    business_profile = await get_business_profile(config.business_id)
 
     #sample rep_profile
-    rep_profile = {
-        "version" : 1,
-        "metric_scores": {
-            "rapport": 4,
-            "needs_discovery": 3,
-            "objection_handling": 2,
-            "closing": 4,
-        },
-        "weakest_dimension": "objection_handling",
-    }
+    # rep_profile = {
+    #     "version" : 1,
+    #     "metric_scores": {
+    #         "rapport": 4,
+    #         "needs_discovery": 3,
+    #         "objection_handling": 2,
+    #         "closing": 4,
+    #     },
+    #     "weakest_dimension": "objection_handling",
+    # }
 
     context = assemble_call_context(
         rep_profile=rep_profile,
-        business_profile=None,
+        business_profile=business_profile,
         scenario=config.scenario,
     )
 
@@ -121,7 +121,7 @@ async def create_realtime_session(config: SessionConfig):
                                 },
                             },
                             "output": {
-                                "voice": "alloy",
+                                "voice": "marin",
                             },
                         },
                         "instructions": instructions,
