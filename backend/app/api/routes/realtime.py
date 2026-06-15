@@ -52,7 +52,6 @@ async def create_realtime_session(config: SessionConfig):
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
     business_profile = await get_business_profile(str(config.business_id))
 
-
     context = assemble_call_context(
         rep_profile=rep_profile_latest,
         business_profile=business_profile,
@@ -72,7 +71,7 @@ async def create_realtime_session(config: SessionConfig):
             detail="OPENAI_API_KEY not configured",
         )
 
-    profile_version = rep_profile_latest ["version"] if rep_profile_latest  else 0
+    profile_version = rep_profile_latest["version"] if rep_profile_latest else 0
 
     db_session = await create_db_session(
         rep_id=str(config.rep_id),
