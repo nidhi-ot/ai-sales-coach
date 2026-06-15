@@ -4,7 +4,6 @@ import uuid
 
 from app.db.client import get_supabase
 
-
 supabase = get_supabase()
 
 

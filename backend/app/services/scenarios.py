@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from app.models.agent import ScenarioSlug
 
@@ -16,7 +17,7 @@ class ScenarioConfig:
     difficulty_notes: str
 
 
-DEFAULT_BUSINESS_PROFILE = {
+DEFAULT_BUSINESS_PROFILE: dict[str, Any] = {
     "name": "Optimal Trappstädning",
     "framework": "BANT",
     "context_data": {
