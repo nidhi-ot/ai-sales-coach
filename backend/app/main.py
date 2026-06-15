@@ -16,14 +16,12 @@ def create_app() -> FastAPI:
         allow_origins=[
             "http://localhost:3000",
             "http://localhost:8080",
-            "http://localhost:8080",
             "https://*.pages.dev",
         ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])

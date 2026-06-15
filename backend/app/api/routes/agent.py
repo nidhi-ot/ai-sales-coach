@@ -10,7 +10,8 @@ from app.services.context import assemble_call_context
 
 router = APIRouter()
 
-# Endpoint to assemble context before a call based on rep, business profiles, 
+
+# Endpoint to assemble context before a call based on rep, business profiles,
 # and the scenario
 @router.post("/before-call", response_model=BeforeCallContextResponse)
 async def assemble_before_call_context(

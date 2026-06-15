@@ -22,8 +22,12 @@ def get_supabase() -> Client:
     return _supabase
 
 
-def _first(data: list[dict[str, Any]] | None) -> dict[str, Any] | None:
-    return data[0] if data else None
+def _first(data: list[Any] | None) -> dict[str, Any] | None:
+    if not data:
+        return None
+
+    first_item = data[0]
+    return first_item if isinstance(first_item, dict) else None
 
 
 async def get_latest_profile(rep_id: str):
@@ -78,3 +82,15 @@ async def create_session(
     )
 
     return _first(result.data)
+
+
+async def check_supabase_connection():
+    """Check that Supabase is reachable with the configured service role."""
+    table_query = get_supabase().table("business_profiles").select("id").limit(1)
+    result = table_query.execute()
+
+    return {
+        "status": "ok",
+        "table": "business_profiles",
+        "row_count": len(result.data or []),
+    }
