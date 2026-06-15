@@ -6,8 +6,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
-from app.db.client import check_supabase_connection, get_business_profile, get_latest_profile
 from app.db.client import create_session as create_db_session
+from app.db.client import (
+    check_supabase_connection,
+    get_business_profile,
+    get_latest_profile,
+)
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 
@@ -48,7 +52,7 @@ async def create_realtime_session(config: SessionConfig):
     rep_profile = await get_latest_profile(config.rep_id)
     business_profile = await get_business_profile(config.business_id)
 
-    #sample rep_profile
+    # sample rep_profile
     # rep_profile = {
     #     "version" : 1,
     #     "metric_scores": {
