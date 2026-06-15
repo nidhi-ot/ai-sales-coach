@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Literal
+from typing import Any, List, Literal, cast
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -8,6 +8,17 @@ from app.db.client import get_supabase
 from app.services.scorecards import create_scorecard_stub
 
 router = APIRouter()
+
+
+def _row_dicts(data: Any) -> list[dict[str, Any]]:
+    if not isinstance(data, list):
+        return []
+
+    rows: list[dict[str, Any]] = []
+    for item in data:
+        if isinstance(item, dict):
+            rows.append(item)
+    return rows
 
 
 class SessionStart(BaseModel):
@@ -35,6 +46,7 @@ class TranscriptBatch(BaseModel):
     Reduces API calls and database writes during
     real-time conversations.
     """
+
     entries: List[TranscriptEntry]
 
 
@@ -52,7 +64,8 @@ async def create_session(data: SessionStart):
         .execute()
     )
 
-    profile_version = profile.data[0]["version"] if profile.data else 0
+    profile_rows = _row_dicts(profile.data)
+    profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
 
     result = (
         supabase.table("sessions")
@@ -68,7 +81,8 @@ async def create_session(data: SessionStart):
         .execute()
     )
 
-    return result.data[0]
+    session_rows = _row_dicts(result.data)
+    return session_rows[0] if session_rows else {}
 
 
 @router.patch("/{session_id}/end")
@@ -95,7 +109,11 @@ async def end_session(session_id: str, data: SessionEnd):
     if not result.data:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session = result.data[0]
+    session_rows = _row_dicts(result.data)
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = session_rows[0]
     # Create placeholder scorecard immediately after session completion.
     # Detailed scoring will be added in MS3.
     try:
@@ -128,7 +146,8 @@ async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
         .execute()
     )
 
-    return result.data[0]
+    transcript_rows = _row_dicts(result.data)
+    return transcript_rows[0] if transcript_rows else {}
 
 
 @router.get("/{session_id}/transcripts")
@@ -144,7 +163,7 @@ async def get_transcript(session_id: str):
         .execute()
     )
 
-    return result.data
+    return _row_dicts(result.data)
 
 
 @router.post("/{session_id}/transcripts/batch")
@@ -170,9 +189,10 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     ]
 
     # Single bulk insert instead of many individual inserts
-    result = supabase.table("transcripts").insert(inserts).execute()
+    result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
 
-    return {"inserted": len(result.data)}
+    inserted_rows = _row_dicts(result.data)
+    return {"inserted": len(inserted_rows)}
 
 
 @router.get("/rep/{rep_id}")
@@ -189,4 +209,4 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
         .execute()
     )
 
-    return result.data
+    return _row_dicts(result.data)
