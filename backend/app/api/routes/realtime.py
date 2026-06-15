@@ -6,12 +6,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
-from app.db.client import create_session as create_db_session
 from app.db.client import (
     check_supabase_connection,
     get_business_profile,
     get_latest_profile,
 )
+from app.db.client import create_session as create_db_session
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 
