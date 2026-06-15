@@ -6,7 +6,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.config import settings
-from app.db.client import check_supabase_connection, get_latest_profile
+from app.db.client import (
+    check_supabase_connection,
+    get_business_profile,
+    get_latest_profile,
+)
 from app.db.client import create_session as create_db_session
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
@@ -42,20 +46,15 @@ class SupabaseStatusResponse(BaseModel):
 
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
-    rep_profile = {
-        "version": 1,
-        "metric_scores": {
-            "rapport": 4,
-            "needs_discovery": 3,
-            "objection_handling": 2,
-            "closing": 4,
-        },
-        "weakest_dimension": "objection_handling",
-    }
+    # Step 1: Pick the AI customer persona for the selected scenario.
+
+    # Profile from database is not used now.
+    rep_profile_latest = await get_latest_profile(str(config.rep_id))
+    business_profile = await get_business_profile(str(config.business_id))
 
     context = assemble_call_context(
-        rep_profile=rep_profile,
-        business_profile=None,
+        rep_profile=rep_profile_latest,
+        business_profile=business_profile,
         scenario=config.scenario,
     )
 
@@ -72,8 +71,7 @@ async def create_realtime_session(config: SessionConfig):
             detail="OPENAI_API_KEY not configured",
         )
 
-    latest_profile = await get_latest_profile(str(config.rep_id))
-    profile_version = latest_profile["version"] if latest_profile else 0
+    profile_version = rep_profile_latest["version"] if rep_profile_latest else 0
 
     db_session = await create_db_session(
         rep_id=str(config.rep_id),
@@ -112,7 +110,7 @@ async def create_realtime_session(config: SessionConfig):
                                 },
                             },
                             "output": {
-                                "voice": "alloy",
+                                "voice": "marin",
                             },
                         },
                         "instructions": instructions,
