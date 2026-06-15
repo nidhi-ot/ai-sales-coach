@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, realtime, sessions
+from app.api.routes import agent, auth, realtime, scorecards, sessions
 
 
 def create_app() -> FastAPI:
@@ -15,6 +15,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=[
             "http://localhost:3000",
+            "http://localhost:8080",
             "https://*.pages.dev",
         ],
         allow_credentials=True,
@@ -22,20 +23,14 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])
+    app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
+    app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
     app.include_router(
-        auth.router,
-        prefix="/api/v1/auth",
-        tags=["auth"],
-    )
-    app.include_router(
-        sessions.router,
-        prefix="/api/v1/sessions",
-        tags=["sessions"],
-    )
-    app.include_router(
-        realtime.router,
-        prefix="/api/v1/realtime",
-        tags=["realtime"],
+        scorecards.router,
+        prefix="/api/v1/scorecards",
+        tags=["scorecards"],
     )
 
     @app.get("/health", tags=["health"])

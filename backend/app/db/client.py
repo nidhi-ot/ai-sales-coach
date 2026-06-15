@@ -1,17 +1,40 @@
+from typing import Any
+
 from supabase import Client, create_client
 
 from app.config import settings
 
-supabase: Client = create_client(
-    settings.supabase_url,
-    settings.supabase_service_role_key,
-)
+_supabase: Client | None = None
+
+
+def get_supabase() -> Client:
+    global _supabase
+
+    if _supabase is None:
+        if not settings.supabase_url or not settings.supabase_service_role_key:
+            raise RuntimeError("Supabase URL and service role key must be configured")
+
+        _supabase = create_client(
+            settings.supabase_url,
+            settings.supabase_service_role_key,
+        )
+
+    return _supabase
+
+
+def _first(data: list[Any] | None) -> dict[str, Any] | None:
+    if not data:
+        return None
+
+    first_item = data[0]
+    return first_item if isinstance(first_item, dict) else None
 
 
 async def get_latest_profile(rep_id: str):
     """Get rep's latest salesperson profile version."""
     result = (
-        supabase.table("salesperson_profiles")
+        get_supabase()
+        .table("salesperson_profiles")
         .select("*")
         .eq("rep_id", rep_id)
         .order("version", desc=True)
@@ -19,7 +42,21 @@ async def get_latest_profile(rep_id: str):
         .execute()
     )
 
-    return result.data[0] if result.data else None
+    return _first(result.data)
+
+
+async def get_business_profile(business_id: str):
+    """Get business profile configuration for prompt assembly."""
+    result = (
+        get_supabase()
+        .table("business_profiles")
+        .select("*")
+        .eq("id", business_id)
+        .limit(1)
+        .execute()
+    )
+
+    return _first(result.data)
 
 
 async def create_session(
@@ -30,7 +67,8 @@ async def create_session(
 ):
     """Create new practice session."""
     result = (
-        supabase.table("sessions")
+        get_supabase()
+        .table("sessions")
         .insert(
             {
                 "rep_id": rep_id,
@@ -43,12 +81,12 @@ async def create_session(
         .execute()
     )
 
-    return result.data[0]
+    return _first(result.data)
 
 
 async def check_supabase_connection():
     """Check that Supabase is reachable with the configured service role."""
-    table_query = supabase.table("business_profiles").select("id").limit(1)
+    table_query = get_supabase().table("business_profiles").select("id").limit(1)
     result = table_query.execute()
 
     return {
