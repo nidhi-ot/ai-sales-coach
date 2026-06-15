@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Literal
+from typing import List, Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.db.client import get_supabase
+from app.services.scorecards import create_scorecard_stub
 
 router = APIRouter()
 
@@ -24,6 +25,17 @@ class TranscriptEntry(BaseModel):
     speaker: Literal["rep", "ai_customer"]
     text: str
     timestamp_offset_ms: int
+
+
+class TranscriptBatch(BaseModel):
+    """
+    Accept multiple transcript entries in one request
+    instead of sending each line separately.
+
+    Reduces API calls and database writes during
+    real-time conversations.
+    """
+    entries: List[TranscriptEntry]
 
 
 @router.post("/")
@@ -62,6 +74,9 @@ async def create_session(data: SessionStart):
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark session as completed."""
+    """After a session ends, automatically create a
+    scorecard stub that will later be populated
+    with GPT analysis """
     supabase = get_supabase()
 
     result = (
@@ -80,7 +95,19 @@ async def end_session(session_id: str, data: SessionEnd):
     if not result.data:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    return result.data[0]
+    session = result.data[0]
+    # Create placeholder scorecard immediately after session completion.
+    # Detailed scoring will be added in MS3.
+    try:
+        await create_scorecard_stub(
+            session_id=session_id,
+            rep_id=session["rep_id"],
+            business_id=session["business_id"],
+        )
+    except Exception as e:
+        print(f"Scorecard creation failed: {e}")
+
+    return session
 
 
 @router.post("/{session_id}/transcripts")
@@ -118,6 +145,34 @@ async def get_transcript(session_id: str):
     )
 
     return result.data
+
+
+@router.post("/{session_id}/transcripts/batch")
+async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
+    """
+    Store multiple transcript entries in a single
+    database operation.
+
+    Frontend buffers transcript chunks and sends
+    them together to reduce Supabase write load.
+    """
+
+    supabase = get_supabase()
+
+    inserts = [
+        {
+            "session_id": session_id,
+            "speaker": entry.speaker,
+            "text": entry.text,
+            "timestamp_offset_ms": entry.timestamp_offset_ms,
+        }
+        for entry in batch.entries
+    ]
+
+    # Single bulk insert instead of many individual inserts
+    result = supabase.table("transcripts").insert(inserts).execute()
+
+    return {"inserted": len(result.data)}
 
 
 @router.get("/rep/{rep_id}")
