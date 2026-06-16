@@ -49,7 +49,7 @@ class SupabaseStatusResponse(BaseModel):
     table: str
     row_count: int
 
-
+# To create a realtime session for sales call practice
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
@@ -58,6 +58,12 @@ async def create_realtime_session(config: SessionConfig):
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
     business_profile = await get_business_profile(str(config.business_id))
 
+    # Print profiles for debugging
+    print(f" Rep Profile (latest) : {rep_profile_latest}")
+    print(f" Business Profile: {business_profile}")
+
+
+    # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
     context = assemble_call_context(
         rep_profile=rep_profile_latest,
         business_profile=business_profile,
@@ -70,6 +76,7 @@ async def create_realtime_session(config: SessionConfig):
 
     instructions = context["system_instruction"]
     openai_api_key = settings.openai_api_key
+    print(f"📋 System Instructions: \n {instructions}\n")
 
     if not openai_api_key:
         raise HTTPException(
@@ -93,7 +100,7 @@ async def create_realtime_session(config: SessionConfig):
         )
 
     # Store the database session ID separately from the OpenAI realtime session
-    # ID. The database ID is used for transcripts, scorecards, and updates.
+    # ID. The database ID is used for transcripts and later session updates.
     supabase_session_id = db_session["id"]
 
     vad_threshold = config.vad.threshold if config.vad else 0.5
@@ -172,7 +179,7 @@ async def create_realtime_session(config: SessionConfig):
 async def realtime_status():
     return {"status": "ok"}
 
-
+# For short-lived token to keep the OpenAI key secure
 @router.post("/token", response_model=EphemeralTokenResponse)
 async def create_ephemeral_token():
     openai_api_key = settings.openai_api_key
@@ -216,6 +223,7 @@ async def create_ephemeral_token():
         )
 
 
+# To check supabase connectivity
 @router.get("/supabase-status", response_model=SupabaseStatusResponse)
 async def supabase_status():
     if not settings.supabase_url or not settings.supabase_service_role_key:
