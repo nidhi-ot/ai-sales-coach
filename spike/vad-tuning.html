@@ -9,6 +9,7 @@
 
     <!-- Buttons for the user -->
     <button id="start">Start Call</button>
+    <button id="endCall" disabled>End Call</button>
     <button id="downloadLog">Download Log</button>
     <div>
       <label for="vadConfig">VAD config:</label>
@@ -37,6 +38,16 @@
     <script>
       // Array to store all logs
       const logMessages = [];
+
+      // These variables keep track of the active call so we can end it cleanly.
+      let activeSessionId = null;
+      let callStartedAt = null;
+      let callTimeoutId = null;
+      let activePeerConnection = null;
+      let activeStream = null;
+
+      // Hard cap for practice calls: 10 minutes.
+      const CALL_TIMEOUT_MS = 10 * 60 * 1000;
 
       // VAD settings we will test during Task 3.1
       const vadConfigs = {
@@ -69,6 +80,88 @@
         logMessages.push(logEntry);
         document.getElementById("log").textContent += message + "\n";
       }
+
+      // End the active call, close WebRTC, and tell the backend.
+      async function endCall(endReason) {
+        if (!activeSessionId) {
+          log("No active session to end.");
+          return;
+        }
+
+        const endedAt = new Date();
+        const durationSeconds = callStartedAt
+          ? Math.round((endedAt - callStartedAt) / 1000)
+          : 0;
+
+        const sessionIdToEnd = activeSessionId;
+
+        if (callTimeoutId) {
+          clearTimeout(callTimeoutId);
+          callTimeoutId = null;
+        }
+
+        if (activeStream) {
+          activeStream.getTracks().forEach((track) => {
+            track.stop();
+          });
+          activeStream = null;
+        }
+
+        if (activePeerConnection) {
+          activePeerConnection.close();
+          activePeerConnection = null;
+        }
+
+        document.getElementById("endCall").disabled = true;
+        document.getElementById("start").disabled = false;
+
+        activeSessionId = null;
+        callStartedAt = null;
+
+        log(
+          "Ending session. Reason: " +
+            endReason +
+            ", duration: " +
+            durationSeconds +
+            " seconds"
+        );
+
+        try {
+          const endRes = await fetch(
+            "http://localhost:8000/api/v1/sessions/" + sessionIdToEnd + "/end",
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ended_at: endedAt.toISOString(),
+                duration_seconds: durationSeconds,
+                end_reason: endReason,
+              }),
+            }
+          );
+
+          if (!endRes.ok) {
+            const errorText = await endRes.text();
+            throw new Error(
+              "Backend session end failed with status " +
+                endRes.status +
+                ": " +
+                errorText
+            );
+          }
+
+          log("✅ Backend session ended successfully");
+        } catch (error) {
+          log("❌ Failed to notify backend that session ended: " + error.message);
+        }
+      }
+
+      // Let the user end the call before the 10-minute timeout.
+      document.getElementById("endCall").onclick = () => {
+        endCall("manual");
+      };
 
       // Mark when the AI starts responding too early or cuts you off.
       document.getElementById("falsePositive").onclick = () => {
@@ -145,6 +238,8 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true
           });
+          
+          activeStream = stream;
 
           log("✅ Microphone access granted in browser");
 
@@ -180,10 +275,18 @@
 
             const tokenData = await tokenRes.json();
             const clientSecret = tokenData.client_secret;
+            activeSessionId = tokenData.session_id;
 
             if (!clientSecret) {
             throw new Error("Backend response did not include client_secret");
             }
+
+            if (!activeSessionId) {
+              throw new Error("Backend response did not include session_id");
+            }
+
+            callStartedAt = new Date();
+            log("Backend session id: " + activeSessionId);
 
             log("Ephemeral token received: " + clientSecret.slice(0, 20) + "...");
             log(
@@ -199,6 +302,7 @@
             // Step 3: Create a WebRTC peer connection
             // This represents the "call connection"
             const peerConnection = new RTCPeerConnection();
+            activePeerConnection = peerConnection;
 
             // Play the AI customer's audio when OpenAI sends it back
             const remoteAudio = document.createElement("audio");
@@ -284,6 +388,13 @@
             log("✅ Remote description set: connected to OpenAI");
             log("✅ Connection ready. Say: Hi, I'm calling about your cleaning services");
 
+            document.getElementById("start").disabled = true;
+            document.getElementById("endCall").disabled = false;
+
+            callTimeoutId = setTimeout(() => {
+              log("10-minute session timeout reached.");
+              endCall("timeout");
+            }, CALL_TIMEOUT_MS);
 
         } catch (error) {
           // If anything fails, show the error on the page and in console

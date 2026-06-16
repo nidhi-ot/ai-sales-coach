@@ -30,6 +30,7 @@ class SessionStart(BaseModel):
 class SessionEnd(BaseModel):
     ended_at: datetime
     duration_seconds: int
+    end_reason: str
 
 
 class TranscriptEntry(BaseModel):
