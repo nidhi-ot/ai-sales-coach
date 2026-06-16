@@ -29,12 +29,16 @@ def assemble_call_context(
     scenario_config = get_scenario_config(scenario)
     framework = normalize_framework(cast(str | None, business.get("framework")))
     metric_scores = _coerce_metric_scores(profile.get("metric_scores"))
-    weakest_dimension = profile.get("weakest_dimension") or _find_weakest_dimension(metric_scores)
+    weakest_dimension = profile.get("weakest_dimension") or _find_weakest_dimension(
+        metric_scores
+    )
     profile_version = int(profile.get("version") or 0)
     business_context = _merge_business_context(business)
 
     system_instruction = _build_system_instruction(
-        business_name=cast(str, business.get("name") or DEFAULT_BUSINESS_PROFILE["name"]),
+        business_name=cast(
+            str, business.get("name") or DEFAULT_BUSINESS_PROFILE["name"]
+        ),
         business_context=business_context,
         framework=framework,
         metric_scores=metric_scores,
@@ -77,9 +81,11 @@ def _merge_business_context(business_profile: dict[str, Any]) -> dict[str, Any]:
     return {
         "service": context_data.get("service") or default_context["service"],
         "market": context_data.get("market") or default_context["market"],
-        "value_props": context_data.get("value_props") or default_context["value_props"],
+        "value_props": context_data.get("value_props")
+        or default_context["value_props"],
         "common_objections": (
-            context_data.get("common_objections") or default_context["common_objections"]
+            context_data.get("common_objections")
+            or default_context["common_objections"]
         ),
     }
 
@@ -97,7 +103,9 @@ def _build_system_instruction(
     success_conditions = "\n".join(
         f"- {condition}" for condition in scenario_config.success_conditions
     )
-    objections = "\n".join(f"- {objection}" for objection in scenario_config.likely_objections)
+    objections = "\n".join(
+        f"- {objection}" for objection in scenario_config.likely_objections
+    )
     value_props = "\n".join(f"- {value}" for value in business_context["value_props"])
     common_objections = "\n".join(
         f"- {objection}" for objection in business_context["common_objections"]
