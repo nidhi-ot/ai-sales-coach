@@ -18,10 +18,16 @@ from app.services.context import assemble_call_context
 router = APIRouter()
 
 
+class VadConfig(BaseModel):
+    threshold: float
+    silence_duration_ms: int
+
+
 class SessionConfig(BaseModel):
     scenario: ScenarioSlug
     rep_id: UUID
     business_id: UUID
+    vad: VadConfig | None = None
 
 
 class RealtimeSessionResponse(BaseModel):
@@ -86,7 +92,17 @@ async def create_realtime_session(config: SessionConfig):
             detail="Failed to create Supabase session",
         )
 
+    # Store the database session ID separately from the OpenAI realtime session
+    # ID. The database ID is used for transcripts, scorecards, and updates.
     supabase_session_id = db_session["id"]
+
+    vad_threshold = config.vad.threshold if config.vad else 0.5
+    vad_silence_duration_ms = config.vad.silence_duration_ms if config.vad else 500
+
+    print(
+        f"🎙️ VAD config: threshold={vad_threshold}, "
+        f"silence_duration_ms={vad_silence_duration_ms}"
+    )
 
     try:
         async with httpx.AsyncClient() as client:
@@ -106,7 +122,9 @@ async def create_realtime_session(config: SessionConfig):
                                     "model": "whisper-1",
                                 },
                                 "turn_detection": {
-                                    "type": "semantic_vad",
+                                    "type": "server_vad",
+                                    "threshold": vad_threshold,
+                                    "silence_duration_ms": vad_silence_duration_ms,
                                 },
                             },
                             "output": {
