@@ -17,6 +17,7 @@ from app.services.context import assemble_call_context
 
 router = APIRouter()
 
+
 class VadConfig(BaseModel):
     threshold: float
     silence_duration_ms: int
