@@ -1,33 +1,42 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const items = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Practice", path: "/scenarios" },
-    { label: "History", path: "/history" },
-    { label: "Scorecards", path: "/scorecards" },
-    { label: "Profile", path: "/profile" },
+  const navItems = [
+    { label: "Dashboard", path: "/dashboard", icon: "🏠" },
+    { label: "Practice", path: "/scenarios", icon: "🎯" },
+    { label: "History", path: "/history", icon: "🕘" },
+    { label: "Scorecards", path: "/scorecards", icon: "📋" },
+    { label: "Profile", path: "/profile", icon: "👤" },
   ];
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", background: "#f6f8f7" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        background: "#f7f9f8",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
       <aside
         style={{
           width: "260px",
-          background: "#064236",
-          color: "white",
+          background: "#ffffff",
+          borderRight: "1px solid #e5e7eb",
           padding: "28px 20px",
         }}
       >
-        <h2 style={{ marginBottom: "40px" }}>AI Sales Coach</h2>
+        <h2 style={{ marginBottom: "32px", color: "#101828" }}>
+          AI Sales Coach
+        </h2>
 
         <nav style={{ display: "grid", gap: "10px" }}>
-          {items.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.path;
 
             return (
@@ -35,17 +44,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.path}
                 onClick={() => router.push(item.path)}
                 style={{
-                  padding: "13px 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "13px 14px",
                   borderRadius: "12px",
                   border: "none",
-                  textAlign: "left",
                   cursor: "pointer",
-                  color: "white",
-                  background: active ? "rgba(255,255,255,0.18)" : "transparent",
+                  textAlign: "left",
+                  fontSize: "15px",
                   fontWeight: active ? 700 : 500,
+                  background: active ? "#006b4f" : "transparent",
+                  color: active ? "#ffffff" : "#344054",
                 }}
               >
-                {item.label}
+                <span style={{ fontSize: "18px" }}>{item.icon}</span>
+                <span>{item.label}</span>
               </button>
             );
           })}
