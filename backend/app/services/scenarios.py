@@ -18,22 +18,52 @@ class ScenarioConfig:
 
 
 DEFAULT_BUSINESS_PROFILE: dict[str, Any] = {
-    "name": "Optimal Trappstädning",
+    "name": "AI Sales Coach",
     "framework": "BANT",
     "context_data": {
-        "service": "professional stairwell and common-area cleaning for properties",
-        "market": "Swedish apartment buildings, housing associations, and property managers",
+        "service": (
+            "AI-powered sales practice software where reps rehearse realistic calls with "
+            "buyer personas before speaking with live prospects"
+        ),
+        "market": (
+            "B2B SaaS and sales-led companies with growing teams, onboarding pressure, "
+            "inconsistent role-play quality, and managers who cannot personally coach every call"
+        ),
+        "pricing": (
+            "30-day pilot for 5 to 15 reps, then team pricing around $79 per rep per month "
+            "plus a $499 per month manager workspace; enterprise pricing depends on seats, "
+            "integrations, and custom personas"
+        ),
+        "buyer_profiles": [
+            (
+                "VP Sales or Head of Sales responsible for ramp, pipeline quality, and "
+                "manager leverage"
+            ),
+            "Sales enablement leader standardizing messaging and objection handling",
+            "Founder-led SaaS team trying to coach sellers without adding more meetings",
+        ],
         "value_props": [
-            "reliable recurring cleaning quality",
-            "clear checklists and predictable scheduling",
-            "fast handling of missed areas or tenant complaints",
-            "transparent pricing for recurring contracts",
+            (
+                "reps can practice cold calls, discovery, objection handling, and closing "
+                "without risking live pipeline"
+            ),
+            (
+                "AI buyers stay in character across a full call and respond to the rep's "
+                "actual approach"
+            ),
+            "managers get repeatable coaching moments without sitting in every role-play",
+            (
+                "custom personas reflect the team's ICP, buying process, language, and common "
+                "objections"
+            ),
         ],
         "common_objections": [
-            "we already have a cleaning supplier",
-            "send information by email",
-            "we need to discuss this with the board",
-            "price is the most important factor",
+            "AI cant replace coaching",
+            "too expensive",
+            "my team wont adopt it",
+            "we already use call recording or enablement tools",
+            "I do not trust AI to sound like our real buyers",
+            "we do not have time to set this up",
         ],
     },
 }
@@ -44,140 +74,64 @@ SCENARIOS: dict[ScenarioSlug, ScenarioConfig] = {
         slug=ScenarioSlug.cold_call,
         title="Cold Call",
         objective=(
-            "The rep must earn attention from an unfamiliar decision maker and book an "
-            "introductory meeting."
+            "The rep must earn attention from a skeptical Head of Sales and book a focused "
+            "introductory meeting or pilot discussion for AI Sales Coach."
         ),
         customer_context=(
-            "You are a busy property manager or housing-association board member who was not "
-            "expecting the call. You may have a current supplier, but you still care about "
-            "tenant complaints, quality drift, and simple vendor management."
+            "You are Sarah Mitchell, Head of Sales at Nimbus Analytics, a growing B2B SaaS "
+            "company. You lead 15 Account Executives, 6 SDRs, and 3 Sales Managers. You report "
+            "to the CRO and are responsible for revenue attainment, rep productivity, new-hire "
+            "ramp time, sales coaching effectiveness, and forecast accuracy. Your team is growing, "
+            "but new reps take 4-6 months to become productive, role plays happen inconsistently, "
+            "managers spend too much time on repetitive coaching, discovery quality varies by rep, "
+            "and objection handling is uneven. You believe great managers create great "
+            "sales teams. You are not anti-AI, but you are skeptical of AI vendors that promise "
+            "transformation without proving adoption, realism, and business impact."
         ),
         opening_posture=(
-            "Start guarded, time-poor, and mildly skeptical. Give short answers until the rep "
-            "earns a reason to continue."
+            "This is a true cold call. Start brisk, guarded, and time-poor between forecast work "
+            "and a pipeline review. Give short answers at first. You may say "
+            "'We are not looking at more sales software'. Do not become hostile, but do not "
+            "become friendly too quickly."
         ),
         resistance_profile=(
-            "Push back with 'send me an email', 'we already have someone', or 'I do not have "
-            "time' if the rep leads with a generic pitch."
+            "If the rep leads with hype, push back with 'AI cant replace coaching', 'too "
+            "expensive', or 'my team wont adopt it'. If the rep asks thoughtful discovery "
+            "questions, gradually share real challenges and become more engaged. If the rep "
+            "pitches too early, become shorter and more skeptical."
         ),
         success_conditions=(
-            "The rep states a relevant reason for the call within the first few turns.",
-            "The rep asks at least one problem or situation question before pitching deeply.",
-            "The rep proposes a specific next meeting time or clear meeting commitment.",
+            (
+                "The rep states a relevant reason for calling a SaaS Head of Sales within the "
+                "first few turns."
+            ),
+            (
+                "The rep asks about ramp, manager coaching capacity, adoption risk, or current "
+                "role-play process before pitching deeply."
+            ),
+            (
+                "The rep positions AI Sales Coach as manager leverage and practice, not a "
+                "replacement for human coaching."
+            ),
+            (
+                "The rep earns a specific next meeting, pilot discussion, or evaluation step "
+                "with a clear reason to attend."
+            ),
         ),
         likely_objections=(
-            "I am in the middle of something.",
-            "We already have a cleaner.",
-            "Send something by email.",
+            "I am between forecast calls. What is this about?",
+            "AI cant replace coaching.",
+            "This sounds too expensive for a 15-person team.",
+            "My team wont adopt it.",
+            "We already have Gong, enablement content, and manager role-plays.",
+            "How do I know the AI buyer will sound like our actual customers?",
             "What is this about?",
+            "How is this different from every other coaching platform?",
         ),
         difficulty_notes=(
-            "Do not agree to a meeting until the rep connects the service to a plausible "
-            "property-management pain or measurable operational upside."
-        ),
-    ),
-    ScenarioSlug.hot_call: ScenarioConfig(
-        slug=ScenarioSlug.hot_call,
-        title="Hot Call",
-        objective=(
-            "The rep must connect with a warm inbound lead, clarify the need, and book the "
-            "next meeting."
-        ),
-        customer_context=(
-            "You recently requested information or filled in an interest form for stairwell "
-            "cleaning. You have a practical need, but you are comparing options and want to "
-            "avoid being rushed."
-        ),
-        opening_posture=(
-            "Start receptive but cautious. You remember the inquiry, but you expect the rep to "
-            "understand your situation before recommending anything."
-        ),
-        resistance_profile=(
-            "If the rep skips discovery, ask for a price immediately or say you are collecting "
-            "quotes from several suppliers."
-        ),
-        success_conditions=(
-            "The rep references the inbound interest naturally.",
-            "The rep qualifies need, authority, timeline, and buying process.",
-            "The rep books a meeting or walkthrough with a clear agenda.",
-        ),
-        likely_objections=(
-            "Can you just give me a price?",
-            "We are looking at two other suppliers.",
-            "I need to ask another board member.",
-            "How quickly could you start?",
-        ),
-        difficulty_notes=(
-            "Reward confident progression, but keep enough ambiguity that the rep must qualify "
-            "before asking for the meeting."
-        ),
-    ),
-    ScenarioSlug.direktforsaljning: ScenarioConfig(
-        slug=ScenarioSlug.direktforsaljning,
-        title="Direktförsäljning",
-        objective=(
-            "The rep must pitch directly and close the cleaning contract during the phone call."
-        ),
-        customer_context=(
-            "You are responsible for a property where cleaning quality has become inconsistent. "
-            "You can decide or strongly influence the decision, but you need confidence before "
-            "agreeing on the call."
-        ),
-        opening_posture=(
-            "Start open to a direct conversation, but make the rep prove fit, urgency, and "
-            "implementation confidence."
-        ),
-        resistance_profile=(
-            "Test pricing, contract length, start date, guarantees, and whether the rep can "
-            "handle complaints after signing."
-        ),
-        success_conditions=(
-            "The rep diagnoses the current pain and desired outcome.",
-            "The rep frames a clear offer with scope, start path, and risk reversal.",
-            "The rep asks for the close and handles final hesitation without becoming pushy.",
-        ),
-        likely_objections=(
-            "That sounds expensive.",
-            "I do not want to get locked into a long contract.",
-            "How do I know the quality will stay high?",
-            "I need to think about it.",
-        ),
-        difficulty_notes=(
-            "Do not accept the contract until the rep has clarified decision criteria and made "
-            "a concrete closing ask."
-        ),
-    ),
-    ScenarioSlug.meeting: ScenarioConfig(
-        slug=ScenarioSlug.meeting,
-        title="Meeting",
-        objective="The rep must handle a face-to-face closing interaction.",
-        customer_context=(
-            "You are in a scheduled meeting with the rep about recurring cleaning for a "
-            "property portfolio or housing association. You have details to share and expect "
-            "a professional consultation."
-        ),
-        opening_posture=(
-            "Start engaged and businesslike. You will answer thoughtful questions, but you "
-            "will not close unless the rep links their proposal to your priorities."
-        ),
-        resistance_profile=(
-            "Probe implementation, stakeholder buy-in, reporting, issue escalation, pricing, "
-            "and what happens if residents complain."
-        ),
-        success_conditions=(
-            "The rep structures the meeting and confirms the decision process.",
-            "The rep uses consultative discovery before presenting the recommendation.",
-            "The rep summarizes value, handles objections, and secures a clear close or next step.",
-        ),
-        likely_objections=(
-            "The board will ask why we should switch.",
-            "What reporting do we get?",
-            "How do you handle missed cleaning tasks?",
-            "Can you match our current supplier's price?",
-        ),
-        difficulty_notes=(
-            "Act like a serious buyer. Give richer answers than in phone scenarios, but require "
-            "a polished closing conversation."
+            "Do not agree to a meeting until the rep connects the product to a real sales-team "
+            "pain, handles at least one of your adoption or coaching concerns, and avoids "
+            "claiming that AI replaces sales managers."
         ),
     ),
 }
@@ -197,7 +151,7 @@ FRAMEWORK_DIMENSIONS: dict[str, tuple[str, ...]] = {
 }
 
 
-# get the scenario configuration based on the scenario slug (cold call, hot call etc.)
+# Get the scenario configuration based on the scenario slug.
 def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
     return SCENARIOS[ScenarioSlug(scenario)]
 
