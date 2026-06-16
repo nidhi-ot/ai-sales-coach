@@ -73,15 +73,15 @@ async def create_session(data: SessionStart):
         supabase.table("sessions")
         .insert(
             {
-              "rep_id": data.rep_id,
-              "business_id": data.business_id,
-              "scenario": data.scenario,
-              "profile_version": profile_version,
-              "status": "active",
-              "metadata": {
-                          "system_instruction": data.system_instruction,
-                    },
-           }
+                "rep_id": data.rep_id,
+                "business_id": data.business_id,
+                "scenario": data.scenario,
+                "profile_version": profile_version,
+                "status": "active",
+                "metadata": {
+                    "system_instruction": data.system_instruction,
+                },
+            }
         )
         .execute()
     )
