@@ -11,19 +11,39 @@ business = (
     supabase.table("business_profiles")
     .insert(
         {
-            "name": "Optimal Trappstädning",
+            "name": "AI Sales Coach",
             "framework": "BANT",
             "context_data": {
-                "industry": "B2B stairwell cleaning",
-                "typical_objections": [
-                    "Already have a supplier",
-                    "Too expensive",
-                    "Not looking to switch right now",
+                "service": (
+                    "AI-powered sales practice software where reps rehearse realistic calls "
+                    "with buyer personas before speaking with live prospects"
+                ),
+                "market": (
+                    "B2B SaaS and sales-led companies with growing teams, onboarding pressure, "
+                    "and stretched sales managers"
+                ),
+                "pricing": (
+                    "30-day pilot for 5 to 15 reps, then around $79 per rep per month plus a "
+                    "$499 per month manager workspace"
+                ),
+                "buyer_profiles": [
+                    "Head of Sales or VP Sales",
+                    "Sales enablement leader",
+                    "Founder-led SaaS team",
+                ],
+                "common_objections": [
+                    "AI cant replace coaching",
+                    "too expensive",
+                    "my team wont adopt it",
+                    "we already use call recording or enablement tools",
+                    "I do not trust AI to sound like our real buyers",
+                    "we do not have time to set this up",
                 ],
                 "value_props": [
-                    "Eco-friendly products",
-                    "24/7 emergency service",
-                    "Flexible contracts",
+                    "reps practice realistic calls before live pipeline is at risk",
+                    "AI buyers stay in character across a full call",
+                    "managers create repeatable coaching moments without joining every role-play",
+                    "custom personas reflect the team's ICP and real objections",
                 ],
             },
         }
