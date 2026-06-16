@@ -204,8 +204,4 @@ def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
 
 def normalize_framework(framework: str | None) -> str:
     value = (framework or DEFAULT_BUSINESS_PROFILE["framework"]).upper()
-    return (
-        value
-        if value in FRAMEWORK_DIMENSIONS
-        else DEFAULT_BUSINESS_PROFILE["framework"]
-    )
+    return value if value in FRAMEWORK_DIMENSIONS else DEFAULT_BUSINESS_PROFILE["framework"]

@@ -24,9 +24,7 @@ async def create_scorecard(data: ScorecardStub):
 async def get_scorecard(session_id: str):
     supabase = get_supabase()
 
-    result = (
-        supabase.table("scorecards").select("*").eq("session_id", session_id).execute()
-    )
+    result = supabase.table("scorecards").select("*").eq("session_id", session_id).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Scorecard not found")
