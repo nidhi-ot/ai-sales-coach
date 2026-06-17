@@ -23,10 +23,9 @@ export default function LoginPage() {
     }
 
     if (!businessId.trim()) {
-    setError("Please enter your Business ID");
-    return;
-  }
-
+      setError("Please enter your Business ID");
+      return;
+    }
 
     if (password !== DUMMY_PASSWORD) {
       setError("Invalid password");
@@ -44,187 +43,268 @@ export default function LoginPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#f6f8f7",
-        display: "grid",
-        placeItems: "center",
+        background: "#f4f7f5",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "32px",
         fontFamily: "Arial, sans-serif",
-        padding: "24px",
       }}
     >
-      <section
+      <div
         style={{
-          width: "420px",
-          background: "white",
-          padding: "36px",
-          borderRadius: "24px",
-          boxShadow: "0 14px 40px rgba(0,0,0,0.08)",
+          width: "1200px",
+          height: "720px",
+          background: "#fff",
+          borderRadius: "28px",
+          overflow: "hidden",
+          display: "flex",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        {/* LEFT SIDE */}
+        <section
+          style={{
+            width: "450px",
+            padding: "48px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          {/* LOGO */}
           <div
             style={{
-              width: "54px",
-              height: "54px",
-              borderRadius: "16px",
-              background: "#006b4f",
-              color: "white",
-              display: "grid",
-              placeItems: "center",
-              margin: "0 auto 16px",
-              fontSize: "24px",
-              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              marginBottom: "32px",
             }}
           >
-            AI
+            <img
+              src="/logo.png"
+              alt="AI Sales Coach"
+              style={{
+                width: "90px",
+                height: "90px",
+                objectFit: "contain",
+              }}
+            />
+
           </div>
 
-          <h1 style={{ margin: 0 }}>AI Sales Coach</h1>
+          <h1
+            style={{
+              marginBottom: "8px",
+              color: "#101828",
+            }}
+          >
+            Welcome back!
+          </h1>
 
-          <p style={{ marginTop: "10px", color: "#667085", lineHeight: "1.5" }}>
-            Practice. Improve. Close more deals.
+          <p
+            style={{
+              color: "#667085",
+              marginBottom: "28px",
+            }}
+          >
+            Sign in to continue your sales training journey.
           </p>
-        </div>
 
-        <h2 style={{ marginBottom: "6px" }}>Welcome back!</h2>
+          <label style={labelStyle}>Rep ID</label>
 
-        <p style={{ color: "#667085", marginBottom: "24px" }}>
-          Sign in to continue your sales training journey.
-        </p>
+          <input
+            value={repId}
+            onChange={(e) => setRepId(e.target.value)}
+            placeholder="Enter your rep_id"
+            style={inputStyle}
+          />
 
-        <label style={labelStyle}>Rep ID</label>
-        <input
-          value={repId}
-          onChange={(e) => setRepId(e.target.value)}
-          placeholder="Enter your rep_id"
-          style={inputStyle}
-        />
-        <label style={labelStyle}>Business ID</label>
-        <input
-          value={businessId}
-          onChange={(e) => setBusinessId(e.target.value)}
-          placeholder="Enter your business_id"
-          style={inputStyle}
-        />
+          <label style={labelStyle}>Business ID</label>
 
-        <label style={labelStyle}>Password</label>
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="demo123"
-          type="password"
-          style={inputStyle}
-        />
+          <input
+            value={businessId}
+            onChange={(e) => setBusinessId(e.target.value)}
+            placeholder="Enter your business_id"
+            style={inputStyle}
+          />
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "18px",
-            fontSize: "14px",
-          }}
-        >
-          <label
+          <label style={labelStyle}>Password</label>
+
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="demo123"
+            style={inputStyle}
+          />
+
+          <div
             style={{
               display: "flex",
-              gap: "8px",
-              alignItems: "center",
-              color: "#344054",
+              justifyContent: "space-between",
+              marginBottom: "20px",
+              fontSize: "14px",
             }}
           >
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            Remember me
-          </label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Remember me
+            </label>
+
+            <button
+              type="button"
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "#006b4f",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          {error && (
+            <p
+              style={{
+                color: "#b42318",
+                fontSize: "14px",
+                marginBottom: "16px",
+              }}
+            >
+              {error}
+            </p>
+          )}
 
           <button
-            type="button"
+            onClick={handleSignIn}
             style={{
+              width: "100%",
+              padding: "15px",
+              borderRadius: "14px",
               border: "none",
-              background: "transparent",
-              color: "#006b4f",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
-          >
-            Forgot password?
-          </button>
-        </div>
-
-        {error && <p style={{ color: "#b42318", fontSize: "14px" }}>{error}</p>}
-
-        <button onClick={handleSignIn} style={buttonStyle}>
-          Sign In
-        </button>
-
-        <p
-          style={{
-            textAlign: "center",
-            color: "#667085",
-            fontSize: "14px",
-            marginTop: "22px",
-          }}
-        >
-          New here?{" "}
-          <button
-            type="button"
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "#006b4f",
-              cursor: "pointer",
+              background: "#006b4f",
+              color: "white",
               fontWeight: 700,
+              fontSize: "15px",
+              cursor: "pointer",
             }}
           >
-            Create an account
+            Sign In
           </button>
-        </p>
 
-        <p
+          <p
+            style={{
+              textAlign: "center",
+              marginTop: "24px",
+              color: "#667085",
+            }}
+          >
+            New here?{" "}
+            <span
+              style={{
+                color: "#006b4f",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Create an account
+            </span>
+          </p>
+
+          <p
+            style={{
+              marginTop: "24px",
+              textAlign: "center",
+              fontSize: "12px",
+              color: "#98a2b3",
+              lineHeight: "1.6",
+            }}
+          >
+            By continuing, you agree to our Terms of Service and Privacy Policy.
+          </p>
+        </section>
+
+        {/* RIGHT SIDE IMAGE */}
+        <div
           style={{
-            textAlign: "center",
-            color: "#98a2b3",
-            fontSize: "12px",
-            marginTop: "18px",
-            lineHeight: "1.5",
+            flex: 1,
+            position: "relative",
           }}
         >
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </p>
-      </section>
+          <img
+            src="/staircase.jpg"
+            alt="Building"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: "24px",
+              left: "24px",
+              right: "24px",
+              background: "rgba(255,255,255,0.95)",
+              padding: "20px",
+              borderRadius: "18px",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <h3
+              style={{
+                marginTop: 0,
+                marginBottom: "8px",
+              }}
+            >
+              AI Sales Coach
+            </h3>
+
+            <p
+              style={{
+                margin: 0,
+                color: "#667085",
+                lineHeight: "1.6",
+              }}
+            >
+              Improve sales conversations through realistic practice scenarios,
+              AI coaching, and performance feedback.
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }
 
 const labelStyle = {
   display: "block",
-  fontSize: "14px",
+  marginBottom: "8px",
   fontWeight: 600,
   color: "#344054",
-  marginBottom: "8px",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "13px",
-  marginBottom: "16px",
-  borderRadius: "12px",
-  border: "1px solid #d0d5dd",
-  fontSize: "15px",
-  boxSizing: "border-box" as const,
-};
-
-const buttonStyle = {
-  width: "100%",
   padding: "14px",
   borderRadius: "12px",
-  border: "none",
-  background: "#006b4f",
-  color: "white",
-  fontWeight: "bold",
+  border: "1px solid #d0d5dd",
+  marginBottom: "18px",
   fontSize: "15px",
-  cursor: "pointer",
+  boxSizing: "border-box" as const,
 };
