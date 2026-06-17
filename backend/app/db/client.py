@@ -77,7 +77,7 @@ async def create_session(
                 "scenario": scenario,
                 "profile_version": profile_version,
                 "status": "active",
-                "metadata" : metadata or {},
+                "metadata": metadata or {},
             }
         )
         .execute()

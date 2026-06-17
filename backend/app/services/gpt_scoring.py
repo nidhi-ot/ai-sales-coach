@@ -1,29 +1,26 @@
 import json
 from typing import Any
 
-from app.config import settings
-
 from openai import AsyncOpenAI
+
+from app.config import settings
 
 
 async def gpt_analyze_transcript(
-    rep_text: str,
-    ai_text: str,
-    system_instruction: str,
-    scenario_title: str
+    rep_text: str, ai_text: str, system_instruction: str, scenario_title: str
 ) -> dict[str, Any]:
     """
     Analyze a sales call transcript using GPT-5.5 to generate scorecard feedback.
-    
+
     ⚠️ CRITICAL: This function runs ASYNC AFTER the call, NEVER during live call.
     This is OFF THE AUDIO PATH for real-time performance.
-    
+
     Args:
         rep_text: The sales representative's spoken text
         ai_text: The AI customer's responses
         system_instruction: The scenario system instruction/context
         scenario_title: The scenario title for context
-        
+
     Returns:
         Dictionary containing scores and BANT framework analysis
         Keys: rapport_score, needs_discovery_score, objection_handling_score, closing_score,
@@ -32,11 +29,11 @@ async def gpt_analyze_transcript(
     """
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY not configured in settings")
-    
-    
+
     client = AsyncOpenAI(api_key=settings.openai_api_key)
-    
-    prompt = f"""You are an expert sales coach evaluating a practice sales call for an AI Sales Coach platform.
+
+    prompt = f"""You are an expert sales coach evaluating a practice sales call.
+You are part of an AI Sales Coach platform.
 
 SCENARIO: {scenario_title}
 
@@ -98,39 +95,47 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
     "timeline": <1-10>
   }},
   "strengths": ["strength 1", "strength 2", "strength 3"],
-  "improvement_areas": ["area 1", "area 2", "area 3"]
+  "improvement_areas": ["area 1", "area 2", "area 3"],
+  "feedback_summary": "A concise summary of the feedback for the rep, highlighting key strengths
+and areas for improvement.",
 }}"""
-    
+
     response = await client.chat.completions.create(
         model=settings.openai_analysis_model,
         messages=[
             {
                 "role": "system",
-                "content": "You are an expert sales coach. Analyze sales calls and provide constructive feedback. Always respond with valid JSON only.",
+                "content": (
+                    "You are an expert sales coach. Analyze sales calls and provide "
+                    "constructive feedback. Always respond with valid JSON only."
+                ),
             },
             {
                 "role": "user",
                 "content": prompt,
-            }
+            },
         ],
         max_completion_tokens=1000,
     )
-    
-    response_text = response.choices[0].message.content.strip()
-    
+
+    content = response.choices[0].message.content
+    if content is None:
+        raise ValueError("GPT returned empty response")
+    response_text = content.strip()
+
     # Handle potential markdown code blocks in response
     if response_text.startswith("```json"):
         response_text = response_text[7:]
     elif response_text.startswith("```"):
         response_text = response_text[3:]
-    
+
     if response_text.endswith("```"):
         response_text = response_text[:-3]
-    
+
     response_text = response_text.strip()
-    
+
     feedback = json.loads(response_text)
-    
+
     # Validate and normalize response
     normalized = {
         # Sales Execution Skills
@@ -153,17 +158,18 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
         },
         "strengths": feedback.get("strengths", []),
         "improvement_areas": feedback.get("improvement_areas", []),
+        "feedback_summary": feedback.get("feedback_summary", ""),
     }
-    
+
     # Ensure strengths and improvement_areas are lists of strings
     if not isinstance(normalized["strengths"], list):
         normalized["strengths"] = []
     if not isinstance(normalized["improvement_areas"], list):
         normalized["improvement_areas"] = []
-    
+
     normalized["strengths"] = [str(s) for s in normalized["strengths"]]
     normalized["improvement_areas"] = [str(s) for s in normalized["improvement_areas"]]
-    
+
     return normalized
 
 

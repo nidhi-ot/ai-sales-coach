@@ -62,7 +62,7 @@ async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
                 "overall_score": 0,
                 "strengths": [],
                 "improvement_areas": [],
-                "framework_scores":{},
+                "framework_scores": {},
                 "feedback_summary": "Analysis pending (stub).",
             },
             on_conflict="session_id",
@@ -121,11 +121,15 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         last_offset_ms = max(timestamp_offsets, default=0)
         duration_seconds = round(last_offset_ms / 1000)
 
+    # Defensive check - session should not be None due to earlier guard
+    if session is None:
+        raise LookupError("Session became None unexpectedly")
+
     feedback = await gpt_analyze_transcript(
         rep_text=rep_text,
         ai_text=ai_text,
-        system_instruction=session.get("metadata",{}).get("system_instruction"),
-        scenario_title=session.get("scenario")
+        system_instruction=session.get("metadata", {}).get("system_instruction") or "",
+        scenario_title=session.get("scenario") or "unknown",
     )
 
     framework_score = feedback.get("framework_scores", {})
@@ -146,10 +150,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "strengths": feedback["strengths"],
         "improvement_areas": feedback["improvement_areas"],
         "framework_scores": framework_score,
-        "feedback_summary": (
-            "After-call scorecard generated from the saved transcript. "
-            "This heuristic pass can be replaced by GPT analysis when the scoring prompt is ready."
-        ),
+        "feedback_summary": feedback["feedback_summary"],
     }
 
     result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()

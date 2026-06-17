@@ -108,8 +108,7 @@ async def create_realtime_session(config: SessionConfig):
     vad_silence_duration_ms = config.vad.silence_duration_ms if config.vad else 500
 
     print(
-        f"🎙️ VAD config: threshold={vad_threshold}, "
-        f"silence_duration_ms={vad_silence_duration_ms}"
+        f"🎙️ VAD config: threshold={vad_threshold}, silence_duration_ms={vad_silence_duration_ms}"
     )
 
     try:
