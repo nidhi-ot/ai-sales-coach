@@ -91,6 +91,7 @@ async def create_realtime_session(config: SessionConfig):
         business_id=str(config.business_id),
         scenario=config.scenario.value,
         profile_version=profile_version,
+        metadata={"system_instruction": instructions},
     )
 
     if not db_session:
