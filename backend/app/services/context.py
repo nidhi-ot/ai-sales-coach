@@ -74,9 +74,7 @@ def _merge_business_context(business_profile: dict[str, Any]) -> dict[str, Any]:
     return {
         "service": context_data.get("service") or default_context["service"],
         "market": (
-            context_data.get("market")
-            or context_data.get("industry")
-            or default_context["market"]
+            context_data.get("market") or context_data.get("industry") or default_context["market"]
         ),
         "pricing": context_data.get("pricing") or default_context["pricing"],
         "buyer_profiles": context_data.get("buyer_profiles") or default_context["buyer_profiles"],

@@ -49,6 +49,7 @@ class SupabaseStatusResponse(BaseModel):
     table: str
     row_count: int
 
+
 # To create a realtime session for sales call practice
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
@@ -61,7 +62,6 @@ async def create_realtime_session(config: SessionConfig):
     # Print profiles for debugging
     print(f" Rep Profile (latest) : {rep_profile_latest}")
     print(f" Business Profile: {business_profile}")
-
 
     # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
     context = assemble_call_context(
@@ -178,6 +178,7 @@ async def create_realtime_session(config: SessionConfig):
 @router.get("/status")
 async def realtime_status():
     return {"status": "ok"}
+
 
 # For short-lived token to keep the OpenAI key secure
 @router.post("/token", response_model=EphemeralTokenResponse)
