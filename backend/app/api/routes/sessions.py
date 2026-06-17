@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.db.client import get_supabase
-from app.services.scorecards import create_scorecard_stub
+from app.models.agent import ScenarioSlug
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
 class SessionStart(BaseModel):
     rep_id: str
     business_id: str
-    scenario: Literal["cold_call", "hot_call", "direktforsaljning", "meeting"]
+    scenario: ScenarioSlug
     system_instruction: str
 
 
@@ -92,10 +92,7 @@ async def create_session(data: SessionStart):
 
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
-    """Mark session as completed."""
-    """After a session ends, automatically create a
-    scorecard stub that will later be populated
-    with GPT analysis """
+    """Mark a practice session as completed."""
     supabase = get_supabase()
 
     result = (
@@ -118,24 +115,12 @@ async def end_session(session_id: str, data: SessionEnd):
     if not session_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session = session_rows[0]
-    # Create placeholder scorecard immediately after session completion.
-    # Detailed scoring will be added in MS3.
-    try:
-        await create_scorecard_stub(
-            session_id=session_id,
-            rep_id=session["rep_id"],
-            business_id=session["business_id"],
-        )
-    except Exception as e:
-        print(f"Scorecard creation failed: {e}")
-
-    return session
+    return session_rows[0]
 
 
 @router.post("/{session_id}/transcripts")
 async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
-    """Add transcript entry during/after call."""
+    """Add transcript entry after call."""
     supabase = get_supabase()
 
     result = (
@@ -182,6 +167,9 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     """
 
     supabase = get_supabase()
+
+    if not batch.entries:
+        return {"inserted": 0}
 
     inserts = [
         {
