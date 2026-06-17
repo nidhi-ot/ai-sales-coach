@@ -11,6 +11,11 @@
     <button id="start">Start Call</button>
     <button id="endCall" disabled>End Call</button>
     <button id="downloadLog">Download Log</button>
+    <!--
+      Historical Day 3 server VAD controls.
+      Current live calls use semantic_vad with eagerness=medium in the backend,
+      so these threshold values no longer change OpenAI's live VAD behavior.
+    -->
     <div>
       <label for="vadConfig">VAD config:</label>
       <select id="vadConfig">
