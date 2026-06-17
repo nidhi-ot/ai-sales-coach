@@ -283,12 +283,11 @@
           log("❌ Failed to notify backend that session ended: " + error.message);
         }
         if (sessionEnded && transcriptSaved) {
-        //   try {
-        //     await runTranscriptAnalysis(sessionIdToEnd);
-        //   } catch (error) {
-        //     log("Failed to create scorecard: " + error.message);
-        //   }
-          log (" Skipping scorecard analysis for now");
+          try {
+            await runTranscriptAnalysis(sessionIdToEnd);
+          } catch (error) {
+            log("Failed to create scorecard: " + error.message);
+          }
         } 
       }
 
