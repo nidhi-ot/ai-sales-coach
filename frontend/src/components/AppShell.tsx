@@ -12,6 +12,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { label: "History", path: "/history", icon: "🕘" },
     { label: "Scorecards", path: "/scorecards", icon: "📋" },
     { label: "Profile", path: "/profile", icon: "👤" },
+    { label: "Progress", path: "/progress", icon: "📈" },
+    { label: "Settings", path: "/settings", icon: "⚙️" },
   ];
 
   return (
@@ -31,9 +33,38 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           padding: "28px 20px",
         }}
       >
-        <h2 style={{ marginBottom: "32px", color: "#101828" }}>
-          AI Sales Coach
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: "32px",
+            paddingBottom: "24px",
+            borderBottom: "1px solid #e5e7eb",
+          }}
+        >
+          <img
+            src="/logo.png"
+            alt="AI Sales Coach"
+            style={{
+              width: "110px",
+              height: "110px",
+              objectFit: "contain",
+              marginBottom: "10px",
+            }}
+          />
+
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "18px",
+              color: "#101828",
+              fontWeight: 700,
+            }}
+          >
+            AI Sales Coach
+          </h2>
+        </div>
 
         <nav style={{ display: "grid", gap: "10px" }}>
           {navItems.map((item) => {
@@ -54,8 +85,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   textAlign: "left",
                   fontSize: "15px",
                   fontWeight: active ? 700 : 500,
-                  background: active ? "#006b4f" : "transparent",
-                  color: active ? "#ffffff" : "#344054",
+                   background: active ? "#e7f4ef" : "transparent",
+                   color: active ? "#006b4f" : "#344054",
                 }}
               >
                 <span style={{ fontSize: "18px" }}>{item.icon}</span>

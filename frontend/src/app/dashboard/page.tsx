@@ -17,11 +17,28 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <h1>Dashboard</h1>
+      <div style={{ marginBottom: "24px" }}>
+  <h1
+    style={{
+      margin: 0,
+      fontSize: "32px",
+      fontWeight: 700,
+      color: "#101828",
+    }}
+  >
+    Good Morning, {repId} 👋
+  </h1>
 
-      <p style={{ color: "#667085" }}>
-        Welcome back, {repId}. Track your AI Sales Coach practice progress.
-      </p>
+  <p
+    style={{
+      marginTop: "8px",
+      color: "#667085",
+      fontSize: "16px",
+    }}
+  >
+    Ready to level up your sales game today?
+  </p>
+</div>
 
       <div
         style={{
