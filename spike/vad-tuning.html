@@ -19,7 +19,7 @@
         <option value="conservative">Conservative: threshold 0.7, silence 800ms</option>
       </select>
     </div>
-    <p>Test phrase: Hi, I'm calling about your cleaning services</p>
+    <p>Test phrase: Hi, I'm calling about AI Sales Coach</p>
     <p>
       During the call, click False Positive if the AI cuts you off, False Negative if
       the AI waits too long, or Good Turn if the timing feels correct.
@@ -45,6 +45,8 @@
       let callTimeoutId = null;
       let activePeerConnection = null;
       let activeStream = null;
+      let activeDataChannel = null;
+      let transcriptBuffer = [];        
 
       // Hard cap for practice calls: 10 minutes.
       const CALL_TIMEOUT_MS = 10 * 60 * 1000;
@@ -76,12 +78,114 @@
       // Helper function to print messages on the page and store them
       function log(message) {
         const timestamp = new Date().toISOString();
-        const logEntry = `[${timestamp}] ${message}`;
-        logMessages.push(logEntry);
+        logMessages.push(`[${timestamp}] ${message}`);
         document.getElementById("log").textContent += message + "\n";
       }
 
-      // End the active call, close WebRTC, and tell the backend.
+      function timestampOffsetMs() {
+        return callStartedAt ? Date.now() - callStartedAt.getTime() : 0;
+      }
+
+      // Realtime transcript events are buffered locally until the call ends.
+      function bufferTranscriptLine(speaker, text) {
+        if (!text || !text.trim()) {
+          return;
+        }
+
+        transcriptBuffer.push({
+          speaker,
+          text: text.trim(),
+          timestamp_offset_ms: timestampOffsetMs(),
+        });
+      }
+
+      async function saveTranscriptBatch(sessionId) {
+        if (!transcriptBuffer.length) {
+          log("No transcript captured; skipping transcript save.");
+          return false;
+        }
+
+        const response = await fetch(
+          "http://localhost:8000/api/v1/sessions/" +
+            sessionId +
+            "/transcripts/batch",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              entries: transcriptBuffer,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            "Transcript batch save failed with status " +
+              response.status +
+              ": " +
+              errorText
+          );
+        }
+
+        log("Saved transcript lines: " + transcriptBuffer.length);
+        return true;
+      }
+
+      async function runScorecardAnalysis(sessionId) {
+        const response = await fetch(
+          "http://localhost:8000/api/v1/scorecards/" + sessionId + "/analyze",
+          {
+            method: "POST",
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            "Scorecard analysis failed with status " +
+              response.status +
+              ": " +
+              errorText
+          );
+        }
+
+        const scorecard = await response.json();
+        log("Scorecard created. Overall score: " + scorecard.overall_score);
+      }
+
+      function handleRealtimeEvent(event) {
+        let payload;
+
+        try {
+          payload = JSON.parse(event.data);
+        } catch {
+          console.debug("Realtime event:", event.data);
+          return;
+        }
+
+        console.debug("Realtime event:", payload);
+
+        if (
+          payload.type === "conversation.item.input_audio_transcription.completed"
+        ) {
+          if (typeof payload.transcript === "string" && payload.transcript.trim()) {
+            bufferTranscriptLine("rep", payload.transcript);
+            log("Rep: " + payload.transcript);
+          }
+        }
+
+        if (payload.type === "response.output_audio_transcript.done") {
+          if (typeof payload.transcript === "string" && payload.transcript.trim()) {
+            bufferTranscriptLine("ai_customer", payload.transcript);
+            log("AI customer: " + payload.transcript);
+          }
+        }
+      }
+
+      // End the call, save the finished transcript, then analyze the scorecard.
       async function endCall(endReason) {
         if (!activeSessionId) {
           log("No active session to end.");
@@ -107,6 +211,11 @@
           activeStream = null;
         }
 
+        if (activeDataChannel) {
+          activeDataChannel.close();
+          activeDataChannel = null;
+        }
+
         if (activePeerConnection) {
           activePeerConnection.close();
           activePeerConnection = null;
@@ -125,6 +234,16 @@
             durationSeconds +
             " seconds"
         );
+
+        let transcriptSaved = false;
+
+        try {
+          transcriptSaved = await saveTranscriptBatch(sessionIdToEnd);
+        } catch (error) {
+          log("Failed to save transcript: " + error.message);
+        }
+
+        let sessionEnded = false;
 
         try {
           const endRes = await fetch(
@@ -152,10 +271,20 @@
             );
           }
 
+          sessionEnded = true;
+
           log("✅ Backend session ended successfully");
         } catch (error) {
           log("❌ Failed to notify backend that session ended: " + error.message);
         }
+        if (sessionEnded && transcriptSaved) {
+        //   try {
+        //     await runScorecardAnalysis(sessionIdToEnd);
+        //   } catch (error) {
+        //     log("Failed to create scorecard: " + error.message);
+        //   }
+          log (" Skipping scorecard analysis for now");
+        } 
       }
 
       // Let the user end the call before the 10-minute timeout.
@@ -203,6 +332,8 @@
           falseNegativeCount +
           "\nGood turns: " +
           goodTurnCount +
+          "\nTranscript lines: " +
+          transcriptBuffer.length +
           "\n\nNotes:\n" +
           notes;
         const blob = new Blob([logContent], { type: "text/plain" });
@@ -219,6 +350,13 @@
       // Run this function when the Start Call button is clicked
       document.getElementById("start").onclick = async () => {
         try {
+          transcriptBuffer = [];
+          falsePositiveCount = 0;
+          falseNegativeCount = 0;
+          goodTurnCount = 0;
+          document.getElementById("log").textContent = "";
+          logMessages.length = 0;
+
           const selectedVadKey = document.getElementById("vadConfig").value;
           const selectedVadConfig = vadConfigs[selectedVadKey];
 
@@ -254,8 +392,8 @@
                 },
                 body: JSON.stringify({
                     scenario: "cold_call",
-                    rep_id: "6a6e7911-0d6f-4749-857b-e89de2f5a8c6",
-                    business_id: "907122ee-986a-4b32-9085-1d216a5301cf",
+                    rep_id: "7823e50f-f264-4856-8c66-d3c14431561c",
+                    business_id: "e00ac996-d133-4d26-a718-2e56945e48a0",
                     vad: {
                       threshold: selectedVadConfig.threshold,
                       silence_duration_ms: selectedVadConfig.silence_duration_ms,
@@ -325,6 +463,7 @@
             // This is used for non-audio events/messages
             const dataChannel =
                 peerConnection.createDataChannel("oai-events");
+            activeDataChannel = dataChannel;
 
             // This runs when the data channel is fully open
             // It may not open until connected to a real remote peer like OpenAI
@@ -332,10 +471,8 @@
                 log("✅ Data channel open for events");
             };
 
-            // This runs when an event/message is received on the data channel
-            dataChannel.onmessage = (event) => {
-                log("Event: " + event.data);
-            };
+            // Transcript events are stored locally and saved after End Call.
+            dataChannel.onmessage = handleRealtimeEvent;
 
             log("✅ Data channel created");
 
@@ -386,7 +523,7 @@
             });
 
             log("✅ Remote description set: connected to OpenAI");
-            log("✅ Connection ready. Say: Hi, I'm calling about your cleaning services");
+            log("✅ Connection ready. Say: Hi, I'm calling about AI Sales Coach");
 
             document.getElementById("start").disabled = true;
             document.getElementById("endCall").disabled = false;
