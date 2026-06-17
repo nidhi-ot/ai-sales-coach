@@ -24,6 +24,13 @@
         <option value="conservative">Conservative: threshold 0.7, silence 800ms</option>
       </select>
     </div>
+    <div>
+      <label for="scenarioSelect">Scenario:</label>
+      <select id="scenarioSelect">
+        <option value="cold_call">Cold Call - Head of Sales</option>
+        <option value="hot_call">Hot Call - Sales Manager</option>
+      </select>
+    </div>
     <p>Test phrase: Hi, I'm calling about AI Sales Coach</p>
     <p>
       During the call, click False Positive if the AI cuts you off, False Negative if
@@ -43,6 +50,8 @@
     <script>
       // Array to store all logs
       const logMessages = [];
+      const TEST_REP_ID = "1dfc2220-8ce4-475b-bfe1-51b04111632a";
+      const TEST_BUSINESS_ID = "57034862-25ed-450f-8b4e-8121757565e5";    
 
       // These variables keep track of the active call so we can end it cleanly.
       let activeSessionId = null;
@@ -319,10 +328,14 @@
         const notes = document.getElementById("testNotes").value;
         const selectedVadKey = document.getElementById("vadConfig").value;
         const selectedVadConfig = vadConfigs[selectedVadKey];
+        const selectedScenario = document.getElementById("scenarioSelect").value;
 
         const logContent =
           logMessages.join("\n") +
           "\n\nSummary:\n" +
+          "Scenario: " +
+          selectedScenario +
+          "\n" +
           "VAD config: " +
           selectedVadConfig.label +
           " (threshold=" +
@@ -374,6 +387,9 @@
               "ms)"
           );
 
+          const selectedScenario = document.getElementById("scenarioSelect").value;
+          log("Testing scenario: " + selectedScenario);
+
           // Step 1: Ask the browser for microphone permission
           log("Requesting microphone access...");
 
@@ -395,9 +411,9 @@
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    scenario: "cold_call",
-                    rep_id: "7823e50f-f264-4856-8c66-d3c14431561c",
-                    business_id: "e00ac996-d133-4d26-a718-2e56945e48a0",
+                    scenario: selectedScenario,
+                    rep_id: TEST_REP_ID,
+                    business_id: TEST_BUSINESS_ID,
                     vad: {
                       threshold: selectedVadConfig.threshold,
                       silence_duration_ms: selectedVadConfig.silence_duration_ms,
