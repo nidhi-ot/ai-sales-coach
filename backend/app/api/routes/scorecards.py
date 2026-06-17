@@ -2,7 +2,10 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.db.client import get_supabase
-from app.services.scorecards import create_scorecard_stub
+from app.services.scorecards import (
+    analyze_transcript,
+    create_scorecard_stub,
+)
 
 router = APIRouter()
 
@@ -12,7 +15,7 @@ class ScorecardStub(BaseModel):
     rep_id: str
     business_id: str
 
-
+# Creates an empty scorecard entry
 @router.post("/")
 async def create_scorecard(data: ScorecardStub):
     return await create_scorecard_stub(
@@ -20,6 +23,17 @@ async def create_scorecard(data: ScorecardStub):
     )
 
 
+@router.post("/{session_id}/analyze")
+async def generate_scorecard(session_id: str):
+    try:
+        return await analyze_transcript(session_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+# Retrievs the scorecard 
 @router.get("/{session_id}")
 async def get_scorecard(session_id: str):
     supabase = get_supabase()

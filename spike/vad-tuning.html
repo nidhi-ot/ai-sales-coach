@@ -139,7 +139,7 @@
         return true;
       }
 
-      async function runScorecardAnalysis(sessionId) {
+      async function runTranscriptAnalysis(sessionId) {
         const response = await fetch(
           "http://localhost:8000/api/v1/scorecards/" + sessionId + "/analyze",
           {
@@ -284,7 +284,7 @@
         }
         if (sessionEnded && transcriptSaved) {
         //   try {
-        //     await runScorecardAnalysis(sessionIdToEnd);
+        //     await runTranscriptAnalysis(sessionIdToEnd);
         //   } catch (error) {
         //     log("Failed to create scorecard: " + error.message);
         //   }
