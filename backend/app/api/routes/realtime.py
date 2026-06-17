@@ -129,9 +129,8 @@ async def create_realtime_session(config: SessionConfig):
                                     "model": "whisper-1",
                                 },
                                 "turn_detection": {
-                                    "type": "server_vad",
-                                    "threshold": vad_threshold,
-                                    "silence_duration_ms": vad_silence_duration_ms,
+                                    "type": "semantic_vad",
+                                    "eagerness": "medium",
                                 },
                             },
                             "output": {
