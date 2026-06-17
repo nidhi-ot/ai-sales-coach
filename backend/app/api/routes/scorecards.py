@@ -15,6 +15,7 @@ class ScorecardStub(BaseModel):
     rep_id: str
     business_id: str
 
+
 # Creates an empty scorecard entry
 @router.post("/")
 async def create_scorecard(data: ScorecardStub):
@@ -33,7 +34,7 @@ async def generate_scorecard(session_id: str):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-# Retrievs the scorecard 
+# Retrievs the scorecard
 @router.get("/{session_id}")
 async def get_scorecard(session_id: str):
     supabase = get_supabase()

@@ -3,9 +3,9 @@ from typing import Any, List, Literal, cast
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.models.agent import ScenarioSlug
 
 from app.db.client import get_supabase
+from app.models.agent import ScenarioSlug
 
 router = APIRouter()
 
@@ -25,6 +25,7 @@ class SessionStart(BaseModel):
     rep_id: str
     business_id: str
     scenario: ScenarioSlug
+    system_instruction: str
 
 
 class SessionEnd(BaseModel):

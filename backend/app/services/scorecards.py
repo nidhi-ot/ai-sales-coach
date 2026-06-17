@@ -34,9 +34,7 @@ def _word_count(text: str) -> int:
 
 def _count_filler_words(text: str) -> int:
     normalized = text.lower()
-    return sum(
-        len(re.findall(rf"\b{re.escape(word)}\b", normalized)) for word in FILLER_WORDS
-    )
+    return sum(len(re.findall(rf"\b{re.escape(word)}\b", normalized)) for word in FILLER_WORDS)
 
 
 def _bounded_score(score: int) -> int:
@@ -88,9 +86,9 @@ def _build_heuristic_feedback(rep_text: str, ai_text: str) -> dict[str, Any]:
 
 
 async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
-    """ Create a scorecard stub with default values for a session.
-        This can be used to ensure a scorecard record exists before the transcript is fully processed.
-        The stub can then be updated with real analysis results once the transcript is available.
+    """Create a scorecard stub with default values for a session.
+    This can be used to ensure a scorecard record exists before the transcript is fully processed.
+    The stub can then be updated with real analysis results once the transcript is available.
     """
     supabase = get_supabase()
     result = (
@@ -148,14 +146,10 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         raise ValueError("Transcript must be saved before scorecard analysis")
 
     rep_text = " ".join(
-        str(row.get("text") or "")
-        for row in transcript_rows
-        if row.get("speaker") == "rep"
+        str(row.get("text") or "") for row in transcript_rows if row.get("speaker") == "rep"
     )
     ai_text = " ".join(
-        str(row.get("text") or "")
-        for row in transcript_rows
-        if row.get("speaker") == "ai_customer"
+        str(row.get("text") or "") for row in transcript_rows if row.get("speaker") == "ai_customer"
     )
     rep_words = _word_count(rep_text)
     ai_words = _word_count(ai_text)
