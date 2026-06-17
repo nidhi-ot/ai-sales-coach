@@ -143,9 +143,9 @@ The recommended setting is:
 Sensitive: threshold=0.3, silence_duration_ms=200
 ```
 
-## Day 4 Semantic VAD Confirmation
+## Day 5 Semantic VAD Confirmation
 
-Test date: 2026-06-17
+Test date: 2026-06-16
 
 Backend endpoint tested: `POST /api/v1/realtime/session`
 
@@ -200,7 +200,7 @@ Pass. The AI waited during the 2-3 second pause and did not interrupt before the
 
 During one test, the AI switched from English to Swedish mid-call. This appears related to language/persona instructions or transcription behavior, not VAD timing.
 
-## Day 4 Final Status
+## Day 5 Final Status
 
 Semantic VAD is confirmed for the live realtime session.
 
