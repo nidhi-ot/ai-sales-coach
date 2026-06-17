@@ -25,6 +25,7 @@ class SessionStart(BaseModel):
     rep_id: str
     business_id: str
     scenario: Literal["cold_call", "hot_call", "direktforsaljning", "meeting"]
+    system_instruction: str
 
 
 class SessionEnd(BaseModel):
@@ -77,6 +78,9 @@ async def create_session(data: SessionStart):
                 "scenario": data.scenario,
                 "profile_version": profile_version,
                 "status": "active",
+                "metadata": {
+                    "system_instruction": data.system_instruction,
+                },
             }
         )
         .execute()
