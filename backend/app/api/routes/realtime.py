@@ -107,7 +107,9 @@ async def create_realtime_session(config: SessionConfig):
     vad_threshold = config.vad.threshold if config.vad else 0.5
     vad_silence_duration_ms = config.vad.silence_duration_ms if config.vad else 500
 
-    print(f"🎙️ VAD config: threshold={vad_threshold}, silence_duration_ms={vad_silence_duration_ms}")
+    print(
+        f"🎙️ VAD config: threshold={vad_threshold}, silence_duration_ms={vad_silence_duration_ms}"
+    )
 
     try:
         async with httpx.AsyncClient() as client:
