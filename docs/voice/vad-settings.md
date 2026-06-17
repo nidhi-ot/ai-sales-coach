@@ -142,3 +142,70 @@ The recommended setting is:
 ```text
 Sensitive: threshold=0.3, silence_duration_ms=200
 ```
+
+## Day 4 Semantic VAD Confirmation
+
+Test date: 2026-06-17
+
+Backend endpoint tested: `POST /api/v1/realtime/session`
+
+Test page: `spike/vad-tuning.html`
+
+Scenario tested: `cold_call`
+
+## Why This Was Added
+
+The Day 3 VAD test above measured `server_vad` settings.
+
+The Week 2 voice plan later required semantic VAD for live calls because semantic VAD is better at understanding whether the rep is actually finished speaking instead of only reacting to silence.
+
+This means the Day 3 `server_vad` result is still useful historical testing, but the current live-call configuration should use `semantic_vad`.
+
+## Current Live-Call Configuration
+
+The realtime session now uses:
+
+```json
+{
+  "type": "semantic_vad",
+  "eagerness": "medium"
+}
+```
+
+This is configured in `backend/app/api/routes/realtime.py` inside the OpenAI Realtime session request.
+
+## Pause Test
+
+The rep spoke a sentence, paused for 2-3 seconds in the middle, then continued speaking.
+
+Test phrase:
+
+```text
+Hi, I'm calling about AI Sales Coach because many sales teams struggle with coaching consistency...
+
+Pause for 2-3 seconds.
+
+...and I wanted to ask how your team currently handles rep training.
+```
+
+Expected behavior:
+
+The AI should wait during the pause and should not interrupt before the rep finishes the full sentence.
+
+Actual behavior:
+
+Pass. The AI waited during the 2-3 second pause and did not interrupt before the rep finished speaking.
+
+## Notes
+
+During one test, the AI switched from English to Swedish mid-call. This appears related to language/persona instructions or transcription behavior, not VAD timing.
+
+## Day 4 Final Status
+
+Semantic VAD is confirmed for the live realtime session.
+
+Current Week 2 recommendation:
+
+```text
+semantic_vad with eagerness=medium
+```
