@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
 type CallStatus = "connecting" | "active" | "ending" | "ended" | "failed";
+type TranscriptSpeaker = "rep" | "ai_customer";
+
+type TranscriptEntry = {
+  speaker: TranscriptSpeaker;
+  text: string;
+  timestamp_offset_ms: number;
+};
 
 export default function CallPage() {
   const router = useRouter();
@@ -20,27 +27,187 @@ export default function CallPage() {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const callRunRef = useRef(0);
+  const callStartedAtRef = useRef<Date | null>(null);
+  const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
 
-  function stopCallResources() {
-    dataChannelRef.current?.close();
-    dataChannelRef.current = null;
+  function cleanupCallResources(resources?: {
+    dataChannel?: RTCDataChannel | null;
+    peerConnection?: RTCPeerConnection | null;
+    localStream?: MediaStream | null;
+    remoteAudio?: HTMLAudioElement | null;
+  }) {
+    const dataChannel = resources?.dataChannel ?? dataChannelRef.current;
+    const peerConnection =
+      resources?.peerConnection ?? peerConnectionRef.current;
+    const localStream = resources?.localStream ?? localStreamRef.current;
+    const remoteAudio = resources?.remoteAudio ?? remoteAudioRef.current;
 
-    peerConnectionRef.current?.getSenders().forEach((sender) => {
-      sender.track?.stop();
-    });
+    dataChannel?.close();
+    peerConnection?.close();
 
-    peerConnectionRef.current?.close();
-    peerConnectionRef.current = null;
-
-    localStreamRef.current?.getTracks().forEach((track) => {
+    localStream?.getTracks().forEach((track) => {
       track.stop();
     });
 
-    localStreamRef.current = null;
+    if (remoteAudio) {
+      remoteAudio.pause();
+      remoteAudio.srcObject = null;
+      remoteAudio.remove();
+    }
+
+    if (!resources || dataChannelRef.current === dataChannel) {
+      dataChannelRef.current = null;
+    }
+
+    if (!resources || peerConnectionRef.current === peerConnection) {
+      peerConnectionRef.current = null;
+    }
+
+    if (!resources || localStreamRef.current === localStream) {
+      localStreamRef.current = null;
+    }
+
+    if (!resources || remoteAudioRef.current === remoteAudio) {
+      remoteAudioRef.current = null;
+    }
+  }
+
+  const handleRealtimeEvent = useCallback((event: MessageEvent<string>) => {
+    function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
+      const trimmedText = text.trim();
+
+      if (!trimmedText) {
+        return;
+      }
+
+      transcriptBufferRef.current.push({
+        speaker,
+        text: trimmedText,
+        timestamp_offset_ms: callStartedAtRef.current
+          ? Date.now() - callStartedAtRef.current.getTime()
+          : 0,
+      });
+    }
+
+    let payload: unknown;
+
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      console.debug("Realtime event:", event.data);
+      return;
+    }
+
+    console.debug("Realtime event:", payload);
+
+    if (!payload || typeof payload !== "object") {
+      return;
+    }
+
+    const realtimeEvent = payload as { type?: string; transcript?: unknown };
+
+    if (
+      realtimeEvent.type ===
+        "conversation.item.input_audio_transcription.completed" &&
+      typeof realtimeEvent.transcript === "string"
+    ) {
+      bufferTranscriptLine("rep", realtimeEvent.transcript);
+    }
+
+    if (
+      realtimeEvent.type === "response.output_audio_transcript.done" &&
+      typeof realtimeEvent.transcript === "string"
+    ) {
+      bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+    }
+  }, []);
+
+  async function saveTranscriptBatch(sessionIdToSave: string) {
+    const entries = transcriptBufferRef.current;
+
+    if (!entries.length) {
+      console.warn("No transcript captured; skipping transcript save.");
+      return false;
+    }
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToSave}/transcripts/batch`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entries,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Transcript batch save failed with status ${response.status}: ${errorText}`
+      );
+    }
+
+    return true;
+  }
+
+  async function endBackendSession(
+    sessionIdToEnd: string,
+    endedAt: Date,
+    durationSeconds: number,
+    endReason: string
+  ) {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToEnd}/end`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ended_at: endedAt.toISOString(),
+          duration_seconds: durationSeconds,
+          end_reason: endReason,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Backend session end failed with status ${response.status}: ${errorText}`
+      );
+    }
   }
 
   useEffect(() => {
-    let cancelled = false;
+    const runId = callRunRef.current + 1;
+    callRunRef.current = runId;
+    const abortController = new AbortController();
+    callStartedAtRef.current = null;
+    transcriptBufferRef.current = [];
+
+    let stream: MediaStream | null = null;
+    let peerConnection: RTCPeerConnection | null = null;
+    let dataChannel: RTCDataChannel | null = null;
+    let remoteAudio: HTMLAudioElement | null = null;
+
+    function isCurrentCallRun() {
+      return !abortController.signal.aborted && callRunRef.current === runId;
+    }
+
+    function cleanupThisRun() {
+      cleanupCallResources({
+        dataChannel,
+        peerConnection,
+        localStream: stream,
+        remoteAudio,
+      });
+    }
 
     async function startCall() {
       try {
@@ -53,12 +220,12 @@ export default function CallPage() {
           return;
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
 
-        if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
+        if (!isCurrentCallRun()) {
+          cleanupThisRun();
           return;
         }
 
@@ -80,15 +247,21 @@ export default function CallPage() {
                 silence_duration_ms: 500,
               },
             }),
+            signal: abortController.signal,
           }
         );
 
         const data = await response.json();
 
+        if (!isCurrentCallRun()) {
+          cleanupThisRun();
+          return;
+        }
+
         if (!response.ok) {
           setError(data.detail || "Failed to create realtime session.");
           setStatus("failed");
-          stopCallResources();
+          cleanupThisRun();
           return;
         }
 
@@ -97,42 +270,39 @@ export default function CallPage() {
         if (!clientSecret) {
           setError("Realtime session did not return client_secret.");
           setStatus("failed");
-          stopCallResources();
-          return;
-        }
-
-        if (cancelled) {
-          stopCallResources();
+          cleanupThisRun();
           return;
         }
 
         setSessionId(data.session_id);
         setOpenaiSessionId(data.openai_session_id);
+        callStartedAtRef.current = new Date();
 
-        const peerConnection = new RTCPeerConnection();
+        peerConnection = new RTCPeerConnection();
         peerConnectionRef.current = peerConnection;
 
-        const remoteAudio = document.createElement("audio");
+        remoteAudio = document.createElement("audio");
         remoteAudio.autoplay = true;
+        remoteAudioRef.current = remoteAudio;
 
         peerConnection.ontrack = (event) => {
-          remoteAudio.srcObject = event.streams[0];
+          if (isCurrentCallRun() && remoteAudio) {
+            remoteAudio.srcObject = event.streams[0];
+          }
         };
 
         stream.getTracks().forEach((track) => {
-          peerConnection.addTrack(track, stream);
+          peerConnection?.addTrack(track, stream as MediaStream);
         });
 
-        const dataChannel = peerConnection.createDataChannel("oai-events");
+        dataChannel = peerConnection.createDataChannel("oai-events");
         dataChannelRef.current = dataChannel;
 
         dataChannel.onopen = () => {
           console.log("Realtime data channel opened");
         };
 
-        dataChannel.onmessage = (event) => {
-          console.log("Realtime event:", event.data);
-        };
+        dataChannel.onmessage = handleRealtimeEvent;
 
         dataChannel.onclose = () => {
           console.log("Realtime data channel closed");
@@ -140,6 +310,11 @@ export default function CallPage() {
 
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
+
+        if (!isCurrentCallRun()) {
+          cleanupThisRun();
+          return;
+        }
 
         const realtimeResponse = await fetch(
           "https://api.openai.com/v1/realtime/calls",
@@ -150,54 +325,95 @@ export default function CallPage() {
               "Content-Type": "application/sdp",
             },
             body: offer.sdp,
+            signal: abortController.signal,
           }
         );
+
+        if (!isCurrentCallRun()) {
+          cleanupThisRun();
+          return;
+        }
 
         if (!realtimeResponse.ok) {
           const errorText = await realtimeResponse.text();
           console.error("OpenAI WebRTC error:", errorText);
           setError("OpenAI WebRTC connection failed.");
           setStatus("failed");
-          stopCallResources();
+          cleanupThisRun();
           return;
         }
 
         const answerSdp = await realtimeResponse.text();
+
+        if (!isCurrentCallRun()) {
+          cleanupThisRun();
+          return;
+        }
 
         await peerConnection.setRemoteDescription({
           type: "answer",
           sdp: answerSdp,
         });
 
-        if (cancelled) {
-          stopCallResources();
+        if (isCurrentCallRun()) {
+          setStatus("active");
+        } else {
+          cleanupThisRun();
+        }
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          cleanupThisRun();
           return;
         }
 
-        setStatus("active");
-      } catch (error) {
         console.error(error);
         setError("Microphone or realtime connection failed.");
         setStatus("failed");
-        stopCallResources();
+        cleanupThisRun();
       }
     }
 
     startCall();
 
     return () => {
-      cancelled = true;
-      stopCallResources();
+      abortController.abort();
+      cleanupThisRun();
     };
-  }, [scenario]);
+  }, [handleRealtimeEvent, scenario]);
 
-  function handleEndCall() {
+  async function handleEndCall() {
     setStatus("ending");
-    stopCallResources();
+    setError("");
+    callRunRef.current += 1;
 
-    setTimeout(() => {
+    const sessionIdToEnd = sessionId;
+    const endedAt = new Date();
+    const durationSeconds = callStartedAtRef.current
+      ? Math.round((endedAt.getTime() - callStartedAtRef.current.getTime()) / 1000)
+      : 0;
+
+    cleanupCallResources();
+
+    if (!sessionIdToEnd) {
+      setError("Call ended locally, but no session ID was available to save.");
       setStatus("ended");
-    }, 700);
+      return;
+    }
+
+    try {
+      await saveTranscriptBatch(sessionIdToEnd);
+      await endBackendSession(sessionIdToEnd, endedAt, durationSeconds, "manual");
+    } catch (error) {
+      console.error(error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Call ended locally, but saving the transcript failed."
+      );
+    } finally {
+      callStartedAtRef.current = null;
+      setStatus("ended");
+    }
   }
 
   return (
@@ -260,16 +476,22 @@ export default function CallPage() {
           {status === "ending" && (
             <>
               <h2>Ending Call...</h2>
-              <p style={{ color: "#667085" }}>Closing the call connection.</p>
+              <p style={{ color: "#667085" }}>
+                Saving the transcript and closing the call connection.
+              </p>
             </>
           )}
 
           {status === "ended" && (
             <>
               <h2>Call Ended</h2>
-              <p style={{ color: "#667085" }}>
-                Your practice session has ended.
-              </p>
+              {error ? (
+                <p style={{ color: "#b54708" }}>{error}</p>
+              ) : (
+                <p style={{ color: "#667085" }}>
+                  Your practice session has ended.
+                </p>
+              )}
             </>
           )}
 

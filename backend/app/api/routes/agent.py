@@ -27,7 +27,6 @@ async def assemble_before_call_context(
     try:
         context = assemble_call_context(
             rep_profile=rep_profile,
-            business_profile=business_profile,
             scenario=request.scenario,
         )
     except UnsupportedScenarioError as exc:

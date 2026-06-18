@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.db.client import get_supabase
 from app.services.scorecards import (
-    analyze_transcript,
+    # analyze_transcript,
     create_scorecard_stub,
 )
 
@@ -28,14 +28,14 @@ async def create_scorecard(data: ScorecardStub):
     )
 
 
-@router.post("/{session_id}/analyze")
-async def generate_scorecard(session_id: str):
-    try:
-        return await analyze_transcript(session_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+# @router.post("/{session_id}/analyze")
+# async def generate_scorecard(session_id: str):
+#     try:
+#         return await analyze_transcript(session_id)
+#     except LookupError as exc:
+#         raise HTTPException(status_code=404, detail=str(exc)) from exc
+#     except ValueError as exc:
+#         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 # Retrievs the scorecard

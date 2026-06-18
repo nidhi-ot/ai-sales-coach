@@ -20,11 +20,11 @@ DEFAULT_METRIC_SCORES: dict[str, int | float] = {
 def assemble_call_context(
     *,
     rep_profile: dict[str, Any] | None,
-    business_profile: dict[str, Any] | None,
+    # business_profile: dict[str, Any] | None,
     scenario: ScenarioSlug,
 ) -> dict[str, Any]:
     profile = rep_profile or {}
-    business = business_profile or DEFAULT_BUSINESS_PROFILE
+    business = DEFAULT_BUSINESS_PROFILE
     scenario_config = get_scenario_config(scenario)
     framework = normalize_framework(cast(str | None, business.get("framework")))
     metric_scores = _coerce_metric_scores(profile.get("metric_scores"))
