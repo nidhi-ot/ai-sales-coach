@@ -3,40 +3,57 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const DUMMY_PASSWORD = "demo123";
-
 export default function LoginPage() {
   const router = useRouter();
 
-  const [repId, setRepId] = useState("");
-  const [businessId, setBusinessId] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
-  function handleSignIn() {
+  async function handleSignIn() {
     setError("");
 
-    if (!repId.trim()) {
-      setError("Please enter your Rep ID");
+    if (!identifier.trim()) {
+      setError("Please enter your email or phone number");
       return;
     }
 
-    if (!businessId.trim()) {
-      setError("Please enter your Business ID");
+    if (!password.trim()) {
+      setError("Please enter your password");
       return;
     }
 
-    if (password !== DUMMY_PASSWORD) {
-      setError("Invalid password");
-      return;
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.detail || "Login failed");
+        return;
+      }
+
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("rep_id", data.rep_id || data.user_id);
+      localStorage.setItem("business_id", data.business_id);
+      localStorage.setItem("full_name", data.full_name || "Sales Rep");
+      localStorage.setItem("remember_me", String(rememberMe));
+
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      setError("Could not connect to backend");
     }
-
-    localStorage.setItem("rep_id", repId.trim());
-    localStorage.setItem("business_id", businessId.trim());
-    localStorage.setItem("remember_me", String(rememberMe));
-
-    router.push("/dashboard");
   }
 
   return (
@@ -62,7 +79,6 @@ export default function LoginPage() {
           boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
         }}
       >
-        {/* LEFT SIDE */}
         <section
           style={{
             width: "450px",
@@ -72,15 +88,7 @@ export default function LoginPage() {
             justifyContent: "center",
           }}
         >
-          {/* LOGO */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "32px",
-            }}
-          >
+          <div style={{ marginBottom: "32px" }}>
             <img
               src="/logo.png"
               alt="AI Sales Coach"
@@ -90,52 +98,30 @@ export default function LoginPage() {
                 objectFit: "contain",
               }}
             />
-
           </div>
 
-          <h1
-            style={{
-              marginBottom: "8px",
-              color: "#101828",
-            }}
-          >
+          <h1 style={{ marginBottom: "8px", color: "#101828" }}>
             Welcome back!
           </h1>
 
-          <p
-            style={{
-              color: "#667085",
-              marginBottom: "28px",
-            }}
-          >
+          <p style={{ color: "#667085", marginBottom: "28px" }}>
             Sign in to continue your sales training journey.
           </p>
 
-          <label style={labelStyle}>Rep ID</label>
-
+          <label style={labelStyle}>Email or Phone</label>
           <input
-            value={repId}
-            onChange={(e) => setRepId(e.target.value)}
-            placeholder="Enter your rep_id"
-            style={inputStyle}
-          />
-
-          <label style={labelStyle}>Business ID</label>
-
-          <input
-            value={businessId}
-            onChange={(e) => setBusinessId(e.target.value)}
-            placeholder="Enter your business_id"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Enter email or phone number"
             style={inputStyle}
           />
 
           <label style={labelStyle}>Password</label>
-
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="demo123"
+            placeholder="Enter your password"
             style={inputStyle}
           />
 
@@ -147,13 +133,7 @@ export default function LoginPage() {
               fontSize: "14px",
             }}
           >
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -162,16 +142,7 @@ export default function LoginPage() {
               Remember me
             </label>
 
-            <button
-              type="button"
-              style={{
-                border: "none",
-                background: "transparent",
-                color: "#006b4f",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
+            <button type="button" style={linkButtonStyle}>
               Forgot password?
             </button>
           </div>
@@ -188,40 +159,19 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button
-            onClick={handleSignIn}
-            style={{
-              width: "100%",
-              padding: "15px",
-              borderRadius: "14px",
-              border: "none",
-              background: "#006b4f",
-              color: "white",
-              fontWeight: 700,
-              fontSize: "15px",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={handleSignIn} style={buttonStyle}>
             Sign In
           </button>
 
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "24px",
-              color: "#667085",
-            }}
-          >
+          <p style={{ textAlign: "center", marginTop: "24px", color: "#667085" }}>
             New here?{" "}
-            <span
-              style={{
-                color: "#006b4f",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
+            <button
+              type="button"
+              onClick={() => router.push("/register")}
+              style={linkButtonStyle}
             >
               Create an account
-            </span>
+            </button>
           </p>
 
           <p
@@ -237,13 +187,7 @@ export default function LoginPage() {
           </p>
         </section>
 
-        {/* RIGHT SIDE IMAGE */}
-        <div
-          style={{
-            flex: 1,
-            position: "relative",
-          }}
-        >
+        <div style={{ flex: 1, position: "relative" }}>
           <img
             src="/staircase.jpg"
             alt="Building"
@@ -266,22 +210,11 @@ export default function LoginPage() {
               backdropFilter: "blur(8px)",
             }}
           >
-            <h3
-              style={{
-                marginTop: 0,
-                marginBottom: "8px",
-              }}
-            >
+            <h3 style={{ marginTop: 0, marginBottom: "8px" }}>
               AI Sales Coach
             </h3>
 
-            <p
-              style={{
-                margin: 0,
-                color: "#667085",
-                lineHeight: "1.6",
-              }}
-            >
+            <p style={{ margin: 0, color: "#667085", lineHeight: "1.6" }}>
               Improve sales conversations through realistic practice scenarios,
               AI coaching, and performance feedback.
             </p>
@@ -307,4 +240,24 @@ const inputStyle = {
   marginBottom: "18px",
   fontSize: "15px",
   boxSizing: "border-box" as const,
+};
+
+const buttonStyle = {
+  width: "100%",
+  padding: "15px",
+  borderRadius: "14px",
+  border: "none",
+  background: "#006b4f",
+  color: "white",
+  fontWeight: 700,
+  fontSize: "15px",
+  cursor: "pointer",
+};
+
+const linkButtonStyle = {
+  border: "none",
+  background: "transparent",
+  color: "#006b4f",
+  cursor: "pointer",
+  fontWeight: 700,
 };

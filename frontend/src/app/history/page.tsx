@@ -10,6 +10,7 @@ type Session = {
   started_at: string;
   duration_seconds: number | null;
   status: string;
+  shared_with_manager?: boolean;
 };
 
 export default function HistoryPage() {
@@ -28,7 +29,14 @@ export default function HistoryPage() {
     fetch(`http://127.0.0.1:8000/api/v1/sessions/rep/${repId}`)
       .then((res) => res.json())
       .then((data) => {
-        setSessions(data);
+        const safeSessions = Array.isArray(data)
+          ? data.map((session) => ({
+              ...session,
+              shared_with_manager: session.shared_with_manager ?? false,
+            }))
+          : [];
+
+        setSessions(safeSessions);
         setLoading(false);
       })
       .catch((error) => {
@@ -37,11 +45,37 @@ export default function HistoryPage() {
       });
   }, []);
 
+  async function updateSharing(sessionId: string, shared: boolean) {
+    setSessions((current) =>
+      current.map((session) =>
+        session.id === sessionId
+          ? { ...session, shared_with_manager: shared }
+          : session
+      )
+    );
+
+    try {
+      await fetch(
+        `http://127.0.0.1:8000/api/v1/scorecards/session/${sessionId}/share`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            shared_with_manager: shared,
+          }),
+        }
+      );
+    } catch (error) {
+      console.error("Failed to update sharing:", error);
+    }
+  }
+
   return (
     <AppShell>
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ marginBottom: "8px" }}>Session History</h1>
-
         <p style={{ color: "#667085" }}>
           Review your previous AI Sales Coach practice sessions.
         </p>
@@ -58,15 +92,13 @@ export default function HistoryPage() {
         {loading ? (
           <p>Loading sessions...</p>
         ) : sessions.length === 0 ? (
-          <p style={{ color: "#667085" }}>
-            No practice sessions found yet.
-          </p>
+          <p style={{ color: "#667085" }}>No practice sessions found yet.</p>
         ) : (
           <>
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "2fr 2fr 1fr 1fr",
+                gridTemplateColumns: "1.5fr 1.5fr 1fr 1.3fr 1fr",
                 fontWeight: 700,
                 paddingBottom: "12px",
                 borderBottom: "1px solid #e5e7eb",
@@ -76,6 +108,7 @@ export default function HistoryPage() {
               <div>Scenario</div>
               <div>Date</div>
               <div>Status</div>
+              <div>Share</div>
               <div>Action</div>
             </div>
 
@@ -84,7 +117,7 @@ export default function HistoryPage() {
                 key={session.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "2fr 2fr 1fr 1fr",
+                  gridTemplateColumns: "1.5fr 1.5fr 1fr 1.3fr 1fr",
                   alignItems: "center",
                   padding: "16px 0",
                   borderBottom: "1px solid #f2f4f7",
@@ -106,13 +139,9 @@ export default function HistoryPage() {
                       padding: "6px 10px",
                       borderRadius: "999px",
                       background:
-                        session.status === "completed"
-                          ? "#e7f4ef"
-                          : "#fff4e5",
+                        session.status === "completed" ? "#e7f4ef" : "#fff4e5",
                       color:
-                        session.status === "completed"
-                          ? "#027a48"
-                          : "#b54708",
+                        session.status === "completed" ? "#027a48" : "#b54708",
                       fontSize: "13px",
                       fontWeight: 600,
                     }}
@@ -121,9 +150,30 @@ export default function HistoryPage() {
                   </span>
                 </div>
 
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#344054",
+                    fontSize: "14px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(session.shared_with_manager)}
+                    onChange={(e) =>
+                      updateSharing(session.id, e.target.checked)
+                    }
+                  />
+                  Manager
+                </label>
+
                 <div>
                   <button
-                    onClick={() => router.push("/scorecards")}
+                    onClick={() =>
+                      router.push(`/scorecards?session_id=${session.id}`)
+                    }
                     style={{
                       padding: "8px 14px",
                       borderRadius: "10px",
@@ -134,7 +184,7 @@ export default function HistoryPage() {
                       fontWeight: 600,
                     }}
                   >
-                    View Scorecard
+                    View
                   </button>
                 </div>
               </div>

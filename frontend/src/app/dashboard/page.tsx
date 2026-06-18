@@ -6,39 +6,41 @@ import AppShell from "../../components/AppShell";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [repId, setRepId] = useState("rep");
+
+  const [fullName, setFullName] = useState("Sales Rep");
 
   useEffect(() => {
-    const storedRepId = localStorage.getItem("rep_id");
-    if (storedRepId) {
-      setRepId(storedRepId);
-    }
-  }, []);
+    const storedName = localStorage.getItem("full_name");
+
+    if (storedName && storedName !== "undefined") {
+    setFullName(storedName);
+  }
+}, []);
 
   return (
     <AppShell>
       <div style={{ marginBottom: "24px" }}>
-  <h1
-    style={{
-      margin: 0,
-      fontSize: "32px",
-      fontWeight: 700,
-      color: "#101828",
-    }}
-  >
-    Good Morning, {repId} 👋
-  </h1>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "32px",
+            fontWeight: 700,
+            color: "#101828",
+          }}
+        >
+          Good Morning, {fullName} 👋
+        </h1>
 
-  <p
-    style={{
-      marginTop: "8px",
-      color: "#667085",
-      fontSize: "16px",
-    }}
-  >
-    Ready to level up your sales game today?
-  </p>
-</div>
+        <p
+          style={{
+            marginTop: "8px",
+            color: "#667085",
+            fontSize: "16px",
+          }}
+        >
+          Ready to level up your sales game today?
+        </p>
+      </div>
 
       <div
         style={{
@@ -82,8 +84,18 @@ function Card({ title, value }: { title: string; value: string }) {
         boxShadow: "0 8px 20px rgba(0,0,0,0.05)",
       }}
     >
-      <p style={{ color: "#667085" }}>{title}</p>
-      <h2>{value}</h2>
+      <p style={{ color: "#667085", marginBottom: "8px" }}>
+        {title}
+      </p>
+
+      <h2
+        style={{
+          margin: 0,
+          color: "#101828",
+        }}
+      >
+        {value}
+      </h2>
     </div>
   );
 }
