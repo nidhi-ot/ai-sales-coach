@@ -14,6 +14,7 @@ from app.db.client import (
 from app.db.client import create_session as create_db_session
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
+from app.services.scenarios import UnsupportedScenarioError
 
 router = APIRouter()
 
@@ -27,6 +28,7 @@ class SessionConfig(BaseModel):
     scenario: ScenarioSlug
     rep_id: UUID
     business_id: UUID
+    # Deprecated spike field. Live calls currently use semantic_vad eagerness below.
     vad: VadConfig | None = None
 
 
@@ -55,20 +57,21 @@ class SupabaseStatusResponse(BaseModel):
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
 
-    # Profile from database is not used now.
+    # Load the rep and business context used to build the realtime persona instructions.
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
     business_profile = await get_business_profile(str(config.business_id))
-
-    # Print profiles for debugging
-    print(f" Rep Profile (latest) : {rep_profile_latest}")
-    print(f" Business Profile: {business_profile}")
+    if business_profile is None:
+        raise HTTPException(status_code=404, detail="Business profile not found")
 
     # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
-    context = assemble_call_context(
-        rep_profile=rep_profile_latest,
-        business_profile=business_profile,
-        scenario=config.scenario,
-    )
+    try:
+        context = assemble_call_context(
+            rep_profile=rep_profile_latest,
+            business_profile=business_profile,
+            scenario=config.scenario,
+        )
+    except UnsupportedScenarioError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     scenario_config = context["scenario"]
     print(f"\n📋 Scenario Selected: {scenario_config.title}")
@@ -76,7 +79,6 @@ async def create_realtime_session(config: SessionConfig):
 
     instructions = context["system_instruction"]
     openai_api_key = settings.openai_api_key
-    print(f"📋 System Instructions: \n {instructions}\n")
 
     if not openai_api_key:
         raise HTTPException(
@@ -86,13 +88,20 @@ async def create_realtime_session(config: SessionConfig):
 
     profile_version = rep_profile_latest["version"] if rep_profile_latest else 0
 
-    db_session = await create_db_session(
-        rep_id=str(config.rep_id),
-        business_id=str(config.business_id),
-        scenario=config.scenario.value,
-        profile_version=profile_version,
-        metadata={"system_instruction": instructions},
-    )
+    # Create the app session before opening the OpenAI realtime connection.
+    try:
+        db_session = await create_db_session(
+            rep_id=str(config.rep_id),
+            business_id=str(config.business_id),
+            scenario=config.scenario.value,
+            profile_version=profile_version,
+            metadata={"system_instruction": instructions},
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create Supabase session",
+        ) from exc
 
     if not db_session:
         raise HTTPException(
@@ -104,12 +113,7 @@ async def create_realtime_session(config: SessionConfig):
     # ID. The database ID is used for transcripts and later session updates.
     supabase_session_id = db_session["id"]
 
-    vad_threshold = config.vad.threshold if config.vad else 0.5
-    vad_silence_duration_ms = config.vad.silence_duration_ms if config.vad else 500
-
-    print(
-        f"🎙️ VAD config: threshold={vad_threshold}, silence_duration_ms={vad_silence_duration_ms}"
-    )
+    print("🎙️ VAD config: semantic_vad, eagerness=medium")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -146,7 +150,7 @@ async def create_realtime_session(config: SessionConfig):
             if not response.is_success:
                 raise HTTPException(
                     status_code=502,
-                    detail=f"OpenAI session creation failed: {response.text}",
+                    detail="OpenAI session creation failed",
                 )
 
             data = response.json()
@@ -169,9 +173,9 @@ async def create_realtime_session(config: SessionConfig):
 
     except httpx.HTTPError as exc:
         raise HTTPException(
-            status_code=500,
-            detail=f"OpenAI API error: {str(exc)}",
-        )
+            status_code=502,
+            detail="OpenAI API request failed",
+        ) from exc
 
 
 @router.get("/status")
