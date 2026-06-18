@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -20,8 +22,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+def first_row(data: Any) -> dict[str, Any] | None:
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        return cast(dict[str, Any], data[0])
+    return None
+
+
 @router.post("/register")
-async def register(data: RegisterRequest):
+async def register(data: RegisterRequest) -> dict[str, Any]:
     supabase = get_supabase()
 
     auth_result = supabase.auth.admin.create_user(
@@ -49,6 +57,8 @@ async def register(data: RegisterRequest):
         .execute()
     )
 
+    account = first_row(account_result.data)
+
     return {
         "message": "Registration successful",
         "user_id": auth_result.user.id,
@@ -57,12 +67,12 @@ async def register(data: RegisterRequest):
         "full_name": data.full_name,
         "phone_number": data.phone_number,
         "role": "rep",
-        "account": account_result.data[0] if account_result.data else None,
+        "account": account,
     }
 
 
 @router.post("/login")
-async def login(data: LoginRequest):
+async def login(data: LoginRequest) -> dict[str, Any]:
     supabase = get_supabase()
 
     identifier = data.identifier.strip()
@@ -73,7 +83,7 @@ async def login(data: LoginRequest):
     email = identifier
 
     if "@" not in identifier:
-        account_result = (
+        phone_result = (
             supabase.table("salesperson_accounts")
             .select("id")
             .eq("phone_number", identifier)
@@ -81,10 +91,13 @@ async def login(data: LoginRequest):
             .execute()
         )
 
-        if not account_result.data:
+        phone_account = first_row(phone_result.data)
+
+        if not phone_account:
             raise HTTPException(status_code=404, detail="Phone number not found")
 
-        user_id = account_result.data[0]["id"]
+        user_id = str(phone_account["id"])
+
         user_result = supabase.auth.admin.get_user_by_id(user_id)
 
         if not user_result.user or not user_result.user.email:
@@ -99,8 +112,11 @@ async def login(data: LoginRequest):
                 "password": data.password,
             }
         )
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid login credentials")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid login credentials",
+        ) from exc
 
     if not auth_result.user:
         raise HTTPException(status_code=401, detail="Invalid login credentials")
@@ -113,10 +129,10 @@ async def login(data: LoginRequest):
         .execute()
     )
 
-    if not account_result.data:
-        raise HTTPException(status_code=404, detail="Salesperson account not found")
+    account = first_row(account_result.data)
 
-    account = account_result.data[0]
+    if not account:
+        raise HTTPException(status_code=404, detail="Salesperson account not found")
 
     return {
         "message": "Login successful",
