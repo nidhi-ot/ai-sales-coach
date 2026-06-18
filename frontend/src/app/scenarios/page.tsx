@@ -37,55 +37,11 @@ export default function ScenariosPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function startSession() {
-    setError("");
-    setLoading(true);
-
-    const repId = localStorage.getItem("rep_id");
-    const businessId = localStorage.getItem("business_id");
-
-    if (!repId || !businessId) {
-      setError("Missing rep or business information. Please login again.");
-      setLoading(false);
-      return;
-    }
-
-    const systemInstruction = `
-You are an AI buyer in an AI Sales Coach training session.
-Scenario: ${selectedScenario}
-Act realistically and challenge the salesperson with objections.
-`;
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/sessions/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          rep_id: repId,
-          business_id: businessId,
-          scenario: selectedScenario,
-          system_instruction: systemInstruction,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || "Could not start session.");
-        setLoading(false);
-        return;
-      }
-
-      router.push(`/call?scenario=${selectedScenario}&session_id=${data.id}`);
-    } catch (error) {
-      console.error(error);
-      setError("Could not connect to backend.");
-      setLoading(false);
-    }
-  }
-
+function startSession() {
+  setError("");
+  setLoading(true);
+  router.push(`/call?scenario=${selectedScenario}`);
+}
   return (
     <AppShell>
       <section

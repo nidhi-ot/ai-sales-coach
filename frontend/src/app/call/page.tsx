@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
@@ -11,31 +11,160 @@ export default function CallPage() {
   const searchParams = useSearchParams();
 
   const scenario = searchParams.get("scenario") || "cold_call";
-  const sessionId = searchParams.get("session_id");
 
   const [status, setStatus] = useState<CallStatus>("connecting");
   const [error, setError] = useState("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [openaiSessionId, setOpenaiSessionId] = useState<string | null>(null);
+
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const dataChannelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
     async function startCall() {
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const repId = localStorage.getItem("rep_id");
+        const businessId = localStorage.getItem("business_id");
 
-        // This is the placeholder for realtime backend connection.
-        // Once Fortuna confirms the bootstrap endpoint, connect it here.
+        if (!repId || !businessId) {
+          setError("Missing rep or business information. Please login again.");
+          setStatus("failed");
+          return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        localStreamRef.current = stream;
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/v1/realtime/session",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              scenario,
+              rep_id: repId,
+              business_id: businessId,
+              vad: {
+                threshold: 0.5,
+                silence_duration_ms: 500,
+              },
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.detail || "Failed to create realtime session.");
+          setStatus("failed");
+          return;
+        }
+
+        const clientSecret = data.client_secret;
+
+        if (!clientSecret) {
+          setError("Realtime session did not return client_secret.");
+          setStatus("failed");
+          return;
+        }
+
+        setSessionId(data.session_id);
+        setOpenaiSessionId(data.openai_session_id);
+
+        const peerConnection = new RTCPeerConnection();
+        peerConnectionRef.current = peerConnection;
+
+        const remoteAudio = document.createElement("audio");
+        remoteAudio.autoplay = true;
+
+        peerConnection.ontrack = (event) => {
+          remoteAudio.srcObject = event.streams[0];
+        };
+
+        stream.getTracks().forEach((track) => {
+          peerConnection.addTrack(track, stream);
+        });
+
+        const dataChannel = peerConnection.createDataChannel("oai-events");
+        dataChannelRef.current = dataChannel;
+
+        dataChannel.onopen = () => {
+          console.log("Realtime data channel opened");
+        };
+
+        dataChannel.onmessage = (event) => {
+          console.log("Realtime event:", event.data);
+        };
+
+        dataChannel.onclose = () => {
+          console.log("Realtime data channel closed");
+        };
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        const realtimeResponse = await fetch(
+          "https://api.openai.com/v1/realtime/calls",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${clientSecret}`,
+              "Content-Type": "application/sdp",
+            },
+            body: offer.sdp,
+          }
+        );
+
+        if (!realtimeResponse.ok) {
+          const errorText = await realtimeResponse.text();
+          console.error("OpenAI WebRTC error:", errorText);
+          setError("OpenAI WebRTC connection failed.");
+          setStatus("failed");
+          return;
+        }
+
+        const answerSdp = await realtimeResponse.text();
+
+        await peerConnection.setRemoteDescription({
+          type: "answer",
+          sdp: answerSdp,
+        });
+
         setStatus("active");
       } catch (error) {
         console.error(error);
-        setError("Microphone access failed. Please allow microphone permission.");
+        setError("Microphone or realtime connection failed.");
         setStatus("failed");
       }
     }
 
     startCall();
-  }, []);
+
+    return () => {
+      dataChannelRef.current?.close();
+      peerConnectionRef.current?.close();
+
+      localStreamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+    };
+  }, [scenario]);
 
   function handleEndCall() {
     setStatus("ending");
+
+    dataChannelRef.current?.close();
+    peerConnectionRef.current?.close();
+
+    localStreamRef.current?.getTracks().forEach((track) => {
+      track.stop();
+    });
 
     setTimeout(() => {
       setStatus("ended");
@@ -65,6 +194,12 @@ export default function CallPage() {
           </p>
         )}
 
+        {openaiSessionId && (
+          <p style={{ color: "#98a2b3", fontSize: "13px" }}>
+            OpenAI Session ID: {openaiSessionId}
+          </p>
+        )}
+
         <div
           style={{
             marginTop: "28px",
@@ -79,7 +214,7 @@ export default function CallPage() {
             <>
               <h2>Connecting...</h2>
               <p style={{ color: "#667085" }}>
-                Requesting microphone access and preparing the call.
+                Requesting microphone access and connecting to realtime AI.
               </p>
             </>
           )}
@@ -96,7 +231,7 @@ export default function CallPage() {
           {status === "ending" && (
             <>
               <h2>Ending Call...</h2>
-              <p style={{ color: "#667085" }}>Saving your session.</p>
+              <p style={{ color: "#667085" }}>Closing the call connection.</p>
             </>
           )}
 
