@@ -3,8 +3,8 @@ from typing import Any, cast
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.db.client import get_supabase, get_supabase_auth
 from app.config import settings
+from app.db.client import get_supabase, get_supabase_auth
 
 router = APIRouter()
 

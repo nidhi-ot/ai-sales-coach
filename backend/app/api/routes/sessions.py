@@ -4,10 +4,10 @@ from typing import Any, List, Literal, cast
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scorecards import analyze_transcript
-from app.config import settings
 
 router = APIRouter()
 
