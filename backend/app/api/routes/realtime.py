@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from app.config import settings
 from app.db.client import (
     check_supabase_connection,
-    get_business_profile,
     get_latest_profile,
 )
 from app.db.client import create_session as create_db_session
@@ -58,20 +57,17 @@ class SupabaseStatusResponse(BaseModel):
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
-
     # Load the rep and business context used to build the realtime persona instructions.
+    # business_profile = await get_business_profile(str(config.business_id))
+    # print("BUSINESS ID RECEIVED:", str(config.business_id))
+    # print("BUSINESS PROFILE RESULT:", business_profile)
+
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
-    business_profile = await get_business_profile(str(config.business_id))
-    print("BUSINESS ID RECEIVED:", str(config.business_id))
-    print("BUSINESS PROFILE RESULT:", business_profile)
-    if business_profile is None:
-        raise HTTPException(status_code=404, detail="Business profile not found")
 
     # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
     try:
         context = assemble_call_context(
             rep_profile=rep_profile_latest,
-            business_profile=business_profile,
             scenario=config.scenario,
         )
     except UnsupportedScenarioError as exc:

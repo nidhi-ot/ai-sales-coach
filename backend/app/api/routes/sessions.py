@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
+from app.services.scorecards import analyze_transcript
+from app.config import settings
 
 router = APIRouter()
 
@@ -88,7 +90,7 @@ async def create_session(data: SessionStart):
         .insert(
             {
                 "rep_id": data.rep_id,
-                "business_id": data.business_id,
+                "business_id": settings.business_id,
                 "scenario": data.scenario.value,
                 "profile_version": profile_version,
                 "status": "active",
@@ -108,6 +110,24 @@ async def create_session(data: SessionStart):
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark a practice session as completed."""
+    try:
+        score_card = await analyze_transcript(session_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to analyze transcript for scorecard",
+        ) from exc
+
+    if not score_card:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to analyze transcript for scorecard",
+        )
+
     supabase = get_supabase()
 
     result = (
@@ -130,7 +150,11 @@ async def end_session(session_id: str, data: SessionEnd):
     if not session_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    return session_rows[0]
+    return {
+        "session": session_rows[0],
+        "score_card_status": "generated",
+        "score_card": score_card,
+    }
 
 
 @router.post("/{session_id}/transcripts")

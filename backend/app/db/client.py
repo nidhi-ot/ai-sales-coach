@@ -5,6 +5,7 @@ from supabase import Client, create_client
 from app.config import settings
 
 _supabase: Client | None = None
+_supabase_auth: Client | None = None
 
 
 def get_supabase() -> Client:
@@ -20,6 +21,22 @@ def get_supabase() -> Client:
         )
 
     return _supabase
+
+
+def get_supabase_auth() -> Client:
+    """Create a browser-like auth client so login does not mutate the service client."""
+    global _supabase_auth
+
+    if _supabase_auth is None:
+        if not settings.supabase_url or not settings.supabase_anon_key:
+            raise RuntimeError("Supabase URL and anon key must be configured")
+
+        _supabase_auth = create_client(
+            settings.supabase_url,
+            settings.supabase_anon_key,
+        )
+
+    return _supabase_auth
 
 
 def _first(data: list[Any] | None) -> dict[str, Any] | None:

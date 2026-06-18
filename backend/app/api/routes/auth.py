@@ -3,11 +3,12 @@ from typing import Any, cast
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.db.client import get_supabase
+from app.db.client import get_supabase, get_supabase_auth
+from app.config import settings
 
 router = APIRouter()
 
-OPTIMAL_BUSINESS_ID = "8f42fcd8-b75c-47c1-9d15-0b57fc193b7d"
+OPTIMAL_BUSINESS_ID = settings.business_id
 
 
 class RegisterRequest(BaseModel):
@@ -74,6 +75,7 @@ async def register(data: RegisterRequest) -> dict[str, Any]:
 @router.post("/login")
 async def login(data: LoginRequest) -> dict[str, Any]:
     supabase = get_supabase()
+    auth_supabase = get_supabase_auth()
 
     identifier = data.identifier.strip()
 
@@ -106,7 +108,7 @@ async def login(data: LoginRequest) -> dict[str, Any]:
         email = user_result.user.email
 
     try:
-        auth_result = supabase.auth.sign_in_with_password(
+        auth_result = auth_supabase.auth.sign_in_with_password(
             {
                 "email": email,
                 "password": data.password,
