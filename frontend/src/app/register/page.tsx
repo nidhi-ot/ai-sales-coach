@@ -66,12 +66,7 @@ export default function RegisterPage() {
         return;
       }
 
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("rep_id", data.rep_id || data.user_id);
-      localStorage.setItem("business_id", data.business_id);
-      localStorage.setItem("full_name", data.full_name);
-
-      router.push("/dashboard");
+      router.push("/");
     } catch (error) {
       console.error(error);
       setError("Could not connect to backend");
@@ -81,25 +76,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#f4f7f5",
-        display: "grid",
-        placeItems: "center",
-        padding: "32px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <section
-        style={{
-          width: "460px",
-          background: "white",
-          padding: "40px",
-          borderRadius: "24px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-        }}
-      >
+    <main style={pageStyle}>
+      <section style={cardStyle}>
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <img
             src="/logo.png"
@@ -111,7 +89,7 @@ export default function RegisterPage() {
             }}
           />
 
-          <h1 style={{ marginBottom: "8px" }}>Create Account</h1>
+          <h1>Create Account</h1>
 
           <p style={{ color: "#667085" }}>
             Join AI Sales Coach and start your practice journey.
@@ -161,42 +139,15 @@ export default function RegisterPage() {
           style={inputStyle}
         />
 
-        {error && (
-          <p style={{ color: "#b42318", fontSize: "14px" }}>{error}</p>
-        )}
+        {error && <p style={{ color: "#b42318", fontSize: "14px" }}>{error}</p>}
 
-        <button
-          onClick={handleCreateAccount}
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "15px",
-            borderRadius: "14px",
-            border: "none",
-            background: "#006b4f",
-            color: "white",
-            fontWeight: 700,
-            fontSize: "15px",
-            cursor: "pointer",
-            marginTop: "8px",
-          }}
-        >
+        <button onClick={handleCreateAccount} disabled={loading} style={buttonStyle}>
           {loading ? "Creating..." : "Create Account"}
         </button>
 
         <p style={{ textAlign: "center", marginTop: "22px", color: "#667085" }}>
           Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "#006b4f",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
+          <button type="button" onClick={() => router.push("/")} style={linkButtonStyle}>
             Sign in
           </button>
         </p>
@@ -204,6 +155,23 @@ export default function RegisterPage() {
     </main>
   );
 }
+
+const pageStyle = {
+  minHeight: "100vh",
+  background: "#f4f7f5",
+  display: "grid",
+  placeItems: "center",
+  padding: "32px",
+  fontFamily: "Arial, sans-serif",
+};
+
+const cardStyle = {
+  width: "460px",
+  background: "white",
+  padding: "40px",
+  borderRadius: "24px",
+  boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+};
 
 const labelStyle = {
   display: "block",
@@ -220,4 +188,25 @@ const inputStyle = {
   marginBottom: "16px",
   fontSize: "15px",
   boxSizing: "border-box" as const,
+};
+
+const buttonStyle = {
+  width: "100%",
+  padding: "15px",
+  borderRadius: "14px",
+  border: "none",
+  background: "#006b4f",
+  color: "white",
+  fontWeight: 700,
+  fontSize: "15px",
+  cursor: "pointer",
+  marginTop: "8px",
+};
+
+const linkButtonStyle = {
+  border: "none",
+  background: "transparent",
+  color: "#006b4f",
+  fontWeight: 700,
+  cursor: "pointer",
 };

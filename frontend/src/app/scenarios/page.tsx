@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
 const scenarios = [
@@ -17,7 +18,7 @@ const scenarios = [
     description: "Follow up with a prospect already interested in AI Sales Coach.",
   },
   {
-    id: "direktförsäljning",
+    id: "direktforsaljning",
     title: "Direktförsäljning",
     icon: "🛒",
     description: "Close AI Sales Coach directly on the call.",
@@ -31,33 +32,59 @@ const scenarios = [
 ];
 
 export default function ScenariosPage() {
+  const router = useRouter();
   const [selectedScenario, setSelectedScenario] = useState("cold_call");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function startSession() {
-  const systemInstruction = `
+    setError("");
+    setLoading(true);
+
+    const repId = localStorage.getItem("rep_id");
+    const businessId = localStorage.getItem("business_id");
+
+    if (!repId || !businessId) {
+      setError("Missing rep or business information. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    const systemInstruction = `
 You are an AI buyer in an AI Sales Coach training session.
 Scenario: ${selectedScenario}
 Act realistically and challenge the salesperson with objections.
 `;
 
-  const response = await fetch("http://127.0.0.1:8000/api/v1/sessions/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-        rep_id: localStorage.getItem("rep_id"),
-        business_id: localStorage.getItem("business_id"),
-        scenario: selectedScenario,
-        system_instruction: systemInstruction,
-    }),
-  });
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/sessions/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rep_id: repId,
+          business_id: businessId,
+          scenario: selectedScenario,
+          system_instruction: systemInstruction,
+        }),
+      });
 
-  const data = await response.json();
+      const data = await response.json();
 
-  console.log("Session created:", data);
-  alert("Practice session started!");
-}
+      if (!response.ok) {
+        setError(data.detail || "Could not start session.");
+        setLoading(false);
+        return;
+      }
+
+      router.push(`/call?scenario=${selectedScenario}&session_id=${data.id}`);
+    } catch (error) {
+      console.error(error);
+      setError("Could not connect to backend.");
+      setLoading(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -71,6 +98,7 @@ Act realistically and challenge the salesperson with objections.
         }}
       >
         <h1>Choose Scenario</h1>
+
         <p style={{ color: "#667085" }}>
           Select the AI Sales Coach conversation you want to practice.
         </p>
@@ -117,22 +145,27 @@ Act realistically and challenge the salesperson with objections.
           ))}
         </div>
 
+        {error && (
+          <p style={{ color: "#b42318", marginTop: "18px" }}>{error}</p>
+        )}
+
         <button
-  onClick={startSession}
-  style={{
-    width: "100%",
-    marginTop: "24px",
-    padding: "15px",
-    borderRadius: "14px",
-    border: "none",
-    background: "#006b4f",
-    color: "white",
-    fontWeight: 700,
-    cursor: "pointer",
-  }}
->
-  Start Practice Call
-</button>
+          onClick={startSession}
+          disabled={loading}
+          style={{
+            width: "100%",
+            marginTop: "24px",
+            padding: "15px",
+            borderRadius: "14px",
+            border: "none",
+            background: "#006b4f",
+            color: "white",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          {loading ? "Preparing Call..." : "Start Practice Call"}
+        </button>
       </section>
     </AppShell>
   );
