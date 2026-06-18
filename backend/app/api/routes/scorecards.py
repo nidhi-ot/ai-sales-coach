@@ -15,8 +15,10 @@ class ScorecardStub(BaseModel):
     rep_id: str
     business_id: str
 
+
 class ShareRequest(BaseModel):
     shared_with_manager: bool
+
 
 # Creates an empty scorecard entry
 @router.post("/")
@@ -48,6 +50,7 @@ async def get_scorecard(session_id: str):
 
     return result.data[0]
 
+
 @router.patch("/session/{session_id}/share")
 async def update_share_setting(
     session_id: str,
@@ -55,13 +58,9 @@ async def update_share_setting(
 ):
     supabase = get_supabase()
 
-    result = (
+    (
         supabase.table("scorecards")
-        .update(
-            {
-                "shared_with_manager": data.shared_with_manager,
-            }
-        )
+        .update({"shared_with_manager": data.shared_with_manager})
         .eq("session_id", session_id)
         .execute()
     )
