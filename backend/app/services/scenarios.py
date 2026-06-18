@@ -17,6 +17,10 @@ class ScenarioConfig:
     difficulty_notes: str
 
 
+class UnsupportedScenarioError(ValueError):
+    """Raised when a scenario is valid in the API enum but has no persona config."""
+
+
 DEFAULT_BUSINESS_PROFILE: dict[str, Any] = {
     "name": "AI Sales Coach",
     "framework": "BANT",
@@ -226,7 +230,20 @@ FRAMEWORK_DIMENSIONS: dict[str, tuple[str, ...]] = {
 
 # Get the scenario configuration based on the scenario slug.
 def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
-    return SCENARIOS[ScenarioSlug(scenario)]
+    try:
+        scenario_slug = ScenarioSlug(scenario)
+    except ValueError as exc:
+        raise UnsupportedScenarioError(f"Unsupported scenario: {scenario}") from exc
+
+    scenario_config = SCENARIOS.get(scenario_slug)
+    if scenario_config is None:
+        supported = ", ".join(slug.value for slug in SCENARIOS)
+        raise UnsupportedScenarioError(
+            f"Scenario '{scenario_slug.value}' is not configured. "
+            f"Supported scenarios: {supported}"
+        )
+
+    return scenario_config
 
 
 def normalize_framework(framework: str | None) -> str:
