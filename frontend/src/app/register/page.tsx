@@ -66,7 +66,12 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/");
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("rep_id", data.rep_id || data.user_id);
+      localStorage.setItem("business_id", data.business_id);
+      localStorage.setItem("full_name", data.full_name);
+
+      router.push("/dashboard");
     } catch (error) {
       console.error(error);
       setError("Could not connect to backend");
@@ -89,7 +94,7 @@ export default function RegisterPage() {
             }}
           />
 
-          <h1>Create Account</h1>
+          <h1 style={{ marginBottom: "8px" }}>Create Account</h1>
 
           <p style={{ color: "#667085" }}>
             Join AI Sales Coach and start your practice journey.
