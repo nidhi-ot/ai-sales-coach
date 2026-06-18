@@ -2,9 +2,22 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
+
+  function handleLogout() {
+    localStorage.removeItem("rep_id");
+    localStorage.removeItem("business_id");
+    localStorage.removeItem("full_name");
+    localStorage.removeItem("role");
+
+    router.push("/");;
+  }
 
   const navItems = [
     { label: "Dashboard", path: "/dashboard", icon: "🏠" },
@@ -31,6 +44,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           background: "#ffffff",
           borderRight: "1px solid #e5e7eb",
           padding: "28px 20px",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <div
@@ -66,7 +81,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </h2>
         </div>
 
-        <nav style={{ display: "grid", gap: "10px" }}>
+        <nav
+          style={{
+            display: "grid",
+            gap: "10px",
+            flex: 1,
+          }}
+        >
           {navItems.map((item) => {
             const active = pathname === item.path;
 
@@ -85,8 +106,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   textAlign: "left",
                   fontSize: "15px",
                   fontWeight: active ? 700 : 500,
-                   background: active ? "#e7f4ef" : "transparent",
-                   color: active ? "#006b4f" : "#344054",
+                  background: active ? "#e7f4ef" : "transparent",
+                  color: active ? "#006b4f" : "#344054",
                 }}
               >
                 <span style={{ fontSize: "18px" }}>{item.icon}</span>
@@ -95,9 +116,32 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <button
+          onClick={handleLogout}
+          style={{
+            marginTop: "20px",
+            padding: "14px",
+            borderRadius: "12px",
+            border: "1px solid #d0d5dd",
+            background: "#ffffff",
+            color: "#b42318",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          🚪 Logout
+        </button>
       </aside>
 
-      <section style={{ flex: 1, padding: "36px" }}>{children}</section>
+      <section
+        style={{
+          flex: 1,
+          padding: "36px",
+        }}
+      >
+        {children}
+      </section>
     </main>
   );
 }
