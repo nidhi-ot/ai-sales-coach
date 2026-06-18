@@ -62,6 +62,8 @@ async def create_realtime_session(config: SessionConfig):
     # Load the rep and business context used to build the realtime persona instructions.
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
     business_profile = await get_business_profile(str(config.business_id))
+    print("BUSINESS ID RECEIVED:", str(config.business_id))
+    print("BUSINESS PROFILE RESULT:", business_profile)
     if business_profile is None:
         raise HTTPException(status_code=404, detail="Business profile not found")
 

@@ -21,7 +21,27 @@ export default function CallPage() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
 
+  function stopCallResources() {
+    dataChannelRef.current?.close();
+    dataChannelRef.current = null;
+
+    peerConnectionRef.current?.getSenders().forEach((sender) => {
+      sender.track?.stop();
+    });
+
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+
+    localStreamRef.current?.getTracks().forEach((track) => {
+      track.stop();
+    });
+
+    localStreamRef.current = null;
+  }
+
   useEffect(() => {
+    let cancelled = false;
+
     async function startCall() {
       try {
         const repId = localStorage.getItem("rep_id");
@@ -36,6 +56,11 @@ export default function CallPage() {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
 
         localStreamRef.current = stream;
 
@@ -63,6 +88,7 @@ export default function CallPage() {
         if (!response.ok) {
           setError(data.detail || "Failed to create realtime session.");
           setStatus("failed");
+          stopCallResources();
           return;
         }
 
@@ -71,6 +97,12 @@ export default function CallPage() {
         if (!clientSecret) {
           setError("Realtime session did not return client_secret.");
           setStatus("failed");
+          stopCallResources();
+          return;
+        }
+
+        if (cancelled) {
+          stopCallResources();
           return;
         }
 
@@ -126,6 +158,7 @@ export default function CallPage() {
           console.error("OpenAI WebRTC error:", errorText);
           setError("OpenAI WebRTC connection failed.");
           setStatus("failed");
+          stopCallResources();
           return;
         }
 
@@ -136,35 +169,31 @@ export default function CallPage() {
           sdp: answerSdp,
         });
 
+        if (cancelled) {
+          stopCallResources();
+          return;
+        }
+
         setStatus("active");
       } catch (error) {
         console.error(error);
         setError("Microphone or realtime connection failed.");
         setStatus("failed");
+        stopCallResources();
       }
     }
 
     startCall();
 
     return () => {
-      dataChannelRef.current?.close();
-      peerConnectionRef.current?.close();
-
-      localStreamRef.current?.getTracks().forEach((track) => {
-        track.stop();
-      });
+      cancelled = true;
+      stopCallResources();
     };
   }, [scenario]);
 
   function handleEndCall() {
     setStatus("ending");
-
-    dataChannelRef.current?.close();
-    peerConnectionRef.current?.close();
-
-    localStreamRef.current?.getTracks().forEach((track) => {
-      track.stop();
-    });
+    stopCallResources();
 
     setTimeout(() => {
       setStatus("ended");
