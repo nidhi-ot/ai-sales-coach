@@ -7,6 +7,7 @@ from app.models.agent import (
     ScenarioSummary,
 )
 from app.services.context import assemble_call_context
+from app.services.scenarios import UnsupportedScenarioError
 
 router = APIRouter()
 
@@ -23,11 +24,14 @@ async def assemble_before_call_context(
     if business_profile is None:
         raise HTTPException(status_code=404, detail="Business profile not found")
 
-    context = assemble_call_context(
-        rep_profile=rep_profile,
-        business_profile=business_profile,
-        scenario=request.scenario,
-    )
+    try:
+        context = assemble_call_context(
+            rep_profile=rep_profile,
+            business_profile=business_profile,
+            scenario=request.scenario,
+        )
+    except UnsupportedScenarioError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     scenario = context["scenario"]
 
     return BeforeCallContextResponse(

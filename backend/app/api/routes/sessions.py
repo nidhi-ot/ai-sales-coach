@@ -33,6 +33,18 @@ class SessionEnd(BaseModel):
     duration_seconds: int
     end_reason: str
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "ended_at": "2026-06-18T12:00:00Z",
+                    "duration_seconds": 180,
+                    "end_reason": "manual",
+                }
+            ]
+        }
+    }
+
 
 class TranscriptEntry(BaseModel):
     speaker: Literal["rep", "ai_customer"]
@@ -52,9 +64,11 @@ class TranscriptBatch(BaseModel):
     entries: List[TranscriptEntry]
 
 
+# Manual session creation only. Live WebRTC calls should start with
+# POST /api/v1/realtime/session so they receive OpenAI credentials.
 @router.post("/")
 async def create_session(data: SessionStart):
-    """Create new practice session."""
+    """Create a manual/non-realtime practice session."""
     supabase = get_supabase()
 
     profile = (
@@ -75,7 +89,7 @@ async def create_session(data: SessionStart):
             {
                 "rep_id": data.rep_id,
                 "business_id": data.business_id,
-                "scenario": data.scenario,
+                "scenario": data.scenario.value,
                 "profile_version": profile_version,
                 "status": "active",
                 "metadata": {
@@ -90,6 +104,7 @@ async def create_session(data: SessionStart):
     return session_rows[0] if session_rows else {}
 
 
+# Live and manual sessions both use this endpoint when the call is finished.
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark a practice session as completed."""
@@ -169,7 +184,7 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     supabase = get_supabase()
 
     if not batch.entries:
-        return {"inserted": 0}
+        raise HTTPException(status_code=400, detail="Transcript batch is empty")
 
     inserts = [
         {
