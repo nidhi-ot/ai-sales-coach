@@ -52,7 +52,9 @@ class SupabaseStatusResponse(BaseModel):
     row_count: int
 
 
-# To create a realtime session for sales call practice
+# Canonical live-practice bootstrap endpoint.
+# Frontend live calls should use this path to create the app session,
+# inject the scenario persona, and receive OpenAI realtime credentials.
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(config: SessionConfig):
     # Step 1: Pick the AI customer persona for the selected scenario.
@@ -183,7 +185,9 @@ async def realtime_status():
     return {"status": "ok"}
 
 
-# For short-lived token to keep the OpenAI key secure
+# Legacy spike-only token endpoint.
+# Do not use this for live practice calls because it does not create an app session
+# and does not inject scenario/persona instructions.
 @router.post("/token", response_model=EphemeralTokenResponse)
 async def create_ephemeral_token():
     openai_api_key = settings.openai_api_key
