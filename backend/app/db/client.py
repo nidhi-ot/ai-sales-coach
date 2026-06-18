@@ -64,6 +64,7 @@ async def create_session(
     business_id: str,
     scenario: str,
     profile_version: int,
+    metadata: dict[str, Any] | None = None,
 ):
     """Create new practice session."""
     result = (
@@ -76,6 +77,7 @@ async def create_session(
                 "scenario": scenario,
                 "profile_version": profile_version,
                 "status": "active",
+                "metadata": metadata or {},
             }
         )
         .execute()

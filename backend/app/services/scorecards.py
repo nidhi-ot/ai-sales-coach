@@ -2,6 +2,7 @@ import re
 from typing import Any
 
 from app.db.client import get_supabase
+from app.services.gpt_scoring import gpt_analyze_transcript
 
 FILLER_WORDS = {
     "actually",
@@ -37,54 +38,6 @@ def _count_filler_words(text: str) -> int:
     return sum(len(re.findall(rf"\b{re.escape(word)}\b", normalized)) for word in FILLER_WORDS)
 
 
-def _bounded_score(score: int) -> int:
-    return max(1, min(10, score))
-
-
-def _build_heuristic_feedback(rep_text: str, ai_text: str) -> dict[str, Any]:
-    question_count = rep_text.count("?")
-    closing_terms = ("next step", "meeting", "book", "schedule", "contract", "start")
-    empathy_terms = ("understand", "thanks", "appreciate", "fair", "makes sense")
-    objection_terms = ("expensive", "already", "busy", "send", "not interested", "think about")
-
-    rapport_score = 6 + int(any(term in rep_text for term in empathy_terms))
-    needs_score = 4 + min(question_count, 4)
-    closing_score = 5 + (2 if any(term in rep_text for term in closing_terms) else 0)
-    objection_score = 6 if any(term in ai_text for term in objection_terms) else 5
-
-    scores: dict[str, int] = {
-        "rapport_score": _bounded_score(rapport_score),
-        "needs_discovery_score": _bounded_score(needs_score),
-        "objection_handling_score": _bounded_score(objection_score),
-        "closing_score": _bounded_score(closing_score),
-    }
-    scores["overall_score"] = round(sum(scores.values()) / len(scores))
-
-    strengths: list[str] = []
-    if question_count:
-        strengths.append("Asked discovery questions during the call.")
-    if any(term in rep_text for term in empathy_terms):
-        strengths.append("Used language that acknowledged the buyer perspective.")
-    if any(term in rep_text for term in closing_terms):
-        strengths.append("Moved toward a concrete next step.")
-    if not strengths:
-        strengths.append("Completed the practice call and captured a usable transcript.")
-
-    improvement_areas: list[str] = []
-    if question_count < 2:
-        improvement_areas.append("Ask more discovery questions before pitching.")
-    if not any(term in rep_text for term in closing_terms):
-        improvement_areas.append("End with a clearer next-step or closing ask.")
-    if _count_filler_words(rep_text) > 3:
-        improvement_areas.append("Reduce filler words to sound more concise.")
-
-    return {
-        **scores,
-        "strengths": strengths,
-        "improvement_areas": improvement_areas,
-    }
-
-
 async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
     """Create a scorecard stub with default values for a session.
     This can be used to ensure a scorecard record exists before the transcript is fully processed.
@@ -109,6 +62,7 @@ async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
                 "overall_score": 0,
                 "strengths": [],
                 "improvement_areas": [],
+                "framework_scores": {},
                 "feedback_summary": "Analysis pending (stub).",
             },
             on_conflict="session_id",
@@ -125,7 +79,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
 
     session = _first_row(
         supabase.table("sessions")
-        .select("id, rep_id, business_id, duration_seconds")
+        .select("id, rep_id, business_id, duration_seconds, scenario, metadata")
         .eq("id", session_id)
         .limit(1)
         .execute()
@@ -167,7 +121,19 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         last_offset_ms = max(timestamp_offsets, default=0)
         duration_seconds = round(last_offset_ms / 1000)
 
-    feedback = _build_heuristic_feedback(rep_text.lower(), ai_text.lower())
+    # Defensive check - session should not be None due to earlier guard
+    if session is None:
+        raise LookupError("Session became None unexpectedly")
+
+    feedback = await gpt_analyze_transcript(
+        rep_text=rep_text,
+        ai_text=ai_text,
+        system_instruction=session.get("metadata", {}).get("system_instruction") or "",
+        scenario_title=session.get("scenario") or "unknown",
+    )
+
+    framework_score = feedback.get("framework_scores", {})
+
     payload: dict[str, Any] = {
         "session_id": session_id,
         "rep_id": session["rep_id"],
@@ -183,10 +149,8 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "overall_score": feedback["overall_score"],
         "strengths": feedback["strengths"],
         "improvement_areas": feedback["improvement_areas"],
-        "feedback_summary": (
-            "After-call scorecard generated from the saved transcript. "
-            "This heuristic pass can be replaced by GPT analysis when the scoring prompt is ready."
-        ),
+        "framework_scores": framework_score,
+        "feedback_summary": feedback["feedback_summary"],
     }
 
     result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
