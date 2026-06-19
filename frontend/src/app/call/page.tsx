@@ -13,6 +13,18 @@ type TranscriptEntry = {
   timestamp_offset_ms: number;
 };
 
+type RealtimeEventPayload = {
+  type?: string;
+  transcript?: unknown;
+  delta?: unknown;
+  item?: {
+    content?: Array<{
+      transcript?: unknown;
+      text?: unknown;
+    }>;
+  };
+};
+
 export default function CallPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -91,6 +103,32 @@ export default function CallPage() {
       });
     }
 
+    function transcriptFromPayload(payload: RealtimeEventPayload) {
+      if (typeof payload.transcript === "string") {
+        return payload.transcript;
+      }
+
+      if (typeof payload.delta === "string") {
+        return payload.delta;
+      }
+
+      const content = payload.item?.content;
+
+      if (Array.isArray(content)) {
+        for (const entry of content) {
+          if (typeof entry?.transcript === "string") {
+            return entry.transcript;
+          }
+
+          if (typeof entry?.text === "string") {
+            return entry.text;
+          }
+        }
+      }
+
+      return null;
+    }
+
     let payload: unknown;
 
     try {
@@ -106,21 +144,23 @@ export default function CallPage() {
       return;
     }
 
-    const realtimeEvent = payload as { type?: string; transcript?: unknown };
+    const realtimeEvent = payload as RealtimeEventPayload;
+    const transcriptText = transcriptFromPayload(realtimeEvent);
 
     if (
       realtimeEvent.type ===
         "conversation.item.input_audio_transcription.completed" &&
-      typeof realtimeEvent.transcript === "string"
+      typeof transcriptText === "string"
     ) {
-      bufferTranscriptLine("rep", realtimeEvent.transcript);
+      bufferTranscriptLine("rep", transcriptText);
     }
 
     if (
-      realtimeEvent.type === "response.output_audio_transcript.done" &&
-      typeof realtimeEvent.transcript === "string"
+      (realtimeEvent.type === "response.output_audio_transcript.done" ||
+        realtimeEvent.type === "response.audio_transcript.done") &&
+      typeof transcriptText === "string"
     ) {
-      bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+      bufferTranscriptLine("ai_customer", transcriptText);
     }
   }, []);
 
@@ -403,6 +443,7 @@ export default function CallPage() {
     try {
       await saveTranscriptBatch(sessionIdToEnd);
       await endBackendSession(sessionIdToEnd, endedAt, durationSeconds, "manual");
+      localStorage.setItem("last_session_id", sessionIdToEnd);
     } catch (error) {
       console.error(error);
       setError(
@@ -524,13 +565,32 @@ export default function CallPage() {
           {status === "ended" && (
             <>
               <button
-                onClick={() => router.push("/history")}
+                onClick={() =>
+                  sessionId
+                    ? router.push(`/scorecards?session_id=${sessionId}`)
+                    : router.push("/history")
+                }
                 style={{
                   padding: "14px 22px",
                   borderRadius: "12px",
                   border: "none",
                   background: "#006b4f",
                   color: "white",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                View Scorecard
+              </button>
+
+              <button
+                onClick={() => router.push("/history")}
+                style={{
+                  padding: "14px 22px",
+                  borderRadius: "12px",
+                  border: "1px solid #d0d5dd",
+                  background: "white",
+                  color: "#344054",
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
