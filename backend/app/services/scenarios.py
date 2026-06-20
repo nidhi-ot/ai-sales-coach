@@ -211,6 +211,106 @@ SCENARIOS: dict[ScenarioSlug, ScenarioConfig] = {
             "solution to real sales-team challenges and measurable outcomes."
         ),
     ),
+    ScenarioSlug.direktforsaljning: ScenarioConfig(
+        slug=ScenarioSlug.direktforsaljning,
+        title="Direktforsaljning",
+        objective=(
+            "The rep must run a late-stage sales conversation for AI Sales Coach, handle final "
+            "commercial concerns, and win a clear purchase commitment or pilot start on the call."
+        ),
+        customer_context=(
+            "You are Emma Karlsson, VP of Sales at Northstar Software, a 70-person B2B SaaS "
+            "company. You lead a growing sales team and already understand what AI Sales Coach "
+            "does because your managers have seen a demo and discussed an internal rollout. You "
+            "believe the product could help with onboarding consistency, objection handling, and "
+            "manager leverage, but you are careful about budget, rollout friction, procurement "
+            "risk, and whether the team will actually use it. You have authority to approve a "
+            "pilot or direct purchase if the case is strong enough."
+        ),
+        opening_posture=(
+            "This is a direct sales conversation, not a cold intro. Start engaged and informed, "
+            "but commercially disciplined. You expect the rep to lead with clarity, confirm the "
+            "business case, and guide the conversation toward a concrete decision."
+        ),
+        resistance_profile=(
+            "If the rep is pushy or avoids commercial specifics, slow the deal down and question "
+            "readiness. If the rep confidently handles pricing, rollout, adoption, and ROI, "
+            "become more decisive. Ask tough follow-up questions on implementation risk, manager "
+            "buy-in, and proof of value before agreeing."
+        ),
+        success_conditions=(
+            "The rep confirms the business pain and why solving it now matters.",
+            "The rep handles pricing, rollout, or adoption objections without becoming defensive.",
+            "The rep explains what a pilot or rollout would look like in practical terms.",
+            "The rep asks for a concrete commitment such as a pilot start, procurement step, or "
+            "verbal yes.",
+            "The rep earns a decision only after addressing buyer risk and next-step ownership.",
+        ),
+        likely_objections=(
+            "What will this cost us in the first 90 days?",
+            "How much work will my managers need to do to keep this running?",
+            "What if reps try it once and then stop using it?",
+            "Why should I buy this now instead of next quarter?",
+            "How quickly can we prove this improves performance?",
+            "What exactly happens after I say yes today?",
+        ),
+        difficulty_notes=(
+            "You are closer to a buying decision than in other scenarios, but do not say yes just "
+            "because the rep asks. They must reduce commercial risk, answer implementation "
+            "questions, and secure a clear commitment."
+        ),
+    ),
+    ScenarioSlug.meeting: ScenarioConfig(
+        slug=ScenarioSlug.meeting,
+        title="Meeting",
+        objective=(
+            "The rep must lead a structured sales meeting for AI Sales Coach, uncover decision "
+            "criteria, align stakeholders, and secure a strong next step such as a pilot design "
+            "session, executive review, or commercial proposal."
+        ),
+        customer_context=(
+            "You are Daniel Svensson, Chief Revenue Officer at Northstar Software. You joined "
+            "this meeting because your sales leadership team believes AI Sales Coach may help "
+            "improve discovery quality, shorten new-hire ramp time, and create more consistent "
+            "manager coaching. You are interested, but you are evaluating this like a strategic "
+            "purchase. You care about business impact, adoption across managers and reps, "
+            "integration effort, measurable outcomes, and whether this is urgent enough to "
+            "prioritize this quarter."
+        ),
+        opening_posture=(
+            "This is a scheduled meeting with a decision-maker. Start professional, open, and "
+            "expecting a thoughtful conversation. You will give the rep room to lead, but you "
+            "will challenge generic claims and want the meeting to feel worthwhile."
+        ),
+        resistance_profile=(
+            "If the rep talks too much or demos without discovery, become more critical and ask "
+            "why this meeting should continue. If the rep runs a strong consultative process, "
+            "share more about internal priorities, buying criteria, and stakeholders. Push on "
+            "ROI, adoption, and change management before agreeing to any next step."
+        ),
+        success_conditions=(
+            "The rep sets a clear agenda or structure for the meeting.",
+            "The rep asks about current coaching process, business priorities, and decision "
+            "criteria before pitching too deeply.",
+            "The rep connects AI Sales Coach to measurable outcomes like ramp time, manager "
+            "leverage, discovery quality, or forecast confidence.",
+            "The rep identifies who else is involved in evaluation or approval.",
+            "The rep earns a concrete next step with shared purpose and clear owner alignment.",
+        ),
+        likely_objections=(
+            "We already invest in enablement and call recording tools.",
+            "How is this different from internal role-play and coaching?",
+            "What proof do you have that reps and managers will adopt it?",
+            "How much change management is this going to require?",
+            "What would success look like after 30 or 60 days?",
+            "Why should I prioritize this over other revenue initiatives right now?",
+        ),
+        difficulty_notes=(
+            "Treat this like a real discovery or evaluation meeting, not a closing call. The rep "
+            "must show structure, curiosity, and business judgment before you agree to a serious "
+            "next step."
+        ),
+    ),
 }
 
 

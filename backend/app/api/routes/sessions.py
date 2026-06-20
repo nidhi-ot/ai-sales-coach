@@ -162,11 +162,17 @@ async def end_session(session_id: str, data: SessionEnd):
             "score_card": score_card,
             "detail": str(exc),
         }
-    except Exception:
+    except Exception as exc:
+        score_card = await create_scorecard_stub(
+            session_id=session_id,
+            rep_id=str(session_row["rep_id"]),
+            business_id=str(session_row["business_id"]),
+        )
         return {
             "session": updated_session,
             "score_card_status": "analysis_failed",
-            "score_card": None,
+            "score_card": score_card,
+            "detail": str(exc),
         }
 
     return {
