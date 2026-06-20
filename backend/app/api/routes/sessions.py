@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
-from app.services.scorecards import analyze_transcript
+from app.services.scorecards import analyze_transcript, create_scorecard_stub
 
 router = APIRouter()
 
@@ -110,25 +110,18 @@ async def create_session(data: SessionStart):
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark a practice session as completed."""
-    try:
-        score_card = await analyze_transcript(session_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to analyze transcript for scorecard",
-        ) from exc
-
-    if not score_card:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to analyze transcript for scorecard",
-        )
-
     supabase = get_supabase()
+    session_lookup = (
+        supabase.table("sessions")
+        .select("id, rep_id, business_id")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+    )
+    session_rows = _row_dicts(session_lookup.data)
+
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
 
     result = (
         supabase.table("sessions")
@@ -146,12 +139,38 @@ async def end_session(session_id: str, data: SessionEnd):
     if not result.data:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session_rows = _row_dicts(result.data)
-    if not session_rows:
+    updated_rows = _row_dicts(result.data)
+    if not updated_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    session_row = session_rows[0]
+    updated_session = updated_rows[0]
+
+    try:
+        score_card = await analyze_transcript(session_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        score_card = await create_scorecard_stub(
+            session_id=session_id,
+            rep_id=str(session_row["rep_id"]),
+            business_id=str(session_row["business_id"]),
+        )
+        return {
+            "session": updated_session,
+            "score_card_status": "pending_transcript",
+            "score_card": score_card,
+            "detail": str(exc),
+        }
+    except Exception:
+        return {
+            "session": updated_session,
+            "score_card_status": "analysis_failed",
+            "score_card": None,
+        }
+
     return {
-        "session": session_rows[0],
+        "session": updated_session,
         "score_card_status": "generated",
         "score_card": score_card,
     }
