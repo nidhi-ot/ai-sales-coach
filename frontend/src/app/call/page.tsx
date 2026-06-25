@@ -4,7 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
-type CallStatus = "connecting" | "active" | "ending" | "ended" | "failed";
+type CallStatus =
+  | "ready"
+  | "connecting"
+  | "active"
+  | "holding"
+  | "ending"
+  | "ended"
+  | "failed";
+
 type TranscriptSpeaker = "rep" | "ai_customer";
 
 type TranscriptEntry = {
@@ -31,57 +39,41 @@ export default function CallPage() {
 
   const scenario = searchParams.get("scenario") || "cold_call";
 
-  const [status, setStatus] = useState<CallStatus>("connecting");
+  const [status, setStatus] = useState<CallStatus>("ready");
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [openaiSessionId, setOpenaiSessionId] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const callRunRef = useRef(0);
   const callStartedAtRef = useRef<Date | null>(null);
   const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
 
-  function cleanupCallResources(resources?: {
-    dataChannel?: RTCDataChannel | null;
-    peerConnection?: RTCPeerConnection | null;
-    localStream?: MediaStream | null;
-    remoteAudio?: HTMLAudioElement | null;
-  }) {
-    const dataChannel = resources?.dataChannel ?? dataChannelRef.current;
-    const peerConnection =
-      resources?.peerConnection ?? peerConnectionRef.current;
-    const localStream = resources?.localStream ?? localStreamRef.current;
-    const remoteAudio = resources?.remoteAudio ?? remoteAudioRef.current;
+  function cleanupCallResources() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
 
-    dataChannel?.close();
-    peerConnection?.close();
+    dataChannelRef.current?.close();
+    dataChannelRef.current = null;
 
-    localStream?.getTracks().forEach((track) => {
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+
+    localStreamRef.current?.getTracks().forEach((track) => {
       track.stop();
     });
+    localStreamRef.current = null;
 
-    if (remoteAudio) {
-      remoteAudio.pause();
-      remoteAudio.srcObject = null;
-      remoteAudio.remove();
-    }
-
-    if (!resources || dataChannelRef.current === dataChannel) {
-      dataChannelRef.current = null;
-    }
-
-    if (!resources || peerConnectionRef.current === peerConnection) {
-      peerConnectionRef.current = null;
-    }
-
-    if (!resources || localStreamRef.current === localStream) {
-      localStreamRef.current = null;
-    }
-
-    if (!resources || remoteAudioRef.current === remoteAudio) {
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.pause();
+      remoteAudioRef.current.srcObject = null;
+      remoteAudioRef.current.remove();
       remoteAudioRef.current = null;
     }
   }
@@ -90,9 +82,7 @@ export default function CallPage() {
     function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
       const trimmedText = text.trim();
 
-      if (!trimmedText) {
-        return;
-      }
+      if (!trimmedText) return;
 
       transcriptBufferRef.current.push({
         speaker,
@@ -104,25 +94,15 @@ export default function CallPage() {
     }
 
     function transcriptFromPayload(payload: RealtimeEventPayload) {
-      if (typeof payload.transcript === "string") {
-        return payload.transcript;
-      }
-
-      if (typeof payload.delta === "string") {
-        return payload.delta;
-      }
+      if (typeof payload.transcript === "string") return payload.transcript;
+      if (typeof payload.delta === "string") return payload.delta;
 
       const content = payload.item?.content;
 
       if (Array.isArray(content)) {
         for (const entry of content) {
-          if (typeof entry?.transcript === "string") {
-            return entry.transcript;
-          }
-
-          if (typeof entry?.text === "string") {
-            return entry.text;
-          }
+          if (typeof entry?.transcript === "string") return entry.transcript;
+          if (typeof entry?.text === "string") return entry.text;
         }
       }
 
@@ -138,11 +118,7 @@ export default function CallPage() {
       return;
     }
 
-    console.debug("Realtime event:", payload);
-
-    if (!payload || typeof payload !== "object") {
-      return;
-    }
+    if (!payload || typeof payload !== "object") return;
 
     const realtimeEvent = payload as RealtimeEventPayload;
     const transcriptText = transcriptFromPayload(realtimeEvent);
@@ -179,9 +155,7 @@ export default function CallPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          entries,
-        }),
+        body: JSON.stringify({ entries }),
       }
     );
 
@@ -224,202 +198,173 @@ export default function CallPage() {
     }
   }
 
-  useEffect(() => {
-    const runId = callRunRef.current + 1;
-    callRunRef.current = runId;
+  async function startCall() {
+    setStatus("connecting");
+    setError("");
+    setSessionId(null);
+    setOpenaiSessionId(null);
+    setElapsedSeconds(0);
+
+    callRunRef.current += 1;
+    const runId = callRunRef.current;
     const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     callStartedAtRef.current = null;
     transcriptBufferRef.current = [];
-
-    let stream: MediaStream | null = null;
-    let peerConnection: RTCPeerConnection | null = null;
-    let dataChannel: RTCDataChannel | null = null;
-    let remoteAudio: HTMLAudioElement | null = null;
 
     function isCurrentCallRun() {
       return !abortController.signal.aborted && callRunRef.current === runId;
     }
 
-    function cleanupThisRun() {
-      cleanupCallResources({
-        dataChannel,
-        peerConnection,
-        localStream: stream,
-        remoteAudio,
-      });
-    }
+    try {
+      const repId = localStorage.getItem("rep_id");
+      const businessId = localStorage.getItem("business_id");
 
-    async function startCall() {
-      try {
-        const repId = localStorage.getItem("rep_id");
-        const businessId = localStorage.getItem("business_id");
-
-        if (!repId || !businessId) {
-          setError("Missing rep or business information. Please login again.");
-          setStatus("failed");
-          return;
-        }
-
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-
-        if (!isCurrentCallRun()) {
-          cleanupThisRun();
-          return;
-        }
-
-        localStreamRef.current = stream;
-
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/v1/realtime/session",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              scenario,
-              rep_id: repId,
-              business_id: businessId,
-              vad: {
-                threshold: 0.5,
-                silence_duration_ms: 500,
-              },
-            }),
-            signal: abortController.signal,
-          }
-        );
-
-        const data = await response.json();
-
-        if (!isCurrentCallRun()) {
-          cleanupThisRun();
-          return;
-        }
-
-        if (!response.ok) {
-          setError(data.detail || "Failed to create realtime session.");
-          setStatus("failed");
-          cleanupThisRun();
-          return;
-        }
-
-        const clientSecret = data.client_secret;
-
-        if (!clientSecret) {
-          setError("Realtime session did not return client_secret.");
-          setStatus("failed");
-          cleanupThisRun();
-          return;
-        }
-
-        setSessionId(data.session_id);
-        setOpenaiSessionId(data.openai_session_id);
-        callStartedAtRef.current = new Date();
-
-        peerConnection = new RTCPeerConnection();
-        peerConnectionRef.current = peerConnection;
-
-        remoteAudio = document.createElement("audio");
-        remoteAudio.autoplay = true;
-        remoteAudioRef.current = remoteAudio;
-
-        peerConnection.ontrack = (event) => {
-          if (isCurrentCallRun() && remoteAudio) {
-            remoteAudio.srcObject = event.streams[0];
-          }
-        };
-
-        stream.getTracks().forEach((track) => {
-          peerConnection?.addTrack(track, stream as MediaStream);
-        });
-
-        dataChannel = peerConnection.createDataChannel("oai-events");
-        dataChannelRef.current = dataChannel;
-
-        dataChannel.onopen = () => {
-          console.log("Realtime data channel opened");
-        };
-
-        dataChannel.onmessage = handleRealtimeEvent;
-
-        dataChannel.onclose = () => {
-          console.log("Realtime data channel closed");
-        };
-
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-
-        if (!isCurrentCallRun()) {
-          cleanupThisRun();
-          return;
-        }
-
-        const realtimeResponse = await fetch(
-          "https://api.openai.com/v1/realtime/calls",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${clientSecret}`,
-              "Content-Type": "application/sdp",
-            },
-            body: offer.sdp,
-            signal: abortController.signal,
-          }
-        );
-
-        if (!isCurrentCallRun()) {
-          cleanupThisRun();
-          return;
-        }
-
-        if (!realtimeResponse.ok) {
-          const errorText = await realtimeResponse.text();
-          console.error("OpenAI WebRTC error:", errorText);
-          setError("OpenAI WebRTC connection failed.");
-          setStatus("failed");
-          cleanupThisRun();
-          return;
-        }
-
-        const answerSdp = await realtimeResponse.text();
-
-        if (!isCurrentCallRun()) {
-          cleanupThisRun();
-          return;
-        }
-
-        await peerConnection.setRemoteDescription({
-          type: "answer",
-          sdp: answerSdp,
-        });
-
-        if (isCurrentCallRun()) {
-          setStatus("active");
-        } else {
-          cleanupThisRun();
-        }
-      } catch (error) {
-        if (abortController.signal.aborted) {
-          cleanupThisRun();
-          return;
-        }
-
-        console.error(error);
-        setError("Microphone or realtime connection failed.");
+      if (!repId || !businessId) {
+        setError("Missing rep or business information. Please login again.");
         setStatus("failed");
-        cleanupThisRun();
+        return;
       }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      if (!isCurrentCallRun()) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      localStreamRef.current = stream;
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/realtime/session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            scenario,
+            rep_id: repId,
+            business_id: businessId,
+            vad: {
+              threshold: 0.5,
+              silence_duration_ms: 500,
+            },
+          }),
+          signal: abortController.signal,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!isCurrentCallRun()) {
+        cleanupCallResources();
+        return;
+      }
+
+      if (!response.ok) {
+        setError(data.detail || "Failed to create realtime session.");
+        setStatus("failed");
+        cleanupCallResources();
+        return;
+      }
+
+      const clientSecret = data.client_secret;
+
+      if (!clientSecret) {
+        setError("Realtime session did not return client_secret.");
+        setStatus("failed");
+        cleanupCallResources();
+        return;
+      }
+
+      setSessionId(data.session_id);
+      setOpenaiSessionId(data.openai_session_id);
+      callStartedAtRef.current = new Date();
+
+      const peerConnection = new RTCPeerConnection();
+      peerConnectionRef.current = peerConnection;
+
+      const remoteAudio = document.createElement("audio");
+      remoteAudio.autoplay = true;
+      remoteAudioRef.current = remoteAudio;
+
+      peerConnection.ontrack = (event) => {
+        if (isCurrentCallRun()) {
+          remoteAudio.srcObject = event.streams[0];
+        }
+      };
+
+      stream.getTracks().forEach((track) => {
+        peerConnection.addTrack(track, stream);
+      });
+
+      const dataChannel = peerConnection.createDataChannel("oai-events");
+      dataChannelRef.current = dataChannel;
+      dataChannel.onmessage = handleRealtimeEvent;
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      const realtimeResponse = await fetch(
+        "https://api.openai.com/v1/realtime/calls",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${clientSecret}`,
+            "Content-Type": "application/sdp",
+          },
+          body: offer.sdp,
+          signal: abortController.signal,
+        }
+      );
+
+      if (!realtimeResponse.ok) {
+        const errorText = await realtimeResponse.text();
+        console.error("OpenAI WebRTC error:", errorText);
+        setError("OpenAI WebRTC connection failed.");
+        setStatus("failed");
+        cleanupCallResources();
+        return;
+      }
+
+      const answerSdp = await realtimeResponse.text();
+
+      await peerConnection.setRemoteDescription({
+        type: "answer",
+        sdp: answerSdp,
+      });
+
+      setStatus("active");
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        cleanupCallResources();
+        return;
+      }
+
+      console.error(error);
+      setError("Microphone or realtime connection failed.");
+      setStatus("failed");
+      cleanupCallResources();
     }
+  }
 
-    startCall();
+  function holdCall() {
+    localStreamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = false;
+    });
 
-    return () => {
-      abortController.abort();
-      cleanupThisRun();
-    };
-  }, [handleRealtimeEvent, scenario]);
+    setStatus("holding");
+  }
+
+  function resumeCall() {
+    localStreamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = true;
+    });
+
+    setStatus("active");
+  }
 
   async function handleEndCall() {
     setStatus("ending");
@@ -435,7 +380,6 @@ export default function CallPage() {
     cleanupCallResources();
 
     if (!sessionIdToEnd) {
-      setError("Call ended locally, but no session ID was available to save.");
       setStatus("ended");
       return;
     }
@@ -457,182 +401,315 @@ export default function CallPage() {
     }
   }
 
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    if (status === "active" || status === "holding") {
+      timer = setInterval(() => {
+        if (callStartedAtRef.current) {
+          setElapsedSeconds(
+            Math.floor((Date.now() - callStartedAtRef.current.getTime()) / 1000)
+          );
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [status]);
+
+  useEffect(() => {
+    return () => {
+      callRunRef.current += 1;
+      cleanupCallResources();
+    };
+  }, []);
+
+  const statusLabel =
+    status === "ready"
+      ? "Ready"
+      : status === "connecting"
+        ? "Connecting"
+        : status === "active"
+          ? "Connected"
+          : status === "holding"
+            ? "On Hold"
+            : status === "ending"
+              ? "Ending"
+              : status === "ended"
+                ? "Ended"
+                : "Failed";
+
   return (
     <AppShell>
-      <section
-        style={{
-          maxWidth: "760px",
-          background: "white",
-          borderRadius: "24px",
-          padding: "32px",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <h1>Live Practice Call</h1>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        <section style={heroStyle}>
+          <div>
+            <p style={eyebrowStyle}>Live Practice</p>
+            <h1 style={heroTitleStyle}>Live Practice Call</h1>
+            <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
+              <span style={pillStyle}>Scenario: {scenario.replace("_", " ")}</span>
+              <span style={pillStyle}>Status: {statusLabel}</span>
+            </div>
+          </div>
 
-        <p style={{ color: "#667085" }}>
-          Scenario: <strong>{scenario.replace("_", " ")}</strong>
-        </p>
+          <div style={timerBoxStyle}>
+            <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
+              Call Time
+            </p>
+            <strong style={{ fontSize: "24px" }}>
+              {formatTime(elapsedSeconds)}
+            </strong>
+          </div>
+        </section>
 
-        {sessionId && (
-          <p style={{ color: "#98a2b3", fontSize: "13px" }}>
-            Session ID: {sessionId}
-          </p>
-        )}
+        <section style={callPanelStyle}>
+          <div style={avatarWrapStyle}>
+            <div style={avatarStyle}>
+              {status === "active"
+                ? "🎙️"
+                : status === "holding"
+                  ? "⏸️"
+                  : status === "ended"
+                    ? "✅"
+                    : status === "failed"
+                      ? "⚠️"
+                      : "🤖"}
+            </div>
 
-        {openaiSessionId && (
-          <p style={{ color: "#98a2b3", fontSize: "13px" }}>
-            OpenAI Session ID: {openaiSessionId}
-          </p>
-        )}
+            <h2 style={{ margin: "18px 0 8px" }}>
+              {status === "ready" && "Ready to Start"}
+              {status === "connecting" && "Connecting..."}
+              {status === "active" && "AI Customer is Listening"}
+              {status === "holding" && "Call On Hold"}
+              {status === "ending" && "Ending Call..."}
+              {status === "ended" && "Call Ended"}
+              {status === "failed" && "Connection Failed"}
+            </h2>
 
-        <div
-          style={{
-            marginTop: "28px",
-            padding: "28px",
-            borderRadius: "20px",
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
-            textAlign: "center",
-          }}
-        >
-          {status === "connecting" && (
-            <>
-              <h2>Connecting...</h2>
-              <p style={{ color: "#667085" }}>
-                Requesting microphone access and connecting to realtime AI.
-              </p>
-            </>
+            <p style={{ color: status === "failed" ? "#b42318" : "#667085" }}>
+              {status === "ready" &&
+                "Click Start Call when you are ready. Microphone permission will be requested after that."}
+              {status === "connecting" &&
+                "Creating realtime session and connecting audio."}
+              {status === "active" &&
+                "Speak naturally with the AI buyer. Your conversation is being captured for the scorecard."}
+              {status === "holding" &&
+                "Your microphone is muted. Resume when ready."}
+              {status === "ending" &&
+                "Saving the transcript and closing the call connection."}
+              {status === "ended" &&
+                (error || "Your practice session has ended.")}
+              {status === "failed" && error}
+            </p>
+
+            {status === "ended" && (
+              <div style={savedBoxStyle}>
+                  ✅ Your practice session has been saved successfully.
+              </div>
           )}
+          </div>
 
-          {status === "active" && (
-            <>
-              <h2>Call Active</h2>
-              <p style={{ color: "#667085" }}>
-                Speak naturally with the AI buyer.
-              </p>
-            </>
-          )}
-
-          {status === "ending" && (
-            <>
-              <h2>Ending Call...</h2>
-              <p style={{ color: "#667085" }}>
-                Saving the transcript and closing the call connection.
-              </p>
-            </>
-          )}
-
-          {status === "ended" && (
-            <>
-              <h2>Call Ended</h2>
-              {error ? (
-                <p style={{ color: "#b54708" }}>{error}</p>
-              ) : (
-                <p style={{ color: "#667085" }}>
-                  Your practice session has ended.
-                </p>
-              )}
-            </>
-          )}
-
-          {status === "failed" && (
-            <>
-              <h2>Connection Failed</h2>
-              <p style={{ color: "#b42318" }}>{error}</p>
-            </>
-          )}
-        </div>
-
-        <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
-          {status === "active" && (
-            <button
-              onClick={handleEndCall}
-              style={{
-                padding: "14px 22px",
-                borderRadius: "12px",
-                border: "none",
-                background: "#b42318",
-                color: "white",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              End Call
-            </button>
-          )}
-
-          {status === "ended" && (
-            <>
-              <button
-                onClick={() =>
-                  sessionId
-                    ? router.push(`/scorecards?session_id=${sessionId}`)
-                    : router.push("/history")
-                }
-                style={{
-                  padding: "14px 22px",
-                  borderRadius: "12px",
-                  border: "none",
-                  background: "#006b4f",
-                  color: "white",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                View Scorecard
+          <div style={controlBarStyle}>
+            {status === "ready" && (
+              <button onClick={startCall} style={primaryButton}>
+                ▶ Start Call
               </button>
+            )}
 
-              <button
-                onClick={() => router.push("/history")}
-                style={{
-                  padding: "14px 22px",
-                  borderRadius: "12px",
-                  border: "1px solid #d0d5dd",
-                  background: "white",
-                  color: "#344054",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Go to History
-              </button>
+            {status === "active" && (
+              <>
+                <button onClick={holdCall} style={secondaryButton}>
+                  ⏸ Hold
+                </button>
+                <button onClick={handleEndCall} style={dangerButton}>
+                  ⛔ End Call
+                </button>
+              </>
+            )}
 
+            {status === "holding" && (
+              <>
+                <button onClick={resumeCall} style={primaryButton}>
+                  ▶ Resume
+                </button>
+                <button onClick={handleEndCall} style={dangerButton}>
+                  ⛔ End Call
+                </button>
+              </>
+            )}
+
+            {status === "ended" && (
+              <>
+                <button
+                  onClick={() =>
+                    sessionId
+                      ? router.push(`/scorecards?session_id=${sessionId}`)
+                      : router.push("/history")
+                  }
+                  style={primaryButton}
+                >
+                  View Scorecard
+                </button>
+
+                <button onClick={() => router.push("/history")} style={secondaryButton}>
+                  Go to History
+                </button>
+
+                <button
+                  onClick={() => router.push("/scenarios")}
+                  style={secondaryButton}
+                >
+                  Start Another
+                </button>
+              </>
+            )}
+
+            {status === "failed" && (
               <button
                 onClick={() => router.push("/scenarios")}
-                style={{
-                  padding: "14px 22px",
-                  borderRadius: "12px",
-                  border: "1px solid #d0d5dd",
-                  background: "white",
-                  color: "#344054",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                style={secondaryButton}
               >
-                Start Another
+                Back to Scenarios
               </button>
-            </>
-          )}
-
-          {status === "failed" && (
-            <button
-              onClick={() => router.push("/scenarios")}
-              style={{
-                padding: "14px 22px",
-                borderRadius: "12px",
-                border: "1px solid #d0d5dd",
-                background: "white",
-                color: "#344054",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Back to Scenarios
-            </button>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      </div>
     </AppShell>
   );
 }
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0"
+  )}`;
+}
+
+const heroStyle: React.CSSProperties = {
+  background: "linear-gradient(135deg, #ffffff 0%, #f0faf6 55%, #e6f4ef 100%)",
+  border: "1px solid #dfeee8",
+  borderRadius: "28px",
+  padding: "34px",
+  boxShadow: "0 20px 50px rgba(16, 24, 40, 0.08)",
+  marginBottom: "26px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const eyebrowStyle: React.CSSProperties = {
+  margin: "0 0 8px",
+  color: "#006b4f",
+  fontWeight: 800,
+  fontSize: "14px",
+};
+
+const heroTitleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: "38px",
+  fontWeight: 800,
+  color: "#101828",
+};
+
+const pillStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: "999px",
+  background: "white",
+  border: "1px solid #dfeee8",
+  color: "#344054",
+  fontWeight: 700,
+  fontSize: "13px",
+};
+
+const timerBoxStyle: React.CSSProperties = {
+  background: "white",
+  border: "1px solid #dfeee8",
+  borderRadius: "18px",
+  padding: "16px 22px",
+  minWidth: "120px",
+  textAlign: "center",
+};
+
+const callPanelStyle: React.CSSProperties = {
+  background: "white",
+  borderRadius: "28px",
+  padding: "34px",
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 18px 40px rgba(16, 24, 40, 0.07)",
+};
+
+const avatarWrapStyle: React.CSSProperties = {
+  padding: "52px 32px",
+  borderRadius: "26px",
+  background: "#f9fafb",
+  border: "1px solid #e5e7eb",
+  textAlign: "center",
+};
+
+const avatarStyle: React.CSSProperties = {
+  width: "116px",
+  height: "116px",
+  borderRadius: "999px",
+  background: "#e7f4ef",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  margin: "0 auto",
+  fontSize: "48px",
+  boxShadow: "0 16px 30px rgba(0, 107, 79, 0.12)",
+};
+
+const savedBoxStyle: React.CSSProperties = {
+  marginTop: "20px",
+  padding: "14px 18px",
+  borderRadius: "14px",
+  background: "#f0fdf4",
+  color: "#166534",
+  fontWeight: 700,
+  display: "inline-block",
+};
+
+const controlBarStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  gap: "14px",
+  marginTop: "28px",
+  flexWrap: "wrap",
+};
+
+const primaryButton: React.CSSProperties = {
+  padding: "14px 24px",
+  borderRadius: "14px",
+  border: "none",
+  background: "#006b4f",
+  color: "white",
+  fontWeight: 800,
+  cursor: "pointer",
+  boxShadow: "0 12px 24px rgba(0, 107, 79, 0.22)",
+};
+
+const secondaryButton: React.CSSProperties = {
+  padding: "14px 24px",
+  borderRadius: "14px",
+  border: "1px solid #d0d5dd",
+  background: "white",
+  color: "#344054",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const dangerButton: React.CSSProperties = {
+  padding: "14px 24px",
+  borderRadius: "14px",
+  border: "none",
+  background: "#b42318",
+  color: "white",
+  fontWeight: 800,
+  cursor: "pointer",
+};
