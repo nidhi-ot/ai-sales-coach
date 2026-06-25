@@ -507,7 +507,7 @@ export default function CallPage() {
 
           {status === "active" && (
             <>
-              <h2>Call Active</h2>
+              <h2>In Call...</h2>
               <p style={{ color: "#667085" }}>
                 Speak naturally with the AI buyer.
               </p>
@@ -584,7 +584,7 @@ export default function CallPage() {
               </button>
 
               <button
-                onClick={() => router.push("/history")}
+                onClick={() => router.push("/dashboard")}
                 style={{
                   padding: "14px 22px",
                   borderRadius: "12px",
@@ -595,7 +595,7 @@ export default function CallPage() {
                   cursor: "pointer",
                 }}
               >
-                Go to History
+                Back to Dashboard
               </button>
 
               <button
