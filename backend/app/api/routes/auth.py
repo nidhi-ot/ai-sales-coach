@@ -2,6 +2,7 @@ from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from supabase_auth.errors import AuthApiError
 
 from app.config import settings
 from app.db.client import get_supabase, get_supabase_auth
@@ -33,13 +34,17 @@ def first_row(data: Any) -> dict[str, Any] | None:
 async def register(data: RegisterRequest) -> dict[str, Any]:
     supabase = get_supabase()
 
-    auth_result = supabase.auth.admin.create_user(
-        {
-            "email": data.email,
-            "password": data.password,
-            "email_confirm": True,
-        }
-    )
+    try:
+        auth_result = supabase.auth.admin.create_user(
+            {
+                "email": data.email,
+                "password": data.password,
+                "email_confirm": True,
+            }
+        )
+    except AuthApiError as exc:
+        status_code = 409 if "already been registered" in str(exc) else 400
+        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
 
     if not auth_result.user:
         raise HTTPException(status_code=400, detail="Unable to create user")
