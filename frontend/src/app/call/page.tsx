@@ -567,8 +567,8 @@ export default function CallPage() {
               <button
                 onClick={() =>
                   sessionId
-                    ? router.push(`/scorecards?session_id=${sessionId}`)
-                    : router.push("/history")
+                    ? router.replace(`/scorecards?session_id=${sessionId}`)
+                    : router.replace("/history")
                 }
                 style={{
                   padding: "14px 22px",
