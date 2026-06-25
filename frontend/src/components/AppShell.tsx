@@ -46,6 +46,10 @@ export default function AppShell({
           padding: "28px 20px",
           display: "flex",
           flexDirection: "column",
+          minHeight: "100vh",
+          position: "sticky",
+          top: 0,
+          alignSelf: "flex-start",
         }}
       >
         <div
@@ -86,6 +90,8 @@ export default function AppShell({
             display: "grid",
             gap: "10px",
             flex: 1,
+            alignContent: "start",
+            gridAutoRows: "max-content",
           }}
         >
           {navItems.map((item) => {
