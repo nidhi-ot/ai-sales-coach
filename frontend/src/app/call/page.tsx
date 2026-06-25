@@ -584,21 +584,6 @@ export default function CallPage() {
               </button>
 
               <button
-                onClick={() => router.push("/dashboard")}
-                style={{
-                  padding: "14px 22px",
-                  borderRadius: "12px",
-                  border: "1px solid #d0d5dd",
-                  background: "white",
-                  color: "#344054",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Back to Dashboard
-              </button>
-
-              <button
                 onClick={() => router.push("/scenarios")}
                 style={{
                   padding: "14px 22px",

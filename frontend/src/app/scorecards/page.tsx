@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import ScorecardView, {
   type Scorecard,
@@ -10,6 +10,7 @@ import ScorecardView, {
 
 export default function ScorecardsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const querySessionId = searchParams.get("session_id");
   const [sessionId, setSessionId] = useState<string | null>(querySessionId);
 
@@ -79,6 +80,21 @@ export default function ScorecardsPage() {
       ) : (
         <ScorecardView scorecard={scorecard} />
       )}
+      <button
+        onClick={() => router.push("/dashboard")}
+        style={{
+          marginTop: "24px",
+          padding: "14px 22px",
+          borderRadius: "12px",
+          border: "1px solid #d0d5dd",
+          background: "white",
+          color: "#344054",
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        Back to Dashboard
+      </button>
     </AppShell>
   );
 }
