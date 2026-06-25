@@ -44,6 +44,17 @@ async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
     The stub can then be updated with real analysis results once the transcript is available.
     """
     supabase = get_supabase()
+    existing = _first_row(
+        supabase.table("scorecards")
+        .select("*")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if existing:
+        return existing
+
     result = (
         supabase.table("scorecards")
         .upsert(
