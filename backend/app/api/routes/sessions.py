@@ -30,10 +30,17 @@ class SessionStart(BaseModel):
     system_instruction: str
 
 
+class TranscriptEntry(BaseModel):
+    speaker: Literal["rep", "ai_customer"]
+    text: str
+    timestamp_offset_ms: int
+
+
 class SessionEnd(BaseModel):
     ended_at: datetime
     duration_seconds: int
     end_reason: str
+    entries: List[TranscriptEntry] | None = None
 
     model_config = {
         "json_schema_extra": {
@@ -42,16 +49,17 @@ class SessionEnd(BaseModel):
                     "ended_at": "2026-06-18T12:00:00Z",
                     "duration_seconds": 180,
                     "end_reason": "manual",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Hello from rep",
+                            "timestamp_offset_ms": 1000,
+                        }
+                    ],
                 }
             ]
         }
     }
-
-
-class TranscriptEntry(BaseModel):
-    speaker: Literal["rep", "ai_customer"]
-    text: str
-    timestamp_offset_ms: int
 
 
 class TranscriptBatch(BaseModel):
@@ -107,13 +115,14 @@ async def create_session(data: SessionStart):
 
 
 # Live and manual sessions both use this endpoint when the call is finished.
+@router.post("/{session_id}/end")
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
     """Mark a practice session as completed."""
     supabase = get_supabase()
     session_lookup = (
         supabase.table("sessions")
-        .select("id, rep_id, business_id")
+        .select("*")
         .eq("id", session_id)
         .limit(1)
         .execute()
@@ -123,17 +132,30 @@ async def end_session(session_id: str, data: SessionEnd):
     if not session_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    result = (
-        supabase.table("sessions")
-        .update(
+    transcript_entries_saved = 0
+    if data.entries:
+        inserts = [
             {
-                "status": "completed",
-                "ended_at": data.ended_at.isoformat(),
-                "duration_seconds": data.duration_seconds,
+                "session_id": session_id,
+                "speaker": entry.speaker,
+                "text": entry.text,
+                "timestamp_offset_ms": entry.timestamp_offset_ms,
             }
-        )
-        .eq("id", session_id)
-        .execute()
+            for entry in data.entries
+        ]
+        transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
+        transcript_entries_saved = len(_row_dicts(transcript_result.data))
+
+    supabase.table("sessions").update(
+        {
+            "status": "completed",
+            "ended_at": data.ended_at.isoformat(),
+            "duration_seconds": data.duration_seconds,
+        }
+    ).eq("id", session_id).execute()
+
+    result = (
+        supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
     )
 
     if not result.data:
@@ -158,6 +180,7 @@ async def end_session(session_id: str, data: SessionEnd):
         )
         return {
             "session": updated_session,
+            "transcript_entries_saved": transcript_entries_saved,
             "score_card_status": "pending_transcript",
             "score_card": score_card,
             "detail": str(exc),
@@ -170,6 +193,7 @@ async def end_session(session_id: str, data: SessionEnd):
         )
         return {
             "session": updated_session,
+            "transcript_entries_saved": transcript_entries_saved,
             "score_card_status": "analysis_failed",
             "score_card": score_card,
             "detail": str(exc),
@@ -177,6 +201,7 @@ async def end_session(session_id: str, data: SessionEnd):
 
     return {
         "session": updated_session,
+        "transcript_entries_saved": transcript_entries_saved,
         "score_card_status": "generated",
         "score_card": score_card,
     }
