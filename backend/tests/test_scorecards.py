@@ -143,8 +143,9 @@ class ScorecardRouteTests(unittest.TestCase):
     def test_post_scorecard_creates_stub_and_get_by_scorecard_id(self):
         fake_supabase = _FakeSupabase()
 
-        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase), patch(
-            "app.services.scorecards.get_supabase", return_value=fake_supabase
+        with (
+            patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
+            patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
         ):
             create_response = self.client.post(
                 "/api/v1/scorecards/",
@@ -201,8 +202,9 @@ class ScorecardRouteTests(unittest.TestCase):
             }
         )
 
-        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase), patch(
-            "app.services.scorecards.get_supabase", return_value=fake_supabase
+        with (
+            patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
+            patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
         ):
             response = self.client.post(
                 "/api/v1/scorecards/",
