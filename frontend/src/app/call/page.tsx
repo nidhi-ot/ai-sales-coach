@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
+
 
 type CallStatus = "connecting" | "active" | "ending" | "ended" | "failed";
 type TranscriptSpeaker = "rep" | "ai_customer";
@@ -173,7 +175,7 @@ export default function CallPage() {
     }
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToSave}/transcripts/batch`,
+      `${API_BASE_URL}/sessions/${sessionIdToSave}/transcripts/batch`,
       {
         method: "POST",
         headers: {
@@ -202,7 +204,7 @@ export default function CallPage() {
     endReason: string
   ) {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToEnd}/end`,
+      `${API_BASE_URL}/sessions/${sessionIdToEnd}/end`,
       {
         method: "PATCH",
         headers: {
@@ -272,7 +274,7 @@ export default function CallPage() {
         localStreamRef.current = stream;
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/v1/realtime/session",
+          `${API_BASE_URL}/realtime/session`,
           {
             method: "POST",
             headers: {
@@ -357,7 +359,7 @@ export default function CallPage() {
         }
 
         const realtimeResponse = await fetch(
-          "https://api.openai.com/v1/realtime/calls",
+          `${API_BASE_URL}/realtime/calls`,
           {
             method: "POST",
             headers: {
@@ -507,7 +509,7 @@ export default function CallPage() {
 
           {status === "active" && (
             <>
-              <h2>Call Active</h2>
+              <h2>In Call...</h2>
               <p style={{ color: "#667085" }}>
                 Speak naturally with the AI buyer.
               </p>
@@ -567,8 +569,8 @@ export default function CallPage() {
               <button
                 onClick={() =>
                   sessionId
-                    ? router.push(`/scorecards?session_id=${sessionId}`)
-                    : router.push("/history")
+                    ? router.replace(`/scorecards?session_id=${sessionId}`)
+                    : router.replace("/history")
                 }
                 style={{
                   padding: "14px 22px",
@@ -581,21 +583,6 @@ export default function CallPage() {
                 }}
               >
                 View Scorecard
-              </button>
-
-              <button
-                onClick={() => router.push("/history")}
-                style={{
-                  padding: "14px 22px",
-                  borderRadius: "12px",
-                  border: "1px solid #d0d5dd",
-                  background: "white",
-                  color: "#344054",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Go to History
               </button>
 
               <button
