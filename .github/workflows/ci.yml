@@ -14,10 +14,10 @@ jobs:
         working-directory: backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -25,9 +25,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install black flake8 mypy
 
       - name: Run Ruff
         run: ruff check app
+
+      - name: Run Black
+        run: black --check .
+
+      - name: Run Flake8
+        run: flake8 app/
+
+      - name: Run Mypy
+        run: mypy app/
 
   frontend-lint:
     runs-on: ubuntu-latest
@@ -36,17 +46,20 @@ jobs:
         working-directory: frontend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: frontend/package.json
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run frontend lint
         run: npm run lint
+
+      - name: Run frontend type check
+        run: npm run type-check
