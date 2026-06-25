@@ -6,6 +6,7 @@ import AppShell from "../../components/AppShell";
 import ScorecardView, {
   type Scorecard,
 } from "../../components/scorecards/ScorecardView";
+import { API_BASE_URL } from "../../lib/api";
 
 
 export default function ScorecardsPage() {
@@ -33,7 +34,7 @@ export default function ScorecardsPage() {
     async function loadScorecard() {
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/v1/scorecards/${resolvedSessionId}`
+          `${API_BASE_URL}/scorecards/${resolvedSessionId}`
         );
 
         const data = await response.json();

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
 
 type Session = {
   id: string;
@@ -27,7 +28,7 @@ export default function HistoryPage() {
       return;
     }
 
-    fetch(`http://127.0.0.1:8000/api/v1/sessions/rep/${repId}`)
+    fetch(`${API_BASE_URL}/sessions/rep/${repId}`)
       .then((res) => res.json())
       .then(async (data) => {
         const safeSessions = Array.isArray(data)
@@ -41,7 +42,7 @@ export default function HistoryPage() {
           safeSessions.map(async (session) => {
             try {
               const scorecardResponse = await fetch(
-                `http://127.0.0.1:8000/api/v1/scorecards/${session.id}`
+                `${API_BASE_URL}/scorecards/${session.id}`
               );
 
               if (!scorecardResponse.ok) {
@@ -80,7 +81,7 @@ export default function HistoryPage() {
 
     try {
       await fetch(
-        `http://127.0.0.1:8000/api/v1/scorecards/session/${sessionId}/share`,
+        `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
         {
           method: "PATCH",
           headers: {

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
+
 
 type CallStatus = "connecting" | "active" | "ending" | "ended" | "failed";
 type TranscriptSpeaker = "rep" | "ai_customer";
@@ -173,7 +175,7 @@ export default function CallPage() {
     }
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToSave}/transcripts/batch`,
+      `${API_BASE_URL}/sessions/${sessionIdToSave}/transcripts/batch`,
       {
         method: "POST",
         headers: {
@@ -202,7 +204,7 @@ export default function CallPage() {
     endReason: string
   ) {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToEnd}/end`,
+      `${API_BASE_URL}/sessions/${sessionIdToEnd}/end`,
       {
         method: "PATCH",
         headers: {
@@ -272,7 +274,7 @@ export default function CallPage() {
         localStreamRef.current = stream;
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/v1/realtime/session",
+          `${API_BASE_URL}/realtime/session`,
           {
             method: "POST",
             headers: {
@@ -357,7 +359,7 @@ export default function CallPage() {
         }
 
         const realtimeResponse = await fetch(
-          "https://api.openai.com/v1/realtime/calls",
+          `${API_BASE_URL}/realtime/calls`,
           {
             method: "POST",
             headers: {

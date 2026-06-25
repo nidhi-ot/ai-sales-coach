@@ -77,6 +77,8 @@ function frameworkMetrics(scorecard: Scorecard): ScoreMetric[] {
 }
 
 export default function ScorecardView({ scorecard }: ScorecardViewProps) {
+  const frameworkScoreMetrics = frameworkMetrics(scorecard);
+
   return (
     <>
       <section
@@ -167,10 +169,10 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
         >
           <h2 style={{ marginTop: 0 }}>BANT Framework</h2>
           <p style={{ color: "#344054", lineHeight: "1.8", marginBottom: 0 }}>
-            {frameworkMetrics(scorecard).map((metric, index) => (
+            {frameworkScoreMetrics.map((metric, index) => (
               <span key={metric.key}>
                 {metric.label}: {metric.value ?? 0}/10
-                {index < frameworkMetrics(scorecard).length - 1 ? <br /> : null}
+                {index < frameworkScoreMetrics.length - 1 ? <br /> : null}
               </span>
             ))}
           </p>
