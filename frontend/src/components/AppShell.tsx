@@ -39,17 +39,18 @@ export default function AppShell({
       }}
     >
       <aside
-        style={{
-          width: "260px",
-          background: "#ffffff",
+         style={{
+          width: "280px",
+          background: "linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%)",
           borderRight: "1px solid #e5e7eb",
-          padding: "28px 20px",
+          padding: "28px 22px",
           display: "flex",
           flexDirection: "column",
           minHeight: "100vh",
           position: "sticky",
           top: 0,
           alignSelf: "flex-start",
+          boxShadow: "8px 0 30px rgba(16, 24, 40, 0.04)",
         }}
       >
         <div
@@ -112,8 +113,11 @@ export default function AppShell({
                   textAlign: "left",
                   fontSize: "15px",
                   fontWeight: active ? 700 : 500,
-                  background: active ? "#e7f4ef" : "transparent",
-                  color: active ? "#006b4f" : "#344054",
+                  background: active
+                    ? "linear-gradient(135deg, #006b4f 0%, #008f6b 100%)"
+                    : "transparent",
+                  color: active ? "white" : "#344054",
+                  boxShadow: active ? "0 10px 20px rgba(0, 107, 79, 0.18)" : "none",
                 }}
               >
                 <span style={{ fontSize: "18px" }}>{item.icon}</span>
@@ -127,8 +131,8 @@ export default function AppShell({
           onClick={handleLogout}
           style={{
             marginTop: "20px",
-            padding: "14px",
-            borderRadius: "12px",
+            padding: "14px 16px",
+            borderRadius: "14px",
             border: "1px solid #d0d5dd",
             background: "#ffffff",
             color: "#b42318",
