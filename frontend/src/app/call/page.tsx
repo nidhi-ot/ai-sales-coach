@@ -568,6 +568,21 @@ export default function CallPage() {
 
             {status === "failed" && (
               <button
+                onClick={() => router.push("/history")}
+                style={{
+                  padding: "14px 22px",
+                  borderRadius: "12px",
+                  border: "1px solid #d0d5dd",
+                  background: "white",
+                  color: "#344054",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Go to History
+              </button>
+
+              <button
                 onClick={() => router.push("/scenarios")}
                 style={secondaryButton}
               >

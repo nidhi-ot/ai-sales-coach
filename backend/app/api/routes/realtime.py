@@ -51,6 +51,7 @@ class SupabaseStatusResponse(BaseModel):
     row_count: int
 
 
+# Need to add logfire
 # Canonical live-practice bootstrap endpoint.
 # Frontend live calls should use this path to create the app session,
 # inject the scenario persona, and receive OpenAI realtime credentials.
