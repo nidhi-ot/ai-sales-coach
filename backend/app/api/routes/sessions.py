@@ -120,13 +120,7 @@ async def create_session(data: SessionStart):
 async def end_session(session_id: str, data: SessionEnd):
     """Mark a practice session as completed."""
     supabase = get_supabase()
-    session_lookup = (
-        supabase.table("sessions")
-        .select("*")
-        .eq("id", session_id)
-        .limit(1)
-        .execute()
-    )
+    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
     session_rows = _row_dicts(session_lookup.data)
 
     if not session_rows:
@@ -154,9 +148,7 @@ async def end_session(session_id: str, data: SessionEnd):
         }
     ).eq("id", session_id).execute()
 
-    result = (
-        supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    )
+    result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
 
     if not result.data:
         raise HTTPException(status_code=404, detail="Session not found")
