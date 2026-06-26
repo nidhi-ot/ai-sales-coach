@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
 
 type Session = {
   id: string;
@@ -10,6 +11,7 @@ type Session = {
   started_at: string;
   duration_seconds: number | null;
   status: string;
+  overall_score?: number | null;
   shared_with_manager?: boolean;
 };
 
@@ -26,9 +28,9 @@ export default function HistoryPage() {
       return;
     }
 
-    fetch(`http://127.0.0.1:8000/api/v1/sessions/rep/${repId}`)
+    fetch(`${API_BASE_URL}/sessions/rep/${repId}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         const safeSessions = Array.isArray(data)
           ? data.map((session) => ({
               ...session,
@@ -36,7 +38,30 @@ export default function HistoryPage() {
             }))
           : [];
 
-        setSessions(safeSessions);
+        const sessionsWithScores = await Promise.all(
+          safeSessions.map(async (session) => {
+            try {
+              const scorecardResponse = await fetch(
+                `${API_BASE_URL}/scorecards/${session.id}`
+              );
+
+              if (!scorecardResponse.ok) {
+                return session;
+              }
+
+              const scorecard = await scorecardResponse.json();
+
+              return {
+                ...session,
+                overall_score: scorecard.overall_score ?? null,
+              };
+            } catch {
+              return session;
+            }
+          })
+        );
+
+        setSessions(sessionsWithScores);
         setLoading(false);
       })
       .catch((error) => {
@@ -56,7 +81,7 @@ export default function HistoryPage() {
 
     try {
       await fetch(
-        `http://127.0.0.1:8000/api/v1/scorecards/session/${sessionId}/share`,
+        `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
         {
           method: "PATCH",
           headers: {
@@ -193,6 +218,12 @@ export default function HistoryPage() {
                         • Duration:{" "}
                         {formatDuration(session.duration_seconds ?? 0)}
                       </p>
+                    </div>
+
+                    <div style={scorePillStyle}>
+                      {session.overall_score != null
+                        ? `${session.overall_score}/10`
+                        : "Pending"}
                     </div>
 
                     <label style={shareLabelStyle}>
@@ -397,6 +428,16 @@ const shareLabelStyle: React.CSSProperties = {
   gap: "8px",
   color: "#344054",
   fontSize: "14px",
+  whiteSpace: "nowrap",
+};
+
+const scorePillStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: "999px",
+  background: "#e7f4ef",
+  color: "#006b4f",
+  fontSize: "13px",
+  fontWeight: 900,
   whiteSpace: "nowrap",
 };
 
