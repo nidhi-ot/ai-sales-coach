@@ -1,6 +1,4 @@
 from datetime import UTC, datetime, timedelta
-from logging import config
-from logging import config
 from uuid import UUID
 
 import httpx
@@ -92,9 +90,14 @@ async def create_realtime_session(config: SessionConfig):
         - Focus area: {config.focus_area}
 
         Use this setup when acting as the AI customer.
-        If the framework is BANT, focus on Budget, Authority, Need, and Timeline.
-        If the framework is MEDDIC, focus on Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, and Champion.
-        If the framework is SPIN, focus on Situation, Problem, Implication, and Need Payoff.
+
+        If the framework is BANT, focus on Budget,
+        Authority, Need, and Timeline.
+
+        If the framework is MEDDIC, follow the MEDDIC methodology.
+
+        If the framework is SPIN, focus on Situation, 
+        Problem, Implication, and Need Payoff.
         """
 
     openai_api_key = settings.openai_api_key
