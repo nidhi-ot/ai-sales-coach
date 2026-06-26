@@ -31,24 +31,6 @@ const businessContexts = [
   },
 ];
 
-const frameworks = [
-  {
-    id: "BANT",
-    title: "BANT",
-    description: "Budget, Authority, Need, Timeline",
-  },
-  {
-    id: "MEDDIC",
-    title: "MEDDIC",
-    description: "Metrics, Economic Buyer, Decision Criteria",
-  },
-  {
-    id: "SPIN",
-    title: "SPIN",
-    description: "Situation, Problem, Implication, Need Payoff",
-  },
-];
-
 const focusAreas = [
   { id: "discovery", title: "Discovery", icon: "🔍" },
   { id: "handling_objections", title: "Handling Objections", icon: "🛡️" },
@@ -364,13 +346,6 @@ const cardGridStyle: React.CSSProperties = {
   gridTemplateColumns: "1fr",
   gap: "12px",
 };
-
-const frameworkGridStyle: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "16px",
-};
-
 const focusGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(4, 1fr)",
@@ -387,16 +362,6 @@ const focusButtonStyle: React.CSSProperties = {
   color: "#101828",
 };
 
-const optionIconStyle: React.CSSProperties = {
-  width: "48px",
-  height: "48px",
-  borderRadius: "16px",
-  background: "#f2f4f7",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "24px",
-};
 
 const stepBadgeStyle: React.CSSProperties = {
   width: "34px",
