@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
 
 type Session = {
   id: string;
@@ -10,6 +11,7 @@ type Session = {
   started_at: string;
   duration_seconds: number | null;
   status: string;
+  overall_score?: number | null;
   shared_with_manager?: boolean;
 };
 
@@ -26,9 +28,9 @@ export default function HistoryPage() {
       return;
     }
 
-    fetch(`http://127.0.0.1:8000/api/v1/sessions/rep/${repId}`)
+    fetch(`${API_BASE_URL}/sessions/rep/${repId}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         const safeSessions = Array.isArray(data)
           ? data.map((session) => ({
               ...session,
@@ -36,7 +38,30 @@ export default function HistoryPage() {
             }))
           : [];
 
-        setSessions(safeSessions);
+        const sessionsWithScores = await Promise.all(
+          safeSessions.map(async (session) => {
+            try {
+              const scorecardResponse = await fetch(
+                `${API_BASE_URL}/scorecards/${session.id}`
+              );
+
+              if (!scorecardResponse.ok) {
+                return session;
+              }
+
+              const scorecard = await scorecardResponse.json();
+
+              return {
+                ...session,
+                overall_score: scorecard.overall_score ?? null,
+              };
+            } catch {
+              return session;
+            }
+          })
+        );
+
+        setSessions(sessionsWithScores);
         setLoading(false);
       })
       .catch((error) => {
@@ -56,7 +81,7 @@ export default function HistoryPage() {
 
     try {
       await fetch(
-        `http://127.0.0.1:8000/api/v1/scorecards/session/${sessionId}/share`,
+        `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
         {
           method: "PATCH",
           headers: {
@@ -80,7 +105,7 @@ export default function HistoryPage() {
           Review your previous AI Sales Coach practice sessions.
         </p>
       </div>
-
+     
       <section
         style={{
           background: "white",
@@ -98,7 +123,7 @@ export default function HistoryPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1.5fr 1.5fr 1fr 1.3fr 1fr",
+                gridTemplateColumns: "1.4fr 1.3fr 0.8fr 1fr 1.2fr 0.8fr",
                 fontWeight: 700,
                 paddingBottom: "12px",
                 borderBottom: "1px solid #e5e7eb",
@@ -107,6 +132,7 @@ export default function HistoryPage() {
             >
               <div>Scenario</div>
               <div>Date</div>
+              <div>Score</div>
               <div>Status</div>
               <div>Share</div>
               <div>Action</div>
@@ -117,7 +143,7 @@ export default function HistoryPage() {
                 key={session.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1.5fr 1.5fr 1fr 1.3fr 1fr",
+                  gridTemplateColumns: "1.4fr 1.3fr 0.8fr 1fr 1.2fr 0.8fr",
                   alignItems: "center",
                   padding: "16px 0",
                   borderBottom: "1px solid #f2f4f7",
@@ -132,7 +158,9 @@ export default function HistoryPage() {
                     ? new Date(session.started_at).toLocaleDateString()
                     : "-"}
                 </div>
-
+                <div style={{ fontWeight: 700, color: "#006b4f" }}>
+                  {session.overall_score != null ? `${session.overall_score}/10` : "Pending"}
+                </div>
                 <div>
                   <span
                     style={{
