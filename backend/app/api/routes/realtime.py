@@ -96,7 +96,7 @@ async def create_realtime_session(config: SessionConfig):
 
         If the framework is MEDDIC, follow the MEDDIC methodology.
 
-        If the framework is SPIN, focus on Situation, 
+        If the framework is SPIN, focus on Situation,
         Problem, Implication, and Need Payoff.
         """
 

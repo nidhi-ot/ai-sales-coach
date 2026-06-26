@@ -299,7 +299,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 function formatScenario(value: string) {
   return value
-    .replace("_", " ")
+    .replaceAll("_", " ")
     .replace("direct sales", "Direct Sales")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
