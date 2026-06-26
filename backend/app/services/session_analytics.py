@@ -30,7 +30,7 @@ def _as_float(value: Any) -> float | None:
 
 def _average(values: list[float]) -> float:
     """Calculate the average of a list of float values"""
-    return round(sum(values)) / len(values) if values else 0.0
+    return round(sum(values) / len(values), 2) if values else 0.0
 
 
 def _scenario_title(scenario: Any) -> str:
