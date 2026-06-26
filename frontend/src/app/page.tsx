@@ -47,6 +47,9 @@ export default function LoginPage() {
       localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
       localStorage.setItem("full_name", data.full_name || "Sales Rep");
+      localStorage.setItem("email", data.email || "");
+      localStorage.setItem("phone_number", data.phone_number || "");
+      localStorage.setItem("role", data.role || "rep");
       localStorage.setItem("remember_me", String(rememberMe));
 
       router.push("/dashboard");
@@ -60,7 +63,7 @@ export default function LoginPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#f4f7f5",
+        background: "linear-gradient(135deg, #f7faf8 0%, #eef7f2 100%)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -70,43 +73,48 @@ export default function LoginPage() {
     >
       <div
         style={{
-          width: "1200px",
-          height: "720px",
+          width: "1180px",
+          minHeight: "680px",
           background: "#fff",
-          borderRadius: "28px",
+          borderRadius: "32px",
           overflow: "hidden",
           display: "flex",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+          boxShadow: "0 28px 80px rgba(16,24,40,0.12)",
+          border: "1px solid #e5e7eb",
         }}
       >
         <section
           style={{
-            width: "450px",
-            padding: "48px",
+            width: "460px",
+            padding: "54px 50px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
           }}
         >
-          <div style={{ marginBottom: "32px" }}>
-            <img
-              src="/logo.png"
-              alt="AI Sales Coach"
-              style={{
-                width: "90px",
-                height: "90px",
-                objectFit: "contain",
-              }}
-            />
-          </div>
+          <img
+            src="/logo.png"
+            alt="AI Sales Coach"
+            style={{
+              width: "76px",
+              height: "76px",
+              objectFit: "contain",
+              marginBottom: "26px",
+            }}
+          />
 
-          <h1 style={{ marginBottom: "8px", color: "#101828" }}>
+          <span style={badgeStyle}>AI Sales Coach</span>
+
+          <h1
+            style={{
+              margin: "18px 0 8px",
+              color: "#101828",
+              fontSize: "34px",
+              fontWeight: 900,
+            }}
+          >
             Welcome back!
           </h1>
-
-          <p style={{ color: "#667085", marginBottom: "28px" }}>
-            Sign in to continue your sales training journey.
-          </p>
 
           <label style={labelStyle}>Email or Phone</label>
           <input
@@ -151,6 +159,10 @@ export default function LoginPage() {
             <p
               style={{
                 color: "#b42318",
+                background: "#fef3f2",
+                border: "1px solid #fecdca",
+                padding: "12px",
+                borderRadius: "12px",
                 fontSize: "14px",
                 marginBottom: "16px",
               }}
@@ -201,22 +213,32 @@ export default function LoginPage() {
           <div
             style={{
               position: "absolute",
-              bottom: "24px",
-              left: "24px",
-              right: "24px",
-              background: "rgba(255,255,255,0.95)",
-              padding: "20px",
-              borderRadius: "18px",
-              backdropFilter: "blur(8px)",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.25) 100%)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: "28px",
+              left: "28px",
+              right: "28px",
+              background: "rgba(255,255,255,0.94)",
+              padding: "24px",
+              borderRadius: "22px",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 16px 40px rgba(16,24,40,0.18)",
             }}
           >
-            <h3 style={{ marginTop: 0, marginBottom: "8px" }}>
-              AI Sales Coach
+            <h3 style={{ marginTop: 0, marginBottom: "8px", fontSize: "22px" }}>
+              Practice calls. Get feedback. Improve faster.
             </h3>
 
             <p style={{ margin: 0, color: "#667085", lineHeight: "1.6" }}>
-              Improve sales conversations through realistic practice scenarios,
-              AI coaching, and performance feedback.
+              Train with realistic AI customer conversations and receive focused
+              coaching after every session.
             </p>
           </div>
         </div>
@@ -225,17 +247,30 @@ export default function LoginPage() {
   );
 }
 
+const badgeStyle = {
+  display: "inline-block",
+  width: "fit-content",
+  padding: "8px 12px",
+  borderRadius: "999px",
+  background: "#e7f4ef",
+  color: "#006b4f",
+  fontWeight: 800,
+  fontSize: "13px",
+};
+
+
+
 const labelStyle = {
   display: "block",
   marginBottom: "8px",
-  fontWeight: 600,
+  fontWeight: 700,
   color: "#344054",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "14px",
-  borderRadius: "12px",
+  padding: "15px",
+  borderRadius: "14px",
   border: "1px solid #d0d5dd",
   marginBottom: "18px",
   fontSize: "15px",
@@ -249,9 +284,10 @@ const buttonStyle = {
   border: "none",
   background: "#006b4f",
   color: "white",
-  fontWeight: 700,
+  fontWeight: 800,
   fontSize: "15px",
   cursor: "pointer",
+  boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
 };
 
 const linkButtonStyle = {
@@ -259,5 +295,5 @@ const linkButtonStyle = {
   background: "transparent",
   color: "#006b4f",
   cursor: "pointer",
-  fontWeight: 700,
+  fontWeight: 800,
 };
