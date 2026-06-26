@@ -1,13 +1,18 @@
 from datetime import datetime
 from typing import Any, List, Literal, cast
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scorecards import analyze_transcript, create_scorecard_stub
+from app.services.session_analytics import (
+    get_dimension_progress,
+    get_recent_sessions,
+    get_session_stats,
+)
 
 router = APIRouter()
 
@@ -72,6 +77,37 @@ class TranscriptBatch(BaseModel):
     """
 
     entries: List[TranscriptEntry]
+
+
+class SessionStatsResponse(BaseModel):
+    total_calls: int
+    avg_score: float
+    best_score: float
+    last_call_date: str | None
+    improvement_rate: float
+
+
+class RecentSessionSummary(BaseModel):
+    id: str
+    title: str
+    scenario: str | None
+    score: float | None
+    date: str | None
+    duration: int | None
+
+
+class RecentSessionsResponse(BaseModel):
+    sessions: list[RecentSessionSummary]
+
+
+class DimensionProgressItem(BaseModel):
+    avg: float
+    latest: float | None
+    count: int
+
+
+class DimensionProgressResponse(BaseModel):
+    dimensions: dict[str, DimensionProgressItem]
 
 
 # Manual session creation only. Live WebRTC calls should start with
@@ -284,3 +320,23 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
     )
 
     return _row_dicts(result.data)
+
+
+@router.get("/stats/{rep_id}", response_model=SessionStatsResponse)
+async def get_stats(rep_id: str):
+    """Get the session statistics for given rep_id"""
+    return get_session_stats(rep_id)
+
+
+@router.get("/recent/{rep_id}", response_model=RecentSessionsResponse)
+async def get_recent(
+    rep_id: str,
+    limit: int = Query(5, ge=1, le=25),
+):
+    """Get the recent sessions for given rep_id"""
+    return {"sessions": get_recent_sessions(rep_id=rep_id, limit=limit)}
+
+
+@router.get("/dimensions/{rep_id}", response_model=DimensionProgressResponse)
+async def get_dimensions(rep_id: str):
+    return {"dimensions": get_dimension_progress(rep_id)}
