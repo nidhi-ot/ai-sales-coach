@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class ScenarioSlug(str, Enum):
     cold_call = "cold_call"
     hot_call = "hot_call"
-    direktforsaljning = "direktforsaljning"
+    directsales = "directsales"
     meeting = "meeting"
 
 

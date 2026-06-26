@@ -93,7 +93,7 @@ Allowed `scenario` values:
 
 - `cold_call`
 - `hot_call`
-- `direktforsaljning`
+- `directsales`
 - `meeting`
 
 Response `200`:
