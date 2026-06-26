@@ -28,7 +28,7 @@ CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   rep_id UUID NOT NULL,
   business_id UUID REFERENCES business_profiles(id),
-  scenario TEXT NOT NULL CHECK (scenario IN ('cold_call', 'hot_call', 'direktforsaljning', 'meeting')),
+  scenario TEXT NOT NULL CHECK (scenario IN ('cold_call', 'hot_call', 'directsales', 'meeting')),
   profile_version INTEGER, -- Which profile version was used for this call
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'error')),
   started_at TIMESTAMPTZ DEFAULT NOW(),

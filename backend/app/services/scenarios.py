@@ -211,9 +211,9 @@ SCENARIOS: dict[ScenarioSlug, ScenarioConfig] = {
             "solution to real sales-team challenges and measurable outcomes."
         ),
     ),
-    ScenarioSlug.direktforsaljning: ScenarioConfig(
-        slug=ScenarioSlug.direktforsaljning,
-        title="Direktforsaljning",
+    ScenarioSlug.directsales: ScenarioConfig(
+        slug=ScenarioSlug.directsales,
+        title="Direct Sales",
         objective=(
             "The rep must run a late-stage sales conversation for AI Sales Coach, handle final "
             "commercial concerns, and win a clear purchase commitment or pilot start on the call."
