@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
+import { API_BASE_URL } from "../../lib/api";
 
 type DashboardStats = {
   total_calls: number;
@@ -65,9 +66,9 @@ export default function DashboardPage() {
 
     const [statsResponse, recentResponse, dimensionsResponse] =
       await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/v1/sessions/stats/${repId}`),
-        fetch(`http://127.0.0.1:8000/api/v1/sessions/recent/${repId}?limit=5`),
-        fetch(`http://127.0.0.1:8000/api/v1/sessions/dimensions/${repId}`),
+        fetch(`${API_BASE_URL}/sessions/stats/${repId}`),
+        fetch(`${API_BASE_URL}/sessions/recent/${repId}?limit=5`),
+        fetch(`${API_BASE_URL}/sessions/dimensions/${repId}`),
       ]);
 
     if (statsResponse.ok) {
@@ -278,11 +279,9 @@ function ProgressRow({
 
 function formatScenario(value: string) {
   return value
-    .replace("_", " ")
-    .replace("direct sales", "Direct Sales")
+    .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
-
 const heroStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #ffffff 0%, #f0faf6 55%, #e6f4ef 100%)",
   border: "1px solid #dfeee8",

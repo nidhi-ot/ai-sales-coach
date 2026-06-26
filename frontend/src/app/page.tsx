@@ -258,13 +258,7 @@ const badgeStyle = {
   fontSize: "13px",
 };
 
-const featureListStyle = {
-  display: "grid",
-  gap: "8px",
-  marginBottom: "28px",
-  color: "#344054",
-  fontSize: "14px",
-};
+
 
 const labelStyle = {
   display: "block",

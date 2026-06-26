@@ -146,7 +146,7 @@ export default function ScorecardsPage() {
     loadScorecard();
   }, [querySessionId]);
 
-  const overallScore = scorecard?.overall_score ?? 0;
+  const overallScore = scorecard?.overall_score ?? null;
 
   return (
     <AppShell>
