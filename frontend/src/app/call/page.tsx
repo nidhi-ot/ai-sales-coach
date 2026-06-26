@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
+
 
 type CallStatus =
   | "ready"
@@ -148,7 +150,7 @@ export default function CallPage() {
     entries: TranscriptEntry[]
   ) {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/v1/sessions/${sessionIdToEnd}/end`,
+      `${API_BASE_URL}/sessions/${sessionIdToEnd}/end`,
       {
         method: "POST",
         headers: {
@@ -212,7 +214,7 @@ export default function CallPage() {
       localStreamRef.current = stream;
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/realtime/session",
+        `${API_BASE_URL}/realtime/session`,
         {
           method: "POST",
           headers: {
@@ -527,8 +529,8 @@ export default function CallPage() {
                 <button
                   onClick={() =>
                     sessionId
-                      ? router.push(`/scorecards?session_id=${sessionId}`)
-                      : router.push("/history")
+                      ? router.replace(`/scorecards?session_id=${sessionId}`)
+                      : router.replace("/history")
                   }
                   style={primaryButton}
                 >
