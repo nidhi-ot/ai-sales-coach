@@ -42,10 +42,10 @@ export default function ScenariosPage() {
   const [error, setError] = useState("");
 
   function startSession() {
-    setError("");
-    setLoading(true);
-    router.push(`/call?scenario=${selectedScenario}`);
-  }
+  setError("");
+  setLoading(true);
+  router.push(`/practice-setup?scenario=${selectedScenario}`);
+}
 
   const selected = scenarios.find((scenario) => scenario.id === selectedScenario);
 

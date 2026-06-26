@@ -41,6 +41,15 @@ export default function CallPage() {
 
   const scenario = searchParams.get("scenario") || "cold_call";
 
+  const businessContext =
+  searchParams.get("business_context") || "apartment_association";
+
+const framework =
+  searchParams.get("framework") || "BANT";
+
+const focusArea =
+  searchParams.get("focus_area") || "handling_objections";
+
   const [status, setStatus] = useState<CallStatus>("ready");
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -224,10 +233,13 @@ export default function CallPage() {
             scenario,
             rep_id: repId,
             business_id: businessId,
+            business_context: businessContext,
+            framework,
+            focus_area: focusArea,
             vad: {
               threshold: 0.5,
               silence_duration_ms: 500,
-            },
+             },
           }),
           signal: abortController.signal,
         }

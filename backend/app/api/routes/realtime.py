@@ -1,4 +1,6 @@
 from datetime import UTC, datetime, timedelta
+from logging import config
+from logging import config
 from uuid import UUID
 
 import httpx
@@ -27,7 +29,9 @@ class SessionConfig(BaseModel):
     scenario: ScenarioSlug
     rep_id: UUID
     business_id: UUID
-    # Deprecated spike field. Live calls currently use semantic_vad eagerness below.
+    business_context: str = "apartment_association"
+    framework: str = "BANT"
+    focus_area: str = "handling_objections"
     vad: VadConfig | None = None
 
 
@@ -79,6 +83,20 @@ async def create_realtime_session(config: SessionConfig):
     print(f"🎯 Objective: {scenario_config.objective}\n")
 
     instructions = context["system_instruction"]
+
+    instructions += f"""
+
+        Practice setup:
+        - Business context: {config.business_context}
+        - Sales framework: {config.framework}
+        - Focus area: {config.focus_area}
+
+        Use this setup when acting as the AI customer.
+        If the framework is BANT, focus on Budget, Authority, Need, and Timeline.
+        If the framework is MEDDIC, focus on Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, and Champion.
+        If the framework is SPIN, focus on Situation, Problem, Implication, and Need Payoff.
+        """
+
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
