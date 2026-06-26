@@ -72,8 +72,8 @@ def get_session_stats(rep_id: str) -> dict[str, Any]:
             scores.append(score)
 
         improvement_rate = 0.0
-    if len(scores) > 1 and scores[0] != 0:
-        improvement_rate = round(((scores[-1] - scores[0]) / scores[0]) * 100, 2)
+    if len(scores) > 1 and scores[-1] != 0:
+        improvement_rate = round(((scores[0] - scores[-1]) / scores[-1]) * 100, 2)
 
     return {
         "total_calls": len(session_rows),
