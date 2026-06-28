@@ -307,7 +307,7 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
 
 @router.get("/rep/{rep_id}")
 async def get_rep_sessions(rep_id: str, limit: int = 20):
-    """Get rep's session history."""
+    """Get rep's session history with score summaries."""
     supabase = get_supabase()
 
     result = (
@@ -319,7 +319,31 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
         .execute()
     )
 
-    return _row_dicts(result.data)
+    session_rows = _row_dicts(result.data)
+    session_ids = [str(row["id"]) for row in session_rows if row.get("id")]
+
+    scorecards_by_session: dict[str, dict[str, Any]] = {}
+
+    if session_ids:
+        scorecard_result = (
+            supabase.table("scorecards")
+            .select("session_id, overall_score, shared_with_manager")
+            .in_("session_id", session_ids)
+            .execute()
+        )
+
+        scorecards_by_session = {
+            str(row["session_id"]): row
+            for row in _row_dicts(scorecard_result.data)
+            if row.get("session_id")
+        }
+
+    for row in session_rows:
+        scorecard = scorecards_by_session.get(str(row["id"]), {})
+        row["overall_score"] = scorecard.get("overall_score")
+        row["shared_with_manager"] = bool(scorecard.get("shared_with_manager", False))
+
+    return session_rows
 
 
 @router.get("/stats/{rep_id}", response_model=SessionStatsResponse)
