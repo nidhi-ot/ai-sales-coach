@@ -30,38 +30,16 @@ export default function HistoryPage() {
 
     fetch(`${API_BASE_URL}/sessions/rep/${repId}`)
       .then((res) => res.json())
-      .then(async (data) => {
+      .then((data) => {
         const safeSessions = Array.isArray(data)
           ? data.map((session) => ({
               ...session,
+              overall_score: session.overall_score ?? null,
               shared_with_manager: session.shared_with_manager ?? false,
             }))
           : [];
 
-        const sessionsWithScores = await Promise.all(
-          safeSessions.map(async (session) => {
-            try {
-              const scorecardResponse = await fetch(
-                `${API_BASE_URL}/scorecards/${session.id}`
-              );
-
-              if (!scorecardResponse.ok) {
-                return session;
-              }
-
-              const scorecard = await scorecardResponse.json();
-
-              return {
-                ...session,
-                overall_score: scorecard.overall_score ?? null,
-              };
-            } catch {
-              return session;
-            }
-          })
-        );
-
-        setSessions(sessionsWithScores);
+        setSessions(safeSessions);
         setLoading(false);
       })
       .catch((error) => {
@@ -223,7 +201,7 @@ export default function HistoryPage() {
                     <div style={scorePillStyle}>
                       {session.overall_score != null
                         ? `${session.overall_score}/10`
-                        : "Pending"}
+                        : "Not scored"}
                     </div>
 
                     <label style={shareLabelStyle}>
