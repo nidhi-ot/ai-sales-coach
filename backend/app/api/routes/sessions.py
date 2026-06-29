@@ -121,13 +121,7 @@ async def create_session(data: SessionStart):
 async def end_session(session_id: str, data: SessionEnd):
     supabase = get_supabase()
 
-    session_lookup = (
-        supabase.table("sessions")
-        .select("*")
-        .eq("id", session_id)
-        .limit(1)
-        .execute()
-    )
+    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
     session_rows = _row_dicts(session_lookup.data)
 
     if not session_rows:
@@ -157,11 +151,7 @@ async def end_session(session_id: str, data: SessionEnd):
             for entry in data.entries
         ]
 
-        transcript_result = (
-            supabase.table("transcripts")
-            .insert(cast(Any, inserts))
-            .execute()
-        )
+        transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
         transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
     supabase.table("sessions").update(
@@ -172,13 +162,7 @@ async def end_session(session_id: str, data: SessionEnd):
         }
     ).eq("id", session_id).execute()
 
-    result = (
-        supabase.table("sessions")
-        .select("*")
-        .eq("id", session_id)
-        .limit(1)
-        .execute()
-    )
+    result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
 
     updated_rows = _row_dicts(result.data)
     if not updated_rows:

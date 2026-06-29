@@ -352,8 +352,6 @@ def normalize_framework(framework: str | None) -> str:
     return value if value in FRAMEWORK_DIMENSIONS else DEFAULT_BUSINESS_PROFILE["framework"]
 
 
-
-
 def get_latest_profile_focus(rep_id: str) -> dict[str, Any] | None:
     supabase = get_supabase()
 
