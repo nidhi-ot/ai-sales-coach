@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL } from "../../lib/api";
-
 
 type CallStatus =
   | "ready"
@@ -37,18 +36,12 @@ type RealtimeEventPayload = {
 
 export default function CallPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const scenario = searchParams.get("scenario") || "cold_call";
-
-  const businessContext =
-  searchParams.get("business_context") || "apartment_association";
-
-const framework =
-  searchParams.get("framework") || "BANT";
-
-const focusArea =
-  searchParams.get("focus_area") || "handling_objections";
+  const [scenario, setScenario] = useState("cold_call");
+  const [businessContext, setBusinessContext] = useState(
+    "apartment_association"
+  );
+  const [framework, setFramework] = useState("BANT");
+  const [focusArea, setFocusArea] = useState("handling_objections");
 
   const [status, setStatus] = useState<CallStatus>("ready");
   const [error, setError] = useState("");
@@ -65,6 +58,16 @@ const focusArea =
   const callRunRef = useRef(0);
   const callStartedAtRef = useRef<Date | null>(null);
   const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setScenario(params.get("scenario") || "cold_call");
+    setBusinessContext(
+      params.get("business_context") || "apartment_association"
+    );
+    setFramework(params.get("framework") || "BANT");
+    setFocusArea(params.get("focus_area") || "handling_objections");
+  }, []);
 
   function cleanupCallResources() {
     abortControllerRef.current?.abort();
@@ -90,53 +93,55 @@ const focusArea =
   }
 
   const handleRealtimeEvent = useCallback((event: MessageEvent<string>) => {
-  function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
-    const trimmedText = text.trim();
-    if (!trimmedText) return;
+    function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
+      const trimmedText = text.trim();
+      if (!trimmedText) return;
 
-    transcriptBufferRef.current.push({
-      speaker,
-      text: trimmedText,
-      timestamp_offset_ms: callStartedAtRef.current
-        ? Date.now() - callStartedAtRef.current.getTime()
-        : 0,
-    });
-  }
+      transcriptBufferRef.current.push({
+        speaker,
+        text: trimmedText,
+        timestamp_offset_ms: callStartedAtRef.current
+          ? Date.now() - callStartedAtRef.current.getTime()
+          : 0,
+      });
+    }
 
-  let payload: unknown;
+    let payload: unknown;
 
-  try {
-    payload = JSON.parse(event.data);
-  } catch {
-    console.debug("Realtime raw event:", event.data);
-    return;
-  }
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      console.debug("Realtime raw event:", event.data);
+      return;
+    }
 
-  if (!payload || typeof payload !== "object") return;
+    if (!payload || typeof payload !== "object") return;
 
-  const realtimeEvent = payload as RealtimeEventPayload;
+    const realtimeEvent = payload as RealtimeEventPayload;
 
-  if (
-    realtimeEvent.type === "conversation.item.input_audio_transcription.completed" &&
-    typeof realtimeEvent.transcript === "string"
-  ) {
-    bufferTranscriptLine("rep", realtimeEvent.transcript);
-  }
+    if (
+      realtimeEvent.type ===
+        "conversation.item.input_audio_transcription.completed" &&
+      typeof realtimeEvent.transcript === "string"
+    ) {
+      bufferTranscriptLine("rep", realtimeEvent.transcript);
+    }
 
-  if (
-    realtimeEvent.type === "response.audio_transcript.done" &&
-    typeof realtimeEvent.transcript === "string"
-  ) {
-    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
-  }
+    if (
+      realtimeEvent.type === "response.audio_transcript.done" &&
+      typeof realtimeEvent.transcript === "string"
+    ) {
+      bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+    }
 
-  if (
-    realtimeEvent.type === "response.output_audio_transcript.done" &&
-    typeof realtimeEvent.transcript === "string"
-  ) {
-    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
-  }
-}, []);
+    if (
+      realtimeEvent.type === "response.output_audio_transcript.done" &&
+      typeof realtimeEvent.transcript === "string"
+    ) {
+      bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+    }
+  }, []);
+
   async function endBackendSession(
     sessionIdToEnd: string,
     endedAt: Date,
@@ -208,28 +213,25 @@ const focusArea =
 
       localStreamRef.current = stream;
 
-      const response = await fetch(
-        `${API_BASE_URL}/realtime/session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      const response = await fetch(`${API_BASE_URL}/realtime/session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scenario,
+          rep_id: repId,
+          business_id: businessId,
+          business_context: businessContext,
+          framework,
+          focus_area: focusArea,
+          vad: {
+            threshold: 0.5,
+            silence_duration_ms: 500,
           },
-          body: JSON.stringify({
-            scenario,
-            rep_id: repId,
-            business_id: businessId,
-            business_context: businessContext,
-            framework,
-            focus_area: focusArea,
-            vad: {
-              threshold: 0.5,
-              silence_duration_ms: 500,
-             },
-          }),
-          signal: abortController.signal,
-        }
-      );
+        }),
+        signal: abortController.signal,
+      });
 
       const data = await response.json();
 
@@ -282,18 +284,15 @@ const focusArea =
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
-      const realtimeResponse = await fetch(
-        "https://api.openai.com/v1/realtime/calls",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${clientSecret}`,
-            "Content-Type": "application/sdp",
-          },
-          body: offer.sdp,
-          signal: abortController.signal,
-        }
-      );
+      const realtimeResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${clientSecret}`,
+          "Content-Type": "application/sdp",
+        },
+        body: offer.sdp,
+        signal: abortController.signal,
+      });
 
       if (!realtimeResponse.ok) {
         const errorText = await realtimeResponse.text();
@@ -488,9 +487,9 @@ const focusArea =
 
             {status === "ended" && (
               <div style={savedBoxStyle}>
-                  ✅ Your practice session has been saved successfully.
+                ✅ Your practice session has been saved successfully.
               </div>
-          )}
+            )}
           </div>
 
           <div style={controlBarStyle}>

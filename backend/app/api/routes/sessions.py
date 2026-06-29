@@ -8,6 +8,7 @@ from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scorecards import analyze_transcript, create_scorecard_stub
+from app.services.scenarios import get_scenario_config
 from app.services.session_analytics import (
     create_next_salesperson_profile,
     get_dimension_progress,
@@ -22,6 +23,23 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     if not isinstance(data, list):
         return []
     return [item for item in data if isinstance(item, dict)]
+
+
+def _format_datetime(value: Any) -> str | None:
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        return value.isoformat()
+
+    if isinstance(value, str):
+        normalized_value = value.replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(normalized_value).isoformat()
+        except ValueError:
+            return value
+
+    return str(value)
 
 
 class SessionStart(BaseModel):
@@ -77,6 +95,25 @@ class DimensionProgressItem(BaseModel):
 
 class DimensionProgressResponse(BaseModel):
     dimensions: dict[str, DimensionProgressItem]
+
+
+class SessionDetailTranscriptEntry(BaseModel):
+    speaker: Literal["rep", "ai_customer"]
+    text: str
+    timestamp_offset_ms: int | None = None
+    created_at: str | None = None
+
+
+class SessionDetailResponse(BaseModel):
+    id: str
+    title: str
+    status: str | None = None
+    created_at: str | None = None
+    ended_at: str | None = None
+    transcript: list[SessionDetailTranscriptEntry]
+    duration: int | None = None
+    scenario: str | None = None
+    scorecard_id: str | None = None
 
 
 @router.post("/")
@@ -337,3 +374,59 @@ async def get_recent(rep_id: str, limit: int = Query(5, ge=1, le=25)):
 @router.get("/dimensions/{rep_id}", response_model=DimensionProgressResponse)
 async def get_dimensions(rep_id: str):
     return {"dimensions": get_dimension_progress(rep_id)}
+
+
+@router.get("/{session_id}", response_model=SessionDetailResponse)
+async def get_session_details(session_id: str):
+    supabase = get_supabase()
+
+    session_result = (
+        supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
+    )
+    session_rows = _row_dicts(session_result.data)
+
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session_row = session_rows[0]
+
+    transcript_result = (
+        supabase.table("transcripts")
+        .select("speaker, text, timestamp_offset_ms, created_at")
+        .eq("session_id", session_id)
+        .order("timestamp_offset_ms")
+        .execute()
+    )
+    transcript_rows = _row_dicts(transcript_result.data)
+
+    scorecard_result = (
+        supabase.table("scorecards").select("id").eq("session_id", session_id).limit(1).execute()
+    )
+    scorecard_rows = _row_dicts(scorecard_result.data)
+    scorecard_id = str(scorecard_rows[0]["id"]) if scorecard_rows else None
+
+    try:
+        title = get_scenario_config(str(session_row.get("scenario"))).title
+    except Exception:
+        scenario_value = session_row.get("scenario")
+        title = str(scenario_value).replace("_", " ").title() if scenario_value else "Unknown"
+
+    return {
+        "id": str(session_row.get("id")),
+        "title": title,
+        "status": session_row.get("status"),
+        "created_at": _format_datetime(session_row.get("started_at")),
+        "ended_at": _format_datetime(session_row.get("ended_at")),
+        "transcript": [
+            {
+                "speaker": row.get("speaker"),
+                "text": row.get("text"),
+                "timestamp_offset_ms": row.get("timestamp_offset_ms"),
+                "created_at": _format_datetime(row.get("created_at")),
+            }
+            for row in transcript_rows
+        ],
+        "duration": session_row.get("duration_seconds"),
+        "scenario": session_row.get("scenario"),
+        "scorecard_id": scorecard_id,
+    }
