@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from app.models.agent import ScenarioSlug
 from app.db.client import get_supabase
-
+from app.models.agent import ScenarioSlug
 
 
 @dataclass(frozen=True)

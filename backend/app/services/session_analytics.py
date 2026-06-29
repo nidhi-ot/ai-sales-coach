@@ -165,7 +165,10 @@ def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
 
     return dimensions
 
-async def create_next_salesperson_profile(session_id: str, scorecard: dict[str, Any]) -> dict[str, Any]:
+async def create_next_salesperson_profile(
+    session_id: str,
+    scorecard: dict[str, Any],
+    ) -> dict[str, Any]:
     supabase = get_supabase()
 
     session_rows = _row_dicts(
@@ -220,7 +223,11 @@ async def create_next_salesperson_profile(session_id: str, scorecard: dict[str, 
         if isinstance(value, (int, float))
     }
 
-    weakest_dimension = min(valid_scores, key=valid_scores.get) if valid_scores else "objection_handling"
+    weakest_dimension = (
+    min(valid_scores, key=valid_scores.get)
+    if valid_scores
+    else "objection_handling"
+    )
 
     result = (
         supabase.table("salesperson_profiles")
