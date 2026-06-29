@@ -188,7 +188,14 @@ export default function PracticeSetupContent() {
                     <div>
                       <span style={smallLabelStyle}>Recommended Focus</span>
                       <strong>
-                        {formatFocusLabel(learningProfile.weakest_dimension)}
+                        {focusAreas.find(
+                        (focus) =>
+                        focus.id ===
+                        mapWeakestDimensionToFocusArea(
+                        learningProfile.weakest_dimension
+                        )
+                        )?.title ??
+                        formatFocusLabel(learningProfile.weakest_dimension)}
                       </strong>
                     </div>
                   </div>
