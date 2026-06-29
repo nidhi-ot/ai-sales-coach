@@ -209,13 +209,10 @@ async def end_session(session_id: str, data: SessionEnd):
     profile_detail = None
 
     try:
-        print("PROFILE CREATE STARTED", session_id)
-        profile = await create_next_salesperson_profile(session_id, score_card)
-        print("PROFILE CREATED", profile)
+      profile = await create_next_salesperson_profile(session_id, score_card)
     except Exception as exc:
-        profile_status = "failed"
-        profile_detail = str(exc)
-        print("PROFILE CREATION FAILED:", repr(exc))
+      profile_status = "failed"
+      profile_detail = str(exc)
 
     return {
         "session": updated_session,

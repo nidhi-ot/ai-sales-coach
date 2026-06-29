@@ -46,9 +46,22 @@ const focusAreas = [
 ];
 
 function mapWeakestDimensionToFocusArea(value: string) {
-  if (value === "objection_handling") return "handling_objections";
-  if (value === "needs_discovery") return "discovery";
-  return value;
+  switch (value) {
+    case "objection_handling":
+      return "handling_objections";
+
+    case "rapport":
+      return "value_proposition";
+
+    case "discovery":
+      return "discovery";
+
+    case "closing":
+      return "closing";
+
+    default:
+      return "handling_objections";
+  }
 }
 
 function formatFocusLabel(value: string) {
