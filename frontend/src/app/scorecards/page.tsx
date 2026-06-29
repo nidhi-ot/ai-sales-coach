@@ -163,12 +163,28 @@ export default function ScorecardsPage() {
             </p>
           </div>
 
-          <div style={scoreCircleStyle}>
-            <strong style={{ fontSize: "40px" }}>{overallScore}/10</strong>
-            <span style={{ color: "#667085", fontWeight: 700 }}>
-              Overall Score
-            </span>
-          </div>
+          {overallScore != null ? (
+            <div style={scoreCircleStyle}>
+              <strong style={{ fontSize: "40px" }}>{overallScore}/10</strong>
+              <span style={{ color: "#667085", fontWeight: 700 }}>
+                Overall Score
+              </span>
+            </div>
+          ) : (
+            <div style={noScoreNoticeStyle}>
+              <span style={infoIconStyle}>i</span>
+
+              <div>
+                <strong style={{ color: "#101828", fontSize: "18px" }}>
+                  No score generated
+                </strong>
+
+                <p style={{ color: "#667085", margin: "8px 0 0", lineHeight: "1.5" }}>
+                  This session did not include enough conversation to evaluate.
+                </p>
+              </div>
+            </div>
+          )}
         </section>
 
         {loading ? (
@@ -239,7 +255,7 @@ export default function ScorecardsPage() {
                     <FrameworkItem
                       key={metric.key}
                       label={metric.label}
-                      value={metric.value ?? 0}
+                      value={metric.value}
                       icon={metric.icon}
                     />
                   ))}
@@ -340,40 +356,80 @@ function ScoreCard({
   icon: string;
   warning?: boolean;
 }) {
-  const score = value ?? 0;
+  const hasScore = value != null;
+  const showWarning = Boolean(warning && hasScore);
 
   return (
     <div
       style={{
-        background: warning
-          ? "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)"
-          : "linear-gradient(135deg, #ecfdf3 0%, #ffffff 100%)",
-        border: warning ? "1px solid #fed7aa" : "1px solid #bbf7d0",
+        background: showWarning
+        ? "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)"
+        : hasScore
+          ? "linear-gradient(135deg, #ecfdf3 0%, #ffffff 100%)"
+          : "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
+        border: showWarning
+          ? "1px solid #fed7aa"
+          : hasScore
+            ? "1px solid #bbf7d0"
+            : "1px solid #e2e8f0",
         borderRadius: "22px",
         padding: "24px",
         boxShadow: "0 12px 30px rgba(16,24,40,0.06)",
+        minHeight: "170px",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <p style={{ margin: 0, color: "#667085", fontWeight: 700 }}>{title}</p>
+        <div>
+          <p style={{ margin: 0, color: "#101828", fontWeight: 800 }}>
+            {title}
+          </p>
+          <span
+            style={{
+              display: "inline-block",
+              marginTop: "8px",
+              padding: "4px 10px",
+              borderRadius: "999px",
+              background: showWarning ? "#ffedd5" : hasScore ? "#dcfce7" : "#f1f5f9",
+              color: showWarning ? "#c2410c" : hasScore ? "#027a48" : "#64748b",
+              fontSize: "13px",
+              fontWeight: 800,
+            }}
+          >
+            {hasScore ? "Scored" : "Not scored"}
+          </span>
+        </div>
+
         <span style={{ fontSize: "24px" }}>{icon}</span>
       </div>
 
-      <h2 style={{ margin: "18px 0 8px", fontSize: "34px" }}>{score}/10</h2>
+      {hasScore ? (
+        <>
+          <h2 style={{ margin: "22px 0 8px", fontSize: "34px" }}>
+            {value}/10
+          </h2>
 
-      <p
-        style={{
-          margin: 0,
-          color: warning ? "#c2410c" : "#027a48",
-          fontWeight: 800,
-        }}
-      >
-        {score >= 8
-          ? "Strong"
-          : score >= 6
-            ? "Good"
-            : "Needs practice"}
-      </p>
+          <p
+            style={{
+              margin: 0,
+              color: warning ? "#c2410c" : "#027a48",
+              fontWeight: 800,
+            }}
+          >
+            {value >= 8 ? "Strong" : value >= 6 ? "Good" : "Needs practice"}
+          </p>
+        </>
+      ) : (
+        <div
+          style={{
+            marginTop: "38px",
+            color: "#98a2b3",
+            fontSize: "32px",
+            fontWeight: 800,
+          }}
+        >
+          —
+        </div>
+      )}
     </div>
   );
 }
@@ -402,7 +458,7 @@ function FrameworkItem({
   icon,
 }: {
   label: string;
-  value: number;
+  value: number | null | undefined;
   icon: string;
 }) {
   return (
@@ -413,7 +469,7 @@ function FrameworkItem({
         <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
           {label}
         </p>
-        <strong>{value}/10</strong>
+        <strong>{value != null ? `${value}/10` : "Not scored"}</strong>
       </div>
     </div>
   );
@@ -473,6 +529,33 @@ const scoreCircleStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   boxShadow: "0 16px 30px rgba(0,107,79,0.18)",
+};
+
+const noScoreNoticeStyle: React.CSSProperties = {
+  minWidth: "320px",
+  maxWidth: "360px",
+  padding: "22px 24px",
+  borderRadius: "18px",
+  background: "rgba(255, 255, 255, 0.72)",
+  border: "1px solid #bfdbfe",
+  display: "flex",
+  alignItems: "center",
+  gap: "18px",
+  boxShadow: "0 16px 30px rgba(16,24,40,0.08)",
+};
+
+const infoIconStyle: React.CSSProperties = {
+  width: "42px",
+  height: "42px",
+  borderRadius: "999px",
+  border: "3px solid #2563eb",
+  color: "#2563eb",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 900,
+  fontSize: "22px",
+  flexShrink: 0,
 };
 
 const scoreGridStyle: React.CSSProperties = {
