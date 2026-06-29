@@ -1,7 +1,4 @@
 from typing import Any
-from unittest import result
-
-import supabase
 
 from app.db.client import get_supabase
 
