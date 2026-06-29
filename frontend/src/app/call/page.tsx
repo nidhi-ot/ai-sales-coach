@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import ScorecardsClient from "./CallPageClient";
+import CallPage from "./CallPageClient";
 
-export default function CallPageClient() {
+export default function CallPageclients() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ScorecardsClient />
+      <CallPage />
     </Suspense>
   );
 }

@@ -38,7 +38,7 @@ const focusAreas = [
   { id: "closing", title: "Closing", icon: "🏆" },
 ];
 
-export default function PracticeSetupPage() {
+export default function PracticeSetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

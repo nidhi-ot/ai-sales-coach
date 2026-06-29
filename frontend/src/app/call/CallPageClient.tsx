@@ -34,7 +34,7 @@ type RealtimeEventPayload = {
   };
 };
 
-export default function CallPageClient() {
+export default function CallPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import ScorecardsClient from "./PracticeSetupPage";
+import PracticeSetupContent from "./PracticeSetupPage";
 
-export default function PracticeSetupPage() {
+export default function PracticePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ScorecardsClient />
+      <PracticeSetupContent />
     </Suspense>
   );
 }
