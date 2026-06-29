@@ -7,8 +7,8 @@ from pydantic import BaseModel
 from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
-from app.services.scorecards import analyze_transcript, create_scorecard_stub
 from app.services.scenarios import get_scenario_config
+from app.services.scorecards import analyze_transcript, create_scorecard_stub
 from app.services.session_analytics import (
     create_next_salesperson_profile,
     get_dimension_progress,
