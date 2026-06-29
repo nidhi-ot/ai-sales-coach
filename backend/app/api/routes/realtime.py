@@ -13,7 +13,10 @@ from app.db.client import (
 from app.db.client import create_session as create_db_session
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
-from app.services.scenarios import UnsupportedScenarioError
+from app.services.scenarios import (
+    UnsupportedScenarioError,
+    build_learning_profile_instruction,
+)
 
 router = APIRouter()
 
@@ -99,7 +102,10 @@ async def create_realtime_session(config: SessionConfig):
         If the framework is SPIN, focus on Situation,
         Problem, Implication, and Need Payoff.
         """
-
+    instructions += build_learning_profile_instruction(
+        rep_id=str(config.rep_id),
+        fallback_focus_area=config.focus_area,
+    )
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
