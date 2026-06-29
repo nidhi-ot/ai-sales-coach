@@ -90,67 +90,53 @@ const focusArea =
   }
 
   const handleRealtimeEvent = useCallback((event: MessageEvent<string>) => {
-    function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
-      const trimmedText = text.trim();
+  function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
 
-      if (!trimmedText) return;
+    transcriptBufferRef.current.push({
+      speaker,
+      text: trimmedText,
+      timestamp_offset_ms: callStartedAtRef.current
+        ? Date.now() - callStartedAtRef.current.getTime()
+        : 0,
+    });
+  }
 
-      transcriptBufferRef.current.push({
-        speaker,
-        text: trimmedText,
-        timestamp_offset_ms: callStartedAtRef.current
-          ? Date.now() - callStartedAtRef.current.getTime()
-          : 0,
-      });
-    }
+  let payload: unknown;
 
-    function transcriptFromPayload(payload: RealtimeEventPayload) {
-      if (typeof payload.transcript === "string") return payload.transcript;
-      if (typeof payload.delta === "string") return payload.delta;
+  try {
+    payload = JSON.parse(event.data);
+  } catch {
+    console.debug("Realtime raw event:", event.data);
+    return;
+  }
 
-      const content = payload.item?.content;
+  if (!payload || typeof payload !== "object") return;
 
-      if (Array.isArray(content)) {
-        for (const entry of content) {
-          if (typeof entry?.transcript === "string") return entry.transcript;
-          if (typeof entry?.text === "string") return entry.text;
-        }
-      }
+  const realtimeEvent = payload as RealtimeEventPayload;
 
-      return null;
-    }
+  if (
+    realtimeEvent.type === "conversation.item.input_audio_transcription.completed" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("rep", realtimeEvent.transcript);
+  }
 
-    let payload: unknown;
+  if (
+    realtimeEvent.type === "response.audio_transcript.done" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+  }
 
-    try {
-      payload = JSON.parse(event.data);
-    } catch {
-      console.debug("Realtime event:", event.data);
-      return;
-    }
-
-    if (!payload || typeof payload !== "object") return;
-
-    const realtimeEvent = payload as RealtimeEventPayload;
-    const transcriptText = transcriptFromPayload(realtimeEvent);
-
-    if (
-      realtimeEvent.type ===
-        "conversation.item.input_audio_transcription.completed" &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("rep", transcriptText);
-    }
-
-    if (
-      (realtimeEvent.type === "response.output_audio_transcript.done" ||
-        realtimeEvent.type === "response.audio_transcript.done") &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("ai_customer", transcriptText);
-    }
-  }, []);
-
+  if (
+    realtimeEvent.type === "response.output_audio_transcript.done" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+  }
+}, []);
   async function endBackendSession(
     sessionIdToEnd: string,
     endedAt: Date,
