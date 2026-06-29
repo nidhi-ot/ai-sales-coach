@@ -90,67 +90,53 @@ const focusArea =
   }
 
   const handleRealtimeEvent = useCallback((event: MessageEvent<string>) => {
-    function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
-      const trimmedText = text.trim();
+  function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
 
-      if (!trimmedText) return;
+    console.log("BUFFERING TRANSCRIPT:", speaker, trimmedText);
 
-      transcriptBufferRef.current.push({
-        speaker,
-        text: trimmedText,
-        timestamp_offset_ms: callStartedAtRef.current
-          ? Date.now() - callStartedAtRef.current.getTime()
-          : 0,
-      });
-    }
+    transcriptBufferRef.current.push({
+      speaker,
+      text: trimmedText,
+      timestamp_offset_ms: callStartedAtRef.current
+        ? Date.now() - callStartedAtRef.current.getTime()
+        : 0,
+    });
+  }
 
-    function transcriptFromPayload(payload: RealtimeEventPayload) {
-      if (typeof payload.transcript === "string") return payload.transcript;
-      if (typeof payload.delta === "string") return payload.delta;
+  let payload: any;
 
-      const content = payload.item?.content;
+  try {
+    payload = JSON.parse(event.data);
+  } catch {
+    console.debug("Realtime raw event:", event.data);
+    return;
+  }
 
-      if (Array.isArray(content)) {
-        for (const entry of content) {
-          if (typeof entry?.transcript === "string") return entry.transcript;
-          if (typeof entry?.text === "string") return entry.text;
-        }
-      }
+  console.log("REALTIME EVENT:", payload.type, payload);
 
-      return null;
-    }
+  if (
+    payload.type === "conversation.item.input_audio_transcription.completed" &&
+    typeof payload.transcript === "string"
+  ) {
+    bufferTranscriptLine("rep", payload.transcript);
+  }
 
-    let payload: unknown;
+  if (
+    payload.type === "response.audio_transcript.done" &&
+    typeof payload.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", payload.transcript);
+  }
 
-    try {
-      payload = JSON.parse(event.data);
-    } catch {
-      console.debug("Realtime event:", event.data);
-      return;
-    }
-
-    if (!payload || typeof payload !== "object") return;
-
-    const realtimeEvent = payload as RealtimeEventPayload;
-    const transcriptText = transcriptFromPayload(realtimeEvent);
-
-    if (
-      realtimeEvent.type ===
-        "conversation.item.input_audio_transcription.completed" &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("rep", transcriptText);
-    }
-
-    if (
-      (realtimeEvent.type === "response.output_audio_transcript.done" ||
-        realtimeEvent.type === "response.audio_transcript.done") &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("ai_customer", transcriptText);
-    }
-  }, []);
-
+  if (
+    payload.type === "response.output_audio_transcript.done" &&
+    typeof payload.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", payload.transcript);
+  }
+}, []);
   async function endBackendSession(
     sessionIdToEnd: string,
     endedAt: Date,
@@ -375,6 +361,7 @@ const focusArea =
     }
 
     try {
+      console.log("TRANSCRIPT ENTRIES SENT TO BACKEND:", entries);
       await endBackendSession(
         sessionIdToEnd,
         endedAt,

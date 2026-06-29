@@ -9,6 +9,7 @@ from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scorecards import analyze_transcript, create_scorecard_stub
 from app.services.session_analytics import (
+    create_next_salesperson_profile,
     get_dimension_progress,
     get_recent_sessions,
     get_session_stats,
@@ -20,12 +21,7 @@ router = APIRouter()
 def _row_dicts(data: Any) -> list[dict[str, Any]]:
     if not isinstance(data, list):
         return []
-
-    rows: list[dict[str, Any]] = []
-    for item in data:
-        if isinstance(item, dict):
-            rows.append(item)
-    return rows
+    return [item for item in data if isinstance(item, dict)]
 
 
 class SessionStart(BaseModel):
@@ -47,35 +43,8 @@ class SessionEnd(BaseModel):
     end_reason: str
     entries: List[TranscriptEntry] | None = None
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "ended_at": "2026-06-18T12:00:00Z",
-                    "duration_seconds": 180,
-                    "end_reason": "manual",
-                    "entries": [
-                        {
-                            "speaker": "rep",
-                            "text": "Hello from rep",
-                            "timestamp_offset_ms": 1000,
-                        }
-                    ],
-                }
-            ]
-        }
-    }
-
 
 class TranscriptBatch(BaseModel):
-    """
-    Accept multiple transcript entries in one request
-    instead of sending each line separately.
-
-    Reduces API calls and database writes during
-    real-time conversations.
-    """
-
     entries: List[TranscriptEntry]
 
 
@@ -110,11 +79,8 @@ class DimensionProgressResponse(BaseModel):
     dimensions: dict[str, DimensionProgressItem]
 
 
-# Manual session creation only. Live WebRTC calls should start with
-# POST /api/v1/realtime/session so they receive OpenAI credentials.
 @router.post("/")
 async def create_session(data: SessionStart):
-    """Create a manual/non-realtime practice session."""
     supabase = get_supabase()
 
     profile = (
@@ -150,20 +116,37 @@ async def create_session(data: SessionStart):
     return session_rows[0] if session_rows else {}
 
 
-# Live and manual sessions both use this endpoint when the call is finished.
 @router.post("/{session_id}/end")
 @router.patch("/{session_id}/end")
 async def end_session(session_id: str, data: SessionEnd):
-    """Mark a practice session as completed."""
     supabase = get_supabase()
-    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
+
+    session_lookup = (
+        supabase.table("sessions")
+        .select("*")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+    )
     session_rows = _row_dicts(session_lookup.data)
 
     if not session_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    session_row = session_rows[0]
     transcript_entries_saved = 0
-    if data.entries:
+    profile = None
+
+    existing_transcripts = _row_dicts(
+        supabase.table("transcripts")
+        .select("id")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if data.entries and not existing_transcripts:
         inserts = [
             {
                 "session_id": session_id,
@@ -173,7 +156,12 @@ async def end_session(session_id: str, data: SessionEnd):
             }
             for entry in data.entries
         ]
-        transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
+
+        transcript_result = (
+            supabase.table("transcripts")
+            .insert(cast(Any, inserts))
+            .execute()
+        )
         transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
     supabase.table("sessions").update(
@@ -184,22 +172,29 @@ async def end_session(session_id: str, data: SessionEnd):
         }
     ).eq("id", session_id).execute()
 
-    result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-
-    if not result.data:
-        raise HTTPException(status_code=404, detail="Session not found")
+    result = (
+        supabase.table("sessions")
+        .select("*")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+    )
 
     updated_rows = _row_dicts(result.data)
     if not updated_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session_row = session_rows[0]
     updated_session = updated_rows[0]
 
     try:
         score_card = await analyze_transcript(session_id)
+        print("PROFILE CREATE STARTED", session_id)
+        profile = await create_next_salesperson_profile(session_id, score_card)
+        print("PROFILE CREATED", profile)
+
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
     except ValueError as exc:
         score_card = await create_scorecard_stub(
             session_id=session_id,
@@ -211,8 +206,10 @@ async def end_session(session_id: str, data: SessionEnd):
             "transcript_entries_saved": transcript_entries_saved,
             "score_card_status": "pending_transcript",
             "score_card": score_card,
+            "profile": profile,
             "detail": str(exc),
         }
+
     except Exception as exc:
         score_card = await create_scorecard_stub(
             session_id=session_id,
@@ -224,6 +221,7 @@ async def end_session(session_id: str, data: SessionEnd):
             "transcript_entries_saved": transcript_entries_saved,
             "score_card_status": "analysis_failed",
             "score_card": score_card,
+            "profile": profile,
             "detail": str(exc),
         }
 
@@ -232,12 +230,12 @@ async def end_session(session_id: str, data: SessionEnd):
         "transcript_entries_saved": transcript_entries_saved,
         "score_card_status": "generated",
         "score_card": score_card,
+        "profile": profile,
     }
 
 
 @router.post("/{session_id}/transcripts")
 async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
-    """Add transcript entry after call."""
     supabase = get_supabase()
 
     result = (
@@ -259,7 +257,6 @@ async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
 
 @router.get("/{session_id}/transcripts")
 async def get_transcript(session_id: str):
-    """Get full transcript for a session."""
     supabase = get_supabase()
 
     result = (
@@ -275,14 +272,6 @@ async def get_transcript(session_id: str):
 
 @router.post("/{session_id}/transcripts/batch")
 async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
-    """
-    Store multiple transcript entries in a single
-    database operation.
-
-    Frontend buffers transcript chunks and sends
-    them together to reduce Supabase write load.
-    """
-
     supabase = get_supabase()
 
     if not batch.entries:
@@ -298,16 +287,13 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
         for entry in batch.entries
     ]
 
-    # Single bulk insert instead of many individual inserts
     result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
-
     inserted_rows = _row_dicts(result.data)
     return {"inserted": len(inserted_rows)}
 
 
 @router.get("/rep/{rep_id}")
 async def get_rep_sessions(rep_id: str, limit: int = 20):
-    """Get rep's session history with score summaries."""
     supabase = get_supabase()
 
     result = (
@@ -349,16 +335,11 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
 
 @router.get("/stats/{rep_id}", response_model=SessionStatsResponse)
 async def get_stats(rep_id: str):
-    """Get the session statistics for given rep_id"""
     return get_session_stats(rep_id)
 
 
 @router.get("/recent/{rep_id}", response_model=RecentSessionsResponse)
-async def get_recent(
-    rep_id: str,
-    limit: int = Query(5, ge=1, le=25),
-):
-    """Get the recent sessions for given rep_id"""
+async def get_recent(rep_id: str, limit: int = Query(5, ge=1, le=25)):
     return {"sessions": get_recent_sessions(rep_id=rep_id, limit=limit)}
 
 
