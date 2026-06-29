@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL } from "../../lib/api";
 
+
 type CallStatus =
   | "ready"
   | "connecting"
@@ -43,10 +44,10 @@ export default function CallPage() {
   const businessContext =
   searchParams.get("business_context") || "apartment_association";
 
-  const framework =
+const framework =
   searchParams.get("framework") || "BANT";
 
-  const focusArea =
+const focusArea =
   searchParams.get("focus_area") || "handling_objections";
 
   const [status, setStatus] = useState<CallStatus>("ready");
@@ -89,67 +90,53 @@ export default function CallPage() {
   }
 
   const handleRealtimeEvent = useCallback((event: MessageEvent<string>) => {
-    function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
-      const trimmedText = text.trim();
+  function bufferTranscriptLine(speaker: TranscriptSpeaker, text: string) {
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
 
-      if (!trimmedText) return;
+    transcriptBufferRef.current.push({
+      speaker,
+      text: trimmedText,
+      timestamp_offset_ms: callStartedAtRef.current
+        ? Date.now() - callStartedAtRef.current.getTime()
+        : 0,
+    });
+  }
 
-      transcriptBufferRef.current.push({
-        speaker,
-        text: trimmedText,
-        timestamp_offset_ms: callStartedAtRef.current
-          ? Date.now() - callStartedAtRef.current.getTime()
-          : 0,
-      });
-    }
+  let payload: unknown;
 
-    function transcriptFromPayload(payload: RealtimeEventPayload) {
-      if (typeof payload.transcript === "string") return payload.transcript;
-      if (typeof payload.delta === "string") return payload.delta;
+  try {
+    payload = JSON.parse(event.data);
+  } catch {
+    console.debug("Realtime raw event:", event.data);
+    return;
+  }
 
-      const content = payload.item?.content;
+  if (!payload || typeof payload !== "object") return;
 
-      if (Array.isArray(content)) {
-        for (const entry of content) {
-          if (typeof entry?.transcript === "string") return entry.transcript;
-          if (typeof entry?.text === "string") return entry.text;
-        }
-      }
+  const realtimeEvent = payload as RealtimeEventPayload;
 
-      return null;
-    }
+  if (
+    realtimeEvent.type === "conversation.item.input_audio_transcription.completed" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("rep", realtimeEvent.transcript);
+  }
 
-    let payload: unknown;
+  if (
+    realtimeEvent.type === "response.audio_transcript.done" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+  }
 
-    try {
-      payload = JSON.parse(event.data);
-    } catch {
-      console.debug("Realtime event:", event.data);
-      return;
-    }
-
-    if (!payload || typeof payload !== "object") return;
-
-    const realtimeEvent = payload as RealtimeEventPayload;
-    const transcriptText = transcriptFromPayload(realtimeEvent);
-
-    if (
-      realtimeEvent.type ===
-        "conversation.item.input_audio_transcription.completed" &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("rep", transcriptText);
-    }
-
-    if (
-      (realtimeEvent.type === "response.output_audio_transcript.done" ||
-        realtimeEvent.type === "response.audio_transcript.done") &&
-      typeof transcriptText === "string"
-    ) {
-      bufferTranscriptLine("ai_customer", transcriptText);
-    }
-  }, []);
-
+  if (
+    realtimeEvent.type === "response.output_audio_transcript.done" &&
+    typeof realtimeEvent.transcript === "string"
+  ) {
+    bufferTranscriptLine("ai_customer", realtimeEvent.transcript);
+  }
+}, []);
   async function endBackendSession(
     sessionIdToEnd: string,
     endedAt: Date,
@@ -435,276 +422,4 @@ export default function CallPage() {
               : status === "ended"
                 ? "Ended"
                 : "Failed";
-
-  return (
-    <AppShell>
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        <section style={heroStyle}>
-          <div>
-            <p style={eyebrowStyle}>Live Practice</p>
-            <h1 style={heroTitleStyle}>Live Practice Call</h1>
-            <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-              <span style={pillStyle}>Scenario: {scenario.replace("_", " ")}</span>
-              <span style={pillStyle}>Status: {statusLabel}</span>
-            </div>
-          </div>
-
-          <div style={timerBoxStyle}>
-            <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              Call Time
-            </p>
-            <strong style={{ fontSize: "24px" }}>
-              {formatTime(elapsedSeconds)}
-            </strong>
-          </div>
-        </section>
-
-        <section style={callPanelStyle}>
-          <div style={avatarWrapStyle}>
-            <div style={avatarStyle}>
-              {status === "active"
-                ? "🎙️"
-                : status === "holding"
-                  ? "⏸️"
-                  : status === "ended"
-                    ? "✅"
-                    : status === "failed"
-                      ? "⚠️"
-                      : "🤖"}
-            </div>
-
-            <h2 style={{ margin: "18px 0 8px" }}>
-              {status === "ready" && "Ready to Start"}
-              {status === "connecting" && "Connecting..."}
-              {status === "active" && "AI Customer is Listening"}
-              {status === "holding" && "Call On Hold"}
-              {status === "ending" && "Ending Call..."}
-              {status === "ended" && "Call Ended"}
-              {status === "failed" && "Connection Failed"}
-            </h2>
-
-            <p style={{ color: status === "failed" ? "#b42318" : "#667085" }}>
-              {status === "ready" &&
-                "Click Start Call when you are ready. Microphone permission will be requested after that."}
-              {status === "connecting" &&
-                "Creating realtime session and connecting audio."}
-              {status === "active" &&
-                "Speak naturally with the AI buyer. Your conversation is being captured for the scorecard."}
-              {status === "holding" &&
-                "Your microphone is muted. Resume when ready."}
-              {status === "ending" &&
-                "Saving the transcript and closing the call connection."}
-              {status === "ended" &&
-                (error || "Your practice session has ended.")}
-              {status === "failed" && error}
-            </p>
-
-            {status === "ended" && (
-              <div style={savedBoxStyle}>
-                  ✅ Your practice session has been saved successfully.
-              </div>
-          )}
-          </div>
-
-          <div style={controlBarStyle}>
-            {status === "ready" && (
-              <button onClick={startCall} style={primaryButton}>
-                ▶ Start Call
-              </button>
-            )}
-
-            {status === "active" && (
-              <>
-                <button onClick={holdCall} style={secondaryButton}>
-                  ⏸ Hold
-                </button>
-                <button onClick={handleEndCall} style={dangerButton}>
-                  ⛔ End Call
-                </button>
-              </>
-            )}
-
-            {status === "holding" && (
-              <>
-                <button onClick={resumeCall} style={primaryButton}>
-                  ▶ Resume
-                </button>
-                <button onClick={handleEndCall} style={dangerButton}>
-                  ⛔ End Call
-                </button>
-              </>
-            )}
-
-            {status === "ended" && (
-              <>
-                <button
-                  onClick={() =>
-                    sessionId
-                      ? router.replace(`/scorecards?session_id=${sessionId}`)
-                      : router.replace("/history")
-                  }
-                  style={primaryButton}
-                >
-                  View Scorecard
-                </button>
-
-                <button onClick={() => router.push("/history")} style={secondaryButton}>
-                  Go to History
-                </button>
-
-                <button
-                  onClick={() => router.push("/scenarios")}
-                  style={secondaryButton}
-                >
-                  Start Another
-                </button>
-              </>
-            )}
-
-            {status === "failed" && (
-              <button
-                onClick={() => router.push("/scenarios")}
-                style={secondaryButton}
-              >
-                Back to Scenarios
-              </button>
-            )}
-          </div>
-        </section>
-      </div>
-    </AppShell>
-  );
 }
-
-function formatTime(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-    2,
-    "0"
-  )}`;
-}
-
-const heroStyle: React.CSSProperties = {
-  background: "linear-gradient(135deg, #ffffff 0%, #f0faf6 55%, #e6f4ef 100%)",
-  border: "1px solid #dfeee8",
-  borderRadius: "28px",
-  padding: "34px",
-  boxShadow: "0 20px 50px rgba(16, 24, 40, 0.08)",
-  marginBottom: "26px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-};
-
-const eyebrowStyle: React.CSSProperties = {
-  margin: "0 0 8px",
-  color: "#006b4f",
-  fontWeight: 800,
-  fontSize: "14px",
-};
-
-const heroTitleStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: "38px",
-  fontWeight: 800,
-  color: "#101828",
-};
-
-const pillStyle: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: "999px",
-  background: "white",
-  border: "1px solid #dfeee8",
-  color: "#344054",
-  fontWeight: 700,
-  fontSize: "13px",
-};
-
-const timerBoxStyle: React.CSSProperties = {
-  background: "white",
-  border: "1px solid #dfeee8",
-  borderRadius: "18px",
-  padding: "16px 22px",
-  minWidth: "120px",
-  textAlign: "center",
-};
-
-const callPanelStyle: React.CSSProperties = {
-  background: "white",
-  borderRadius: "28px",
-  padding: "34px",
-  border: "1px solid #e5e7eb",
-  boxShadow: "0 18px 40px rgba(16, 24, 40, 0.07)",
-};
-
-const avatarWrapStyle: React.CSSProperties = {
-  padding: "52px 32px",
-  borderRadius: "26px",
-  background: "#f9fafb",
-  border: "1px solid #e5e7eb",
-  textAlign: "center",
-};
-
-const avatarStyle: React.CSSProperties = {
-  width: "116px",
-  height: "116px",
-  borderRadius: "999px",
-  background: "#e7f4ef",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  margin: "0 auto",
-  fontSize: "48px",
-  boxShadow: "0 16px 30px rgba(0, 107, 79, 0.12)",
-};
-
-const savedBoxStyle: React.CSSProperties = {
-  marginTop: "20px",
-  padding: "14px 18px",
-  borderRadius: "14px",
-  background: "#f0fdf4",
-  color: "#166534",
-  fontWeight: 700,
-  display: "inline-block",
-};
-
-const controlBarStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "center",
-  gap: "14px",
-  marginTop: "28px",
-  flexWrap: "wrap",
-};
-
-const primaryButton: React.CSSProperties = {
-  padding: "14px 24px",
-  borderRadius: "14px",
-  border: "none",
-  background: "#006b4f",
-  color: "white",
-  fontWeight: 800,
-  cursor: "pointer",
-  boxShadow: "0 12px 24px rgba(0, 107, 79, 0.22)",
-};
-
-const secondaryButton: React.CSSProperties = {
-  padding: "14px 24px",
-  borderRadius: "14px",
-  border: "1px solid #d0d5dd",
-  background: "white",
-  color: "#344054",
-  fontWeight: 800,
-  cursor: "pointer",
-};
-
-const dangerButton: React.CSSProperties = {
-  padding: "14px 24px",
-  borderRadius: "14px",
-  border: "none",
-  background: "#b42318",
-  color: "white",
-  fontWeight: 800,
-  cursor: "pointer",
-};

@@ -23,6 +23,61 @@ CREATE TABLE salesperson_profiles (
 );
 CREATE INDEX idx_salesperson_profiles_rep_latest ON salesperson_profiles(rep_id, version DESC);
 
+CREATE OR REPLACE FUNCTION create_salesperson_profile_version(
+  p_rep_id UUID,
+  p_business_id UUID,
+  p_call_id UUID,
+  p_metric_scores JSONB,
+  p_weakest_dimension TEXT
+)
+RETURNS salesperson_profiles
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  inserted_profile salesperson_profiles%ROWTYPE;
+  next_version INTEGER;
+BEGIN
+  -- Serialize version allocation per rep so concurrent completed calls cannot
+  -- read the same latest version and insert duplicate next versions.
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_rep_id::TEXT, 0));
+
+  SELECT *
+  INTO inserted_profile
+  FROM salesperson_profiles
+  WHERE call_id = p_call_id
+  LIMIT 1;
+
+  IF FOUND THEN
+    RETURN inserted_profile;
+  END IF;
+
+  SELECT COALESCE(MAX(version), 0) + 1
+  INTO next_version
+  FROM salesperson_profiles
+  WHERE rep_id = p_rep_id;
+
+  INSERT INTO salesperson_profiles (
+    rep_id,
+    business_id,
+    version,
+    call_id,
+    metric_scores,
+    weakest_dimension
+  )
+  VALUES (
+    p_rep_id,
+    p_business_id,
+    next_version,
+    p_call_id,
+    p_metric_scores,
+    p_weakest_dimension
+  )
+  RETURNING * INTO inserted_profile;
+
+  RETURN inserted_profile;
+END;
+$$;
+
 -- 3. Sessions (live calls)
 CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
