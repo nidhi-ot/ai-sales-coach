@@ -26,6 +26,7 @@ async def create_scorecard(data: ScorecardStub):
         session_id=data.session_id, rep_id=data.rep_id, business_id=data.business_id
     )
 
+
 # Retrieves the scorecard by scorecard id, while still accepting a session id
 # for older callers that link directly from the history page.
 @router.get("/{scorecard_id}")
