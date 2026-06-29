@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
+
+type LearningProfile = {
+  version: number;
+  weakest_dimension: string;
+  metric_scores?: Record<string, number>;
+};
 
 const businessContexts = [
   {
@@ -38,6 +45,20 @@ const focusAreas = [
   { id: "closing", title: "Closing", icon: "🏆" },
 ];
 
+function mapWeakestDimensionToFocusArea(value: string) {
+  if (value === "objection_handling") return "handling_objections";
+  if (value === "needs_discovery") return "discovery";
+  return value;
+}
+
+function formatFocusLabel(value: string) {
+  return value
+    .replaceAll("_", " ")
+    .replace("handling objections", "Handling Objections")
+    .replace("objection handling", "Objection Handling")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export default function PracticeSetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +68,28 @@ export default function PracticeSetupContent() {
   const [businessContext, setBusinessContext] = useState("apartment_association");
   const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
+  const [learningProfile, setLearningProfile] = useState<LearningProfile | null>(null);
+
+  useEffect(() => {
+    const repId = localStorage.getItem("rep_id");
+
+    if (!repId) return;
+
+    fetch(`${API_BASE_URL}/profile/${repId}/latest`)
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data: LearningProfile | null) => {
+        if (!data) return;
+
+        setLearningProfile(data);
+        setFocusArea(mapWeakestDimensionToFocusArea(data.weakest_dimension));
+      })
+      .catch((error) => {
+        console.warn("Could not load learning profile:", error);
+      });
+  }, []);
 
   function startPracticeCall() {
     const params = new URLSearchParams({
@@ -74,8 +117,8 @@ export default function PracticeSetupContent() {
           <h1 style={heroTitleStyle}>Let&apos;s get you ready</h1>
 
           <p style={heroSubtitleStyle}>
-            Choose the customer context, sales framework, and focus area before
-            starting your AI practice call.
+            Choose the customer context and sales framework. Your AI coaching
+            focus is recommended from your latest practice profile.
           </p>
         </section>
 
@@ -118,9 +161,50 @@ export default function PracticeSetupContent() {
 
             <SetupSection
               step="3"
-              title="Today's Focus"
-              description="Choose what the AI customer should challenge you on."
+              title="AI Coaching Recommendation"
+              description="Your recommended focus is based on your latest practice result. You can still override it manually."
             >
+              {learningProfile ? (
+                <div style={recommendationBoxStyle}>
+                  <p style={{ margin: 0, fontWeight: 900, color: "#006b4f" }}>
+                    Adaptive Learning Profile
+                  </p>
+
+                  <div style={recommendationGridStyle}>
+                    <div>
+                      <span style={smallLabelStyle}>Profile Version</span>
+                      <strong>v{learningProfile.version}</strong>
+                    </div>
+
+                    <div>
+                      <span style={smallLabelStyle}>Recommended Focus</span>
+                      <strong>
+                        {formatFocusLabel(learningProfile.weakest_dimension)}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <p style={{ margin: "12px 0 0", color: "#475467" }}>
+                    This was your weakest skill in the latest profile. The AI
+                    customer will naturally challenge you on this area.
+                  </p>
+                </div>
+              ) : (
+                <div style={recommendationBoxStyle}>
+                  <p style={{ margin: 0, fontWeight: 900, color: "#006b4f" }}>
+                    No learning profile yet
+                  </p>
+                  <p style={{ margin: "8px 0 0", color: "#475467" }}>
+                    Complete one practice call to generate your adaptive coaching
+                    profile.
+                  </p>
+                </div>
+              )}
+
+              <p style={{ margin: "0 0 12px", color: "#667085", fontWeight: 700 }}>
+                Change focus manually, if needed:
+              </p>
+
               <div style={focusGridStyle}>
                 {focusAreas.map((item) => (
                   <button
@@ -152,7 +236,14 @@ export default function PracticeSetupContent() {
 
             <SummaryRow label="Business Context" value={selectedBusiness?.title || "-"} />
             <SummaryRow label="Framework" value={framework} />
-            <SummaryRow label="Focus Area" value={selectedFocus?.title || "-"} />
+            <SummaryRow
+              label="Focus Area"
+              value={
+                learningProfile
+                  ? `${selectedFocus?.title || "-"} - Profile v${learningProfile.version}`
+                  : selectedFocus?.title || "-"
+              }
+            />
             <SummaryRow label="Difficulty" value="Medium" />
             <SummaryRow label="Estimated Time" value="3 min" />
 
@@ -161,6 +252,10 @@ export default function PracticeSetupContent() {
               <ul style={{ color: "#667085", lineHeight: "1.8", paddingLeft: "20px" }}>
                 <li>Microphone permission will be requested.</li>
                 <li>The AI customer will join the call.</li>
+                <li>
+                  The AI will challenge your selected focus area:{" "}
+                  <strong>{selectedFocus?.title || "-"}</strong>.
+                </li>
                 <li>You can end the call anytime.</li>
               </ul>
             </div>
@@ -274,7 +369,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={summaryRowStyle}>
       <span style={{ color: "#667085" }}>{label}</span>
-      <strong style={{ color: "#101828" }}>{value}</strong>
+      <strong style={{ color: "#101828", textAlign: "right" }}>{value}</strong>
     </div>
   );
 }
@@ -360,6 +455,28 @@ const focusButtonStyle: React.CSSProperties = {
   gap: "10px",
   justifyItems: "center",
   color: "#101828",
+};
+
+const recommendationBoxStyle: React.CSSProperties = {
+  padding: "18px",
+  borderRadius: "18px",
+  background: "#f0fdf4",
+  border: "1px solid #b7e4d4",
+  marginBottom: "18px",
+};
+
+const recommendationGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "14px",
+  marginTop: "14px",
+};
+
+const smallLabelStyle: React.CSSProperties = {
+  display: "block",
+  color: "#667085",
+  fontSize: "13px",
+  marginBottom: "4px",
 };
 
 
