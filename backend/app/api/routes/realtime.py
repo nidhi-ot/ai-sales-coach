@@ -106,8 +106,6 @@ async def create_realtime_session(config: SessionConfig):
         rep_id=str(config.rep_id),
         fallback_focus_area=config.focus_area,
     )
-    print("LEARNING PROFILE INSTRUCTION ADDED")
-    print(instructions[-600:])
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:

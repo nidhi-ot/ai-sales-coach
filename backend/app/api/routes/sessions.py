@@ -172,10 +172,6 @@ async def end_session(session_id: str, data: SessionEnd):
 
     try:
         score_card = await analyze_transcript(session_id)
-        print("PROFILE CREATE STARTED", session_id)
-        profile = await create_next_salesperson_profile(session_id, score_card)
-        print("PROFILE CREATED", profile)
-
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -209,12 +205,23 @@ async def end_session(session_id: str, data: SessionEnd):
             "detail": str(exc),
         }
 
+    profile_status = "generated"
+    profile_detail = None
+
+    try:
+        profile = await create_next_salesperson_profile(session_id, score_card)
+    except Exception as exc:
+        profile_status = "failed"
+        profile_detail = str(exc)
+
     return {
         "session": updated_session,
         "transcript_entries_saved": transcript_entries_saved,
         "score_card_status": "generated",
         "score_card": score_card,
         "profile": profile,
+        "profile_status": profile_status,
+        "profile_detail": profile_detail,
     }
 
 

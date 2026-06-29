@@ -95,6 +95,10 @@ class SessionEndRouteTests(unittest.TestCase):
                 "app.api.routes.sessions.analyze_transcript",
                 new=AsyncMock(return_value=fake_scorecard),
             ) as analyze_mock,
+            patch(
+                "app.api.routes.sessions.create_next_salesperson_profile",
+                new=AsyncMock(return_value={"id": "profile-1"}),
+            ) as profile_mock,
         ):
             response = self.client.post(
                 "/api/v1/sessions/session-123/end",
@@ -121,6 +125,8 @@ class SessionEndRouteTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["score_card_status"], "generated")
         self.assertEqual(payload["score_card"], fake_scorecard)
+        self.assertEqual(payload["profile_status"], "generated")
+        self.assertEqual(payload["profile"], {"id": "profile-1"})
         self.assertEqual(payload["transcript_entries_saved"], 2)
 
         session = payload["session"]
@@ -136,6 +142,46 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(len(fake_supabase.store["transcripts"]), 2)
         self.assertEqual(fake_supabase.store["transcripts"][0]["session_id"], "session-123")
         analyze_mock.assert_awaited_once_with("session-123")
+        profile_mock.assert_awaited_once_with("session-123", fake_scorecard)
+
+    def test_post_end_keeps_generated_scorecard_status_when_profile_creation_fails(self):
+        fake_supabase = _FakeSupabase()
+        fake_scorecard = {"session_id": "session-123", "overall_score": 8}
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.api.routes.sessions.analyze_transcript",
+                new=AsyncMock(return_value=fake_scorecard),
+            ),
+            patch(
+                "app.api.routes.sessions.create_next_salesperson_profile",
+                new=AsyncMock(side_effect=ValueError("invalid profile version")),
+            ),
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:03:00Z",
+                    "duration_seconds": 180,
+                    "end_reason": "manual",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Hello from rep",
+                            "timestamp_offset_ms": 1000,
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["score_card_status"], "generated")
+        self.assertEqual(payload["score_card"], fake_scorecard)
+        self.assertIsNone(payload["profile"])
+        self.assertEqual(payload["profile_status"], "failed")
+        self.assertEqual(payload["profile_detail"], "invalid profile version")
 
 
 if __name__ == "__main__":

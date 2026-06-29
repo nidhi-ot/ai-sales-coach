@@ -17,6 +17,14 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     return [item for item in data if isinstance(item, dict)]
 
 
+def _first_row(data: Any) -> dict[str, Any] | None:
+    if isinstance(data, dict):
+        return data
+
+    rows = _row_dicts(data)
+    return rows[0] if rows else None
+
+
 def _as_float(value: Any) -> float | None:
     """Convert to float value"""
     if value is None:
@@ -199,19 +207,6 @@ async def create_next_salesperson_profile(
     if existing_profile_for_call:
         return existing_profile_for_call[0]
 
-    latest_rows = _row_dicts(
-        supabase.table("salesperson_profiles")
-        .select("version")
-        .eq("rep_id", rep_id)
-        .order("version", desc=True)
-        .limit(1)
-        .execute()
-        .data
-    )
-
-    latest_version = int(latest_rows[0]["version"]) if latest_rows else 0
-    next_version = latest_version + 1
-
     metrics = {
         "rapport": scorecard.get("rapport_score"),
         "discovery": scorecard.get("needs_discovery_score"),
@@ -229,20 +224,15 @@ async def create_next_salesperson_profile(
         else "objection_handling"
     )
 
-    result = (
-        supabase.table("salesperson_profiles")
-        .insert(
-            {
-                "rep_id": rep_id,
-                "business_id": session["business_id"],
-                "version": next_version,
-                "call_id": session_id,
-                "metric_scores": metrics,
-                "weakest_dimension": weakest_dimension,
-            }
-        )
-        .execute()
-    )
+    result = supabase.rpc(
+        "create_salesperson_profile_version",
+        {
+            "p_rep_id": rep_id,
+            "p_business_id": session["business_id"],
+            "p_call_id": session_id,
+            "p_metric_scores": metrics,
+            "p_weakest_dimension": weakest_dimension,
+        },
+    ).execute()
 
-    rows = _row_dicts(result.data)
-    return rows[0] if rows else {}
+    return _first_row(result.data) or {}
