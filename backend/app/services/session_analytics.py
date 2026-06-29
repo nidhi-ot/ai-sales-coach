@@ -219,10 +219,14 @@ async def create_next_salesperson_profile(
         "closing": scorecard.get("closing_score"),
     }
 
-    valid_scores = {key: value for key, value in metrics.items() if isinstance(value, (int, float))}
+    valid_scores = {
+        key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))
+    }
 
     weakest_dimension = (
-        min(valid_scores, key=valid_scores.get) if valid_scores else "objection_handling"
+        min(valid_scores.items(), key=lambda item: item[1])[0]
+        if valid_scores
+        else "objection_handling"
     )
 
     result = (

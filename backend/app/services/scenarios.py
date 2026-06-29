@@ -22,6 +22,13 @@ class UnsupportedScenarioError(ValueError):
     """Raised when a scenario is valid in the API enum but has no persona config."""
 
 
+def _row_dicts(data: Any) -> list[dict[str, Any]]:
+    if not isinstance(data, list):
+        return []
+
+    return [item for item in data if isinstance(item, dict)]
+
+
 DEFAULT_BUSINESS_PROFILE: dict[str, Any] = {
     "name": "AI Sales Coach",
     "framework": "BANT",
@@ -364,7 +371,7 @@ def get_latest_profile_focus(rep_id: str) -> dict[str, Any] | None:
         .execute()
     )
 
-    rows = result.data if isinstance(result.data, list) else []
+    rows = _row_dicts(result.data)
     return rows[0] if rows else None
 
 
