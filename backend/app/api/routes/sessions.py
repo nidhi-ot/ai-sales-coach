@@ -209,10 +209,10 @@ async def end_session(session_id: str, data: SessionEnd):
     profile_detail = None
 
     try:
-      profile = await create_next_salesperson_profile(session_id, score_card)
+        profile = await create_next_salesperson_profile(session_id, score_card)
     except Exception as exc:
-      profile_status = "failed"
-      profile_detail = str(exc)
+        profile_status = "failed"
+        profile_detail = str(exc)
 
     return {
         "session": updated_session,
