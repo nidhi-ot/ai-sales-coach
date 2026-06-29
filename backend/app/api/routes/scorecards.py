@@ -27,17 +27,6 @@ async def create_scorecard(data: ScorecardStub):
         session_id=data.session_id, rep_id=data.rep_id, business_id=data.business_id
     )
 
-
-# @router.post("/{session_id}/analyze")
-# async def generate_scorecard(session_id: str):
-#     try:
-#         return await analyze_transcript(session_id)
-#     except LookupError as exc:
-#         raise HTTPException(status_code=404, detail=str(exc)) from exc
-#     except ValueError as exc:
-#         raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
 # Retrieves the scorecard by scorecard id, while still accepting a session id
 # for older callers that link directly from the history page.
 @router.get("/{scorecard_id}")
