@@ -248,7 +248,7 @@ export default function ScorecardsClients() {
               </section>
 
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>BANT Framework</h2>
+                <h2 style={sectionTitleStyle}>BANT Framework Scores</h2>
 
                 <div style={frameworkGridStyle}>
                   {frameworkMetrics(scorecard).map((metric) => (
