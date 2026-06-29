@@ -47,18 +47,14 @@ const focusAreas = [
 
 function mapWeakestDimensionToFocusArea(value: string) {
   switch (value) {
-    case "objection_handling":
-      return "handling_objections";
-
     case "rapport":
       return "value_proposition";
-
     case "discovery":
       return "discovery";
-
+    case "objection_handling":
+      return "handling_objections";
     case "closing":
       return "closing";
-
     default:
       return "handling_objections";
   }
