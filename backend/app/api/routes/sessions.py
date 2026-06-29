@@ -327,8 +327,9 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
     if session_ids:
         scorecard_result = (
             supabase.table("scorecards")
-            .select("session_id, overall_score, shared_with_manager")
+            .select("session_id, overall_score, shared_with_manager, created_at")
             .in_("session_id", session_ids)
+            .order("created_at", desc=True)
             .execute()
         )
 

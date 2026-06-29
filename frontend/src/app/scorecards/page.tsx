@@ -363,10 +363,10 @@ function ScoreCard({
     <div
       style={{
         background: showWarning
-        ? "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)"
-        : hasScore
-          ? "linear-gradient(135deg, #ecfdf3 0%, #ffffff 100%)"
-          : "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
+          ? "linear-gradient(135deg, #fff7ed 0%, #ffffff 100%)"
+          : hasScore
+            ? "linear-gradient(135deg, #ecfdf3 0%, #ffffff 100%)"
+            : "linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)",
         border: showWarning
           ? "1px solid #fed7aa"
           : hasScore

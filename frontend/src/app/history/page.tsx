@@ -201,7 +201,7 @@ export default function HistoryPage() {
                     <div style={scorePillStyle}>
                       {session.overall_score != null
                         ? `${session.overall_score}/10`
-                        : "Pending"}
+                        : "Not scored"}
                     </div>
 
                     <label style={shareLabelStyle}>
