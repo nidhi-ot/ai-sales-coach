@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 from app.db.client import get_supabase
 from app.services.scorecards import (
-    # analyze_transcript,
     create_scorecard_stub,
 )
 
