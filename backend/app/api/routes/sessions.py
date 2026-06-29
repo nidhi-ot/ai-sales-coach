@@ -380,9 +380,7 @@ async def get_dimensions(rep_id: str):
 async def get_session_details(session_id: str):
     supabase = get_supabase()
 
-    session_result = (
-        supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    )
+    session_result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
     session_rows = _row_dicts(session_result.data)
 
     if not session_rows:
