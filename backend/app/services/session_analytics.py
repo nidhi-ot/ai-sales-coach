@@ -224,15 +224,32 @@ async def create_next_salesperson_profile(
         else "objection_handling"
     )
 
-    result = supabase.rpc(
-        "create_salesperson_profile_version",
-        {
-            "p_rep_id": rep_id,
-            "p_business_id": session["business_id"],
-            "p_call_id": session_id,
-            "p_metric_scores": metrics,
-            "p_weakest_dimension": weakest_dimension,
-        },
-    ).execute()
+    latest_rows = _row_dicts(
+        supabase.table("salesperson_profiles")
+        .select("version")
+        .eq("rep_id", rep_id)
+        .order("version", desc=True)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    latest_version = int(latest_rows[0]["version"]) if latest_rows else 0
+    next_version = latest_version + 1
+
+    result = (
+        supabase.table("salesperson_profiles")
+        .insert(
+            {
+                "rep_id": rep_id,
+                "business_id": session["business_id"],
+                "version": next_version,
+                "call_id": session_id,
+                "metric_scores": metrics,
+                "weakest_dimension": weakest_dimension,
+            }
+        )
+        .execute()
+    )
 
     return _first_row(result.data) or {}
