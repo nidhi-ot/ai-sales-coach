@@ -161,6 +161,17 @@ export default function ScorecardsClients() {
               Review your performance, strengths, and improvement areas from
               this practice session.
             </p>
+
+            {sessionId ? (
+              <div style={heroActionsStyle}>
+                <button
+                  onClick={() => router.push(`/sessions/${sessionId}`)}
+                  style={secondaryButtonStyle}
+                >
+                  View Details
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {overallScore != null ? (
@@ -518,6 +529,13 @@ const heroSubtitleStyle: React.CSSProperties = {
   maxWidth: "640px",
 };
 
+const heroActionsStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "12px",
+  flexWrap: "wrap",
+  marginTop: "18px",
+};
+
 const scoreCircleStyle: React.CSSProperties = {
   width: "150px",
   height: "150px",
@@ -666,5 +684,17 @@ const primaryButtonStyle: React.CSSProperties = {
   fontWeight: 800,
   cursor: "pointer",
   boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
+  whiteSpace: "nowrap",
+};
+
+const secondaryButtonStyle: React.CSSProperties = {
+  padding: "14px 24px",
+  borderRadius: "14px",
+  border: "1px solid #d0d5dd",
+  background: "white",
+  color: "#006b4f",
+  fontWeight: 800,
+  cursor: "pointer",
+  boxShadow: "0 12px 24px rgba(16,24,40,0.06)",
   whiteSpace: "nowrap",
 };

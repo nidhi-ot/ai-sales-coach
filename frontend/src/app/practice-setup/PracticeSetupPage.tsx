@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
 const businessContexts = [
@@ -38,15 +38,18 @@ const focusAreas = [
   { id: "closing", title: "Closing", icon: "🏆" },
 ];
 
-export default function PracticeSetupContent() {
+export default function PracticeSetupPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const scenario = searchParams.get("scenario") || "cold_call";
+  const [scenario, setScenario] = useState("cold_call");
 
   const [businessContext, setBusinessContext] = useState("apartment_association");
   const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setScenario(params.get("scenario") || "cold_call");
+  }, []);
 
   function startPracticeCall() {
     const params = new URLSearchParams({
@@ -110,9 +113,9 @@ export default function PracticeSetupContent() {
                 onChange={(e) => setFramework(e.target.value)}
                 style={selectStyle}
               >
-              <option value="BANT">BANT - Budget, Authority, Need, Timeline</option>
-              <option value="MEDDIC">MEDDIC - Metrics, Economic Buyer, Decision Criteria</option>
-              <option value="SPIN">SPIN - Situation, Problem, Implication, Need Payoff</option>
+                <option value="BANT">BANT - Budget, Authority, Need, Timeline</option>
+                <option value="MEDDIC">MEDDIC - Metrics, Economic Buyer, Decision Criteria</option>
+                <option value="SPIN">SPIN - Situation, Problem, Implication, Need Payoff</option>
               </select>
             </SetupSection>
 
@@ -346,6 +349,7 @@ const cardGridStyle: React.CSSProperties = {
   gridTemplateColumns: "1fr",
   gap: "12px",
 };
+
 const focusGridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(4, 1fr)",
@@ -361,7 +365,6 @@ const focusButtonStyle: React.CSSProperties = {
   justifyItems: "center",
   color: "#101828",
 };
-
 
 const stepBadgeStyle: React.CSSProperties = {
   width: "34px",
@@ -404,6 +407,7 @@ const primaryButtonStyle: React.CSSProperties = {
   cursor: "pointer",
   boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
 };
+
 const selectStyle: React.CSSProperties = {
   width: "100%",
   padding: "16px",
