@@ -189,10 +189,10 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 1)
 
         analyze_mock.assert_awaited_once_with(first_session["id"])
-        self.assertEqual(fake_supabase.rpc_calls[0][0], "create_salesperson_profile_version")
-        self.assertEqual(fake_supabase.rpc_calls[0][1]["p_call_id"], first_session["id"])
-        self.assertEqual(fake_supabase.rpc_calls[0][1]["p_weakest_dimension"], "objection_handling")
-
+        self.assertEqual(fake_supabase.rpc_calls, [])
+        stored_profile = fake_supabase.store["salesperson_profiles"][0]
+        self.assertEqual(stored_profile["call_id"], first_session["id"])
+        self.assertEqual(stored_profile["weakest_dimension"], "objection_handling")
 
 if __name__ == "__main__":
     unittest.main()
