@@ -226,7 +226,6 @@ async def end_session(session_id: str, data: SessionEnd):
             "profile": profile,
             "detail": str(exc),
         }
-
     except Exception as exc:
         score_card = await create_scorecard_stub(
             session_id=session_id,
