@@ -183,6 +183,7 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(payload["profile_status"], "failed")
         self.assertEqual(payload["profile_detail"], "invalid profile version")
 
+
 class _LearningLoopFakeRpc:
     def __init__(self, supabase, name, params):
         self.supabase = supabase
@@ -210,6 +211,7 @@ class _LearningLoopFakeRpc:
         }
         self.supabase.store["salesperson_profiles"].append(profile)
         return SimpleNamespace(data=profile)
+
 
 class _LearningLoopFakeTable:
     def __init__(self, name, store):
@@ -311,7 +313,8 @@ class _LearningLoopFakeTable:
             return SimpleNamespace(data=rows)
 
         raise AssertionError(f"Unexpected table access: {self.name}")
-    
+
+
 class _LearningLoopFakeSupabase:
     def __init__(self):
         self.rpc_calls = []
@@ -326,6 +329,7 @@ class _LearningLoopFakeSupabase:
 
     def rpc(self, name, params):
         return _LearningLoopFakeRpc(self, name, params)
+
 
 class TwoCallLearningLoopRouteTests(unittest.TestCase):
     def setUp(self):
@@ -409,6 +413,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         self.assertEqual(fake_supabase.rpc_calls[0][0], "create_salesperson_profile_version")
         self.assertEqual(fake_supabase.rpc_calls[0][1]["p_call_id"], first_session["id"])
         self.assertEqual(fake_supabase.rpc_calls[0][1]["p_weakest_dimension"], "objection_handling")
+
 
 if __name__ == "__main__":
     unittest.main()

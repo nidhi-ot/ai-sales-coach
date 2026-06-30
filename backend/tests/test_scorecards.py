@@ -25,7 +25,7 @@ class _FakeTable:
     def eq(self, key, value):
         self.filters[key] = value
         return self
-    
+
     def in_(self, key, values):
         self.in_filters[key] = set(values)
         return self
@@ -50,7 +50,7 @@ class _FakeTable:
     def update(self, payload):
         self.update_payload = payload
         return self
-    
+
     def _iter_rows(self):
         table = self.store[self.name]
         return table.values() if isinstance(table, dict) else table
@@ -64,7 +64,9 @@ class _FakeTable:
         rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
         if self.order_column is not None:
             rows.sort(
-                key=lambda row: "" if row.get(self.order_column) is None else row.get(self.order_column),
+                key=lambda row: (
+                    "" if row.get(self.order_column) is None else row.get(self.order_column)
+                ),
                 reverse=self.order_desc,
             )
         if self.limit_value is not None:
@@ -75,7 +77,8 @@ class _FakeTable:
         if self.name == "sessions":
             if self.insert_payload is not None:
                 row = {
-                    "id": self.insert_payload.get("id") or f"session-{len(self.store['sessions']) + 1}",
+                    "id": self.insert_payload.get("id")
+                    or f"session-{len(self.store['sessions']) + 1}",
                     **self.insert_payload,
                 }
                 self.store["sessions"][row["id"]] = row
@@ -88,10 +91,13 @@ class _FakeTable:
 
             return SimpleNamespace(data=self._selected_rows())
 
-
         if self.name == "transcripts":
             if self.insert_payload is not None:
-                payload = self.insert_payload if isinstance(self.insert_payload, list) else [self.insert_payload]
+                payload = (
+                    self.insert_payload
+                    if isinstance(self.insert_payload, list)
+                    else [self.insert_payload]
+                )
                 rows = []
                 for item in payload:
                     row = {"id": f"transcript-{len(self.store['transcripts']) + 1}", **item}
@@ -134,12 +140,11 @@ class _FakeTable:
 
             return SimpleNamespace(data=self._selected_rows())
 
-        
-
         if self.name == "salesperson_profiles":
             return SimpleNamespace(data=self._selected_rows())
 
         raise AssertionError(f"Unexpected table access: {self.name}")
+
 
 class _FakeRpc:
     def __init__(self, supabase, name, params):
@@ -167,6 +172,7 @@ class _FakeRpc:
         self.supabase.store["salesperson_profiles"].append(profile)
         return SimpleNamespace(data=profile)
 
+
 class _FakeSupabase:
     def __init__(self):
         self.rpc_calls = []
@@ -192,7 +198,7 @@ class _FakeSupabase:
 
     def table(self, name):
         return _FakeTable(name, self.store)
-    
+
     def rpc(self, name, params):
         return _FakeRpc(self, name, params)
 
@@ -287,7 +293,10 @@ class ScorecardRouteTests(unittest.TestCase):
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
             patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
-            patch("app.services.scorecards.gpt_analyze_transcript", new=AsyncMock(return_value=feedback)),
+            patch(
+                "app.services.scorecards.gpt_analyze_transcript",
+                new=AsyncMock(return_value=feedback),
+            ),
             patch(
                 "app.api.routes.sessions.create_next_salesperson_profile",
                 new=AsyncMock(return_value={"id": "profile-1"}),
@@ -300,8 +309,16 @@ class ScorecardRouteTests(unittest.TestCase):
                     "duration_seconds": 180,
                     "end_reason": "manual",
                     "entries": [
-                        {"speaker": "rep", "text": "Tell me about the current process.", "timestamp_offset_ms": 1000},
-                        {"speaker": "ai_customer", "text": "We lose track of follow-ups.", "timestamp_offset_ms": 2000},
+                        {
+                            "speaker": "rep",
+                            "text": "Tell me about the current process.",
+                            "timestamp_offset_ms": 1000,
+                        },
+                        {
+                            "speaker": "ai_customer",
+                            "text": "We lose track of follow-ups.",
+                            "timestamp_offset_ms": 2000,
+                        },
                     ],
                 },
             )
@@ -339,7 +356,10 @@ class ScorecardRouteTests(unittest.TestCase):
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
             patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
-            patch("app.services.scorecards.gpt_analyze_transcript", new=AsyncMock(return_value=feedback)),
+            patch(
+                "app.services.scorecards.gpt_analyze_transcript",
+                new=AsyncMock(return_value=feedback),
+            ),
             patch(
                 "app.api.routes.sessions.create_next_salesperson_profile",
                 new=AsyncMock(return_value={"id": "profile-1"}),
@@ -352,8 +372,16 @@ class ScorecardRouteTests(unittest.TestCase):
                     "duration_seconds": 180,
                     "end_reason": "manual",
                     "entries": [
-                        {"speaker": "rep", "text": "Can we agree on a pilot?", "timestamp_offset_ms": 1000},
-                        {"speaker": "ai_customer", "text": "Yes, send the next steps.", "timestamp_offset_ms": 2000},
+                        {
+                            "speaker": "rep",
+                            "text": "Can we agree on a pilot?",
+                            "timestamp_offset_ms": 1000,
+                        },
+                        {
+                            "speaker": "ai_customer",
+                            "text": "Yes, send the next steps.",
+                            "timestamp_offset_ms": 2000,
+                        },
                     ],
                 },
             )
@@ -361,7 +389,9 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
         self.assertEqual(fake_supabase.store["scorecards"][0]["id"], "scorecard-1")
-        self.assertEqual(fake_supabase.store["scorecards"][0]["feedback_summary"], "Generated analysis.")
+        self.assertEqual(
+            fake_supabase.store["scorecards"][0]["feedback_summary"], "Generated analysis."
+        )
         self.assertTrue(fake_supabase.store["scorecards"][0]["shared_with_manager"])
 
     def test_history_returns_scorecard_fields_and_share_update_preserves_record(self):
