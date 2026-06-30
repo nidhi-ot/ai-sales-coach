@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agent, auth, realtime, scorecards, sessions
-from app.api.routes import profiles
+from app.api.routes import agent, auth, profiles, realtime, scorecards, sessions
 
 
 def create_app() -> FastAPI:

@@ -25,9 +25,7 @@ async def get_latest_salesperson_profile(
 
     result = (
         supabase.table("salesperson_profiles")
-        .select(
-            "version, weakest_dimension, metric_scores, created_at"
-        )
+        .select("version, weakest_dimension, metric_scores, created_at")
         .eq("rep_id", rep_id)
         .order("version", desc=True)
         .limit(1)
