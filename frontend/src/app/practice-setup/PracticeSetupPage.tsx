@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
+import { API_BASE_URL } from "../../lib/api";
+
+type LearningProfile = {
+  version: number;
+  weakest_dimension: string;
+  metric_scores?: Record<string, number>;
+};
 
 const businessContexts = [
   {
@@ -38,17 +45,63 @@ const focusAreas = [
   { id: "closing", title: "Closing", icon: "🏆" },
 ];
 
+function mapWeakestDimensionToFocusArea(value: string) {
+  switch (value) {
+    case "rapport":
+      return "value_proposition";
+    case "discovery":
+      return "discovery";
+    case "objection_handling":
+      return "handling_objections";
+    case "closing":
+      return "closing";
+    default:
+      return "handling_objections";
+  }
+}
+
+function getFocusTitle(focusId: string) {
+  return focusAreas.find((item) => item.id === focusId)?.title || "-";
+}
+
 export default function PracticeSetupPage() {
   const router = useRouter();
   const [scenario, setScenario] = useState("cold_call");
-
   const [businessContext, setBusinessContext] = useState("apartment_association");
   const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
+  const [learningProfile, setLearningProfile] = useState<LearningProfile | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setScenario(params.get("scenario") || "cold_call");
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) return;
+
+    fetch(`${API_BASE_URL}/profile/me/latest`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data: LearningProfile | null) => {
+        if (!data) return;
+
+        const recommendedFocus = mapWeakestDimensionToFocusArea(
+          data.weakest_dimension
+        );
+
+        setLearningProfile(data);
+        setFocusArea(recommendedFocus);
+      })
+      .catch((error) => {
+        console.error("Could not load learning profile", error);
+      });
   }, []);
 
   function startPracticeCall() {
@@ -67,6 +120,17 @@ export default function PracticeSetupPage() {
   );
 
   const selectedFocus = focusAreas.find((item) => item.id === focusArea);
+
+  const recommendedFocus = learningProfile
+    ? mapWeakestDimensionToFocusArea(learningProfile.weakest_dimension)
+    : null;
+
+  const recommendedFocusTitle = recommendedFocus
+    ? getFocusTitle(recommendedFocus)
+    : null;
+
+  const isUsingRecommendedFocus =
+    recommendedFocus !== null && focusArea === recommendedFocus;
 
   return (
     <AppShell>
@@ -124,6 +188,24 @@ export default function PracticeSetupPage() {
               title="Today's Focus"
               description="Choose what the AI customer should challenge you on."
             >
+              {learningProfile && recommendedFocusTitle && (
+                <div style={recommendationBoxStyle}>
+                  <p style={{ margin: 0, fontWeight: 900, color: "#006b4f" }}>
+                    AI Recommended Focus
+                  </p>
+
+                  <p style={{ margin: "10px 0 0", color: "#344054" }}>
+                    Profile v{learningProfile.version}:{" "}
+                    <strong>{recommendedFocusTitle}</strong>
+                  </p>
+
+                  <p style={{ margin: "8px 0 0", color: "#667085" }}>
+                    This recommendation is based on your latest practice profile.
+                    You can still choose a different focus manually.
+                  </p>
+                </div>
+              )}
+
               <div style={focusGridStyle}>
                 {focusAreas.map((item) => (
                   <button
@@ -155,7 +237,14 @@ export default function PracticeSetupPage() {
 
             <SummaryRow label="Business Context" value={selectedBusiness?.title || "-"} />
             <SummaryRow label="Framework" value={framework} />
-            <SummaryRow label="Focus Area" value={selectedFocus?.title || "-"} />
+            <SummaryRow
+              label="Focus Area"
+              value={
+                isUsingRecommendedFocus && learningProfile
+                  ? `${selectedFocus?.title || "-"} · AI recommended · Profile v${learningProfile.version}`
+                  : selectedFocus?.title || "-"
+              }
+            />
             <SummaryRow label="Difficulty" value="Medium" />
             <SummaryRow label="Estimated Time" value="3 min" />
 
@@ -364,6 +453,14 @@ const focusButtonStyle: React.CSSProperties = {
   gap: "10px",
   justifyItems: "center",
   color: "#101828",
+};
+
+const recommendationBoxStyle: React.CSSProperties = {
+  marginBottom: "18px",
+  padding: "16px",
+  borderRadius: "16px",
+  background: "#f0faf6",
+  border: "1px solid #b7e4d4",
 };
 
 const stepBadgeStyle: React.CSSProperties = {
