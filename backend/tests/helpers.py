@@ -1,0 +1,211 @@
+"""Shared Supabase fakes for backend route/service tests."""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from types import SimpleNamespace
+from typing import Any
+
+
+DEFAULT_SESSION = {
+    "id": "session-123",
+    "rep_id": "rep-456",
+    "business_id": "business-789",
+    "scenario": "cold_call",
+    "profile_version": 3,
+    "status": "active",
+    "started_at": "2026-06-25T10:00:00+00:00",
+    "ended_at": None,
+    "duration_seconds": None,
+    "metadata": {"system_instruction": "Test scenario"},
+}
+
+
+class FakeTable:
+    def __init__(self, name: str, store: dict[str, Any]):
+        self.name = name
+        self.store = store
+        self.filters: dict[str, Any] = {}
+        self.in_filters: dict[str, set[Any]] = {}
+        self.insert_payload: Any = None
+        self.update_payload: dict[str, Any] | None = None
+        self.order_column: str | None = None
+        self.order_desc = False
+        self.limit_value: int | None = None
+
+    def select(self, *_args: Any, **_kwargs: Any) -> "FakeTable":
+        return self
+
+    def eq(self, key: str, value: Any) -> "FakeTable":
+        self.filters[key] = value
+        return self
+
+    def in_(self, key: str, values: list[Any]) -> "FakeTable":
+        self.in_filters[key] = set(values)
+        return self
+
+    def limit(self, value: int) -> "FakeTable":
+        self.limit_value = value
+        return self
+
+    def order(self, column: str, *_args: Any, **kwargs: Any) -> "FakeTable":
+        self.order_column = column
+        self.order_desc = bool(kwargs.get("desc", False))
+        return self
+
+    def insert(self, payload: Any) -> "FakeTable":
+        self.insert_payload = payload
+        return self
+
+    def upsert(self, payload: Any, *_args: Any, **_kwargs: Any) -> "FakeTable":
+        self.insert_payload = payload
+        return self
+
+    def update(self, payload: dict[str, Any]) -> "FakeTable":
+        self.update_payload = payload
+        return self
+
+    def _iter_rows(self):
+        table = self.store[self.name]
+        return table.values() if isinstance(table, dict) else table
+
+    def _matches(self, row: dict[str, Any]) -> bool:
+        return all(row.get(k) == v for k, v in self.filters.items()) and all(
+            row.get(k) in values for k, values in self.in_filters.items()
+        )
+
+    def _selected_rows(self) -> list[dict[str, Any]]:
+        rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
+        if self.order_column is not None:
+            rows.sort(
+                key=lambda row: "" if row.get(self.order_column) is None else row.get(self.order_column),
+                reverse=self.order_desc,
+            )
+        if self.limit_value is not None:
+            rows = rows[: self.limit_value]
+        return rows
+
+    def execute(self):
+        if self.name == "sessions":
+            return self._execute_sessions()
+
+        if self.name == "transcripts":
+            return self._execute_transcripts()
+
+        if self.name == "scorecards":
+            return self._execute_scorecards()
+
+        if self.name == "salesperson_profiles":
+            return SimpleNamespace(data=self._selected_rows())
+
+        raise AssertionError(f"Unexpected table access: {self.name}")
+
+    def _execute_sessions(self):
+        if self.insert_payload is not None:
+            row = {
+                "id": self.insert_payload.get("id") or f"session-{len(self.store['sessions']) + 1}",
+                **self.insert_payload,
+            }
+            self.store["sessions"][row["id"]] = row
+            return SimpleNamespace(data=[dict(row)])
+
+        if self.update_payload is not None:
+            rows = []
+            for session in self.store["sessions"].values():
+                if self._matches(session):
+                    session.update(self.update_payload)
+                    rows.append(dict(session))
+            return SimpleNamespace(data=rows)
+
+        return SimpleNamespace(data=self._selected_rows())
+
+    def _execute_transcripts(self):
+        if self.insert_payload is not None:
+            payload = self.insert_payload if isinstance(self.insert_payload, list) else [self.insert_payload]
+            rows = []
+            for item in payload:
+                row = {"id": f"transcript-{len(self.store['transcripts']) + 1}", **item}
+                self.store["transcripts"].append(row)
+                rows.append(dict(row))
+            return SimpleNamespace(data=rows)
+
+        return SimpleNamespace(data=self._selected_rows())
+
+    def _execute_scorecards(self):
+        if self.insert_payload is not None:
+            payload = dict(self.insert_payload)
+            existing = next(
+                (
+                    scorecard
+                    for scorecard in self.store["scorecards"]
+                    if scorecard.get("session_id") == payload.get("session_id")
+                ),
+                None,
+            )
+            if existing is not None:
+                existing.update(payload)
+                return SimpleNamespace(data=[dict(existing)])
+
+            row = {
+                "id": payload.get("id") or f"scorecard-{len(self.store['scorecards']) + 1}",
+                "shared_with_manager": False,
+                **payload,
+            }
+            self.store["scorecards"].append(row)
+            return SimpleNamespace(data=[dict(row)])
+
+        if self.update_payload is not None:
+            rows = []
+            for scorecard in self.store["scorecards"]:
+                if self._matches(scorecard):
+                    scorecard.update(self.update_payload)
+                    rows.append(dict(scorecard))
+            return SimpleNamespace(data=rows)
+
+        return SimpleNamespace(data=self._selected_rows())
+
+
+class FakeRpc:
+    def __init__(self, supabase: "FakeSupabase", name: str, params: dict[str, Any]):
+        self.supabase = supabase
+        self.name = name
+        self.params = params
+
+    def execute(self):
+        self.supabase.rpc_calls.append((self.name, self.params))
+        rep_profiles = [
+            profile
+            for profile in self.supabase.store["salesperson_profiles"]
+            if profile["rep_id"] == self.params["p_rep_id"]
+        ]
+        version = max((profile["version"] for profile in rep_profiles), default=0) + 1
+        profile = {
+            "id": f"profile-{version}",
+            "rep_id": self.params["p_rep_id"],
+            "business_id": self.params["p_business_id"],
+            "version": version,
+            "call_id": self.params["p_call_id"],
+            "metric_scores": self.params["p_metric_scores"],
+            "weakest_dimension": self.params["p_weakest_dimension"],
+        }
+        self.supabase.store["salesperson_profiles"].append(profile)
+        return SimpleNamespace(data=profile)
+
+
+class FakeSupabase:
+    def __init__(self, *, with_default_session: bool = True):
+        self.rpc_calls: list[tuple[str, dict[str, Any]]] = []
+        self.store = {
+            "sessions": {},
+            "transcripts": [],
+            "scorecards": [],
+            "salesperson_profiles": [],
+        }
+        if with_default_session:
+            self.store["sessions"][DEFAULT_SESSION["id"]] = deepcopy(DEFAULT_SESSION)
+
+    def table(self, name: str) -> FakeTable:
+        return FakeTable(name, self.store)
+
+    def rpc(self, name: str, params: dict[str, Any]) -> FakeRpc:
+        return FakeRpc(self, name, params)

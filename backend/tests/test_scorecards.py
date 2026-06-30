@@ -1,206 +1,10 @@
 import unittest
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
 from app.main import app
-
-
-class _FakeTable:
-    def __init__(self, name, store):
-        self.name = name
-        self.store = store
-        self.filters = {}
-        self.in_filters = {}
-        self.insert_payload = None
-        self.update_payload = None
-        self.order_column = None
-        self.order_desc = False
-        self.limit_value = None
-
-    def select(self, *_args, **_kwargs):
-        return self
-
-    def eq(self, key, value):
-        self.filters[key] = value
-        return self
-
-    def in_(self, key, values):
-        self.in_filters[key] = set(values)
-        return self
-
-    def limit(self, value):
-        self.limit_value = value
-        return self
-
-    def order(self, column, *_args, **kwargs):
-        self.order_column = column
-        self.order_desc = bool(kwargs.get("desc", False))
-        return self
-
-    def insert(self, payload):
-        self.insert_payload = payload
-        return self
-
-    def upsert(self, payload, *_args, **_kwargs):
-        self.insert_payload = payload
-        return self
-
-    def update(self, payload):
-        self.update_payload = payload
-        return self
-
-    def _iter_rows(self):
-        table = self.store[self.name]
-        return table.values() if isinstance(table, dict) else table
-
-    def _matches(self, row):
-        return all(row.get(k) == v for k, v in self.filters.items()) and all(
-            row.get(k) in values for k, values in self.in_filters.items()
-        )
-
-    def _selected_rows(self):
-        rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
-        if self.order_column is not None:
-            rows.sort(
-                key=lambda row: (
-                    "" if row.get(self.order_column) is None else row.get(self.order_column)
-                ),
-                reverse=self.order_desc,
-            )
-        if self.limit_value is not None:
-            rows = rows[: self.limit_value]
-        return rows
-
-    def execute(self):
-        if self.name == "sessions":
-            if self.insert_payload is not None:
-                row = {
-                    "id": self.insert_payload.get("id")
-                    or f"session-{len(self.store['sessions']) + 1}",
-                    **self.insert_payload,
-                }
-                self.store["sessions"][row["id"]] = row
-                return SimpleNamespace(data=[dict(row)])
-
-            if self.update_payload is not None:
-                for session in self.store["sessions"].values():
-                    if self._matches(session):
-                        session.update(self.update_payload)
-
-            return SimpleNamespace(data=self._selected_rows())
-
-        if self.name == "transcripts":
-            if self.insert_payload is not None:
-                payload = (
-                    self.insert_payload
-                    if isinstance(self.insert_payload, list)
-                    else [self.insert_payload]
-                )
-                rows = []
-                for item in payload:
-                    row = {"id": f"transcript-{len(self.store['transcripts']) + 1}", **item}
-                    self.store["transcripts"].append(row)
-                    rows.append(dict(row))
-                return SimpleNamespace(data=rows)
-
-            return SimpleNamespace(data=self._selected_rows())
-
-        if self.name == "scorecards":
-            if self.insert_payload is not None:
-                payload = dict(self.insert_payload)
-                existing = next(
-                    (
-                        scorecard
-                        for scorecard in self.store["scorecards"]
-                        if scorecard.get("session_id") == payload.get("session_id")
-                    ),
-                    None,
-                )
-                if existing is not None:
-                    existing.update(payload)
-                    return SimpleNamespace(data=[dict(existing)])
-
-                row = {
-                    "id": payload.get("id") or f"scorecard-{len(self.store['scorecards']) + 1}",
-                    "shared_with_manager": False,
-                    **payload,
-                }
-                self.store["scorecards"].append(row)
-                return SimpleNamespace(data=[dict(row)])
-
-            if self.update_payload is not None:
-                rows = []
-                for scorecard in self.store["scorecards"]:
-                    if self._matches(scorecard):
-                        scorecard.update(self.update_payload)
-                        rows.append(dict(scorecard))
-                return SimpleNamespace(data=rows)
-
-            return SimpleNamespace(data=self._selected_rows())
-
-        if self.name == "salesperson_profiles":
-            return SimpleNamespace(data=self._selected_rows())
-
-        raise AssertionError(f"Unexpected table access: {self.name}")
-
-
-class _FakeRpc:
-    def __init__(self, supabase, name, params):
-        self.supabase = supabase
-        self.name = name
-        self.params = params
-
-    def execute(self):
-        self.supabase.rpc_calls.append((self.name, self.params))
-        rep_profiles = [
-            profile
-            for profile in self.supabase.store["salesperson_profiles"]
-            if profile["rep_id"] == self.params["p_rep_id"]
-        ]
-        version = max((profile["version"] for profile in rep_profiles), default=0) + 1
-        profile = {
-            "id": f"profile-{version}",
-            "rep_id": self.params["p_rep_id"],
-            "business_id": self.params["p_business_id"],
-            "version": version,
-            "call_id": self.params["p_call_id"],
-            "metric_scores": self.params["p_metric_scores"],
-            "weakest_dimension": self.params["p_weakest_dimension"],
-        }
-        self.supabase.store["salesperson_profiles"].append(profile)
-        return SimpleNamespace(data=profile)
-
-
-class _FakeSupabase:
-    def __init__(self):
-        self.rpc_calls = []
-        self.store = {
-            "sessions": {
-                "session-123": {
-                    "id": "session-123",
-                    "rep_id": "rep-456",
-                    "business_id": "business-789",
-                    "scenario": "cold_call",
-                    "profile_version": 3,
-                    "status": "active",
-                    "started_at": "2026-06-25T10:00:00+00:00",
-                    "ended_at": None,
-                    "duration_seconds": None,
-                    "metadata": {"system_instruction": "Test scenario"},
-                }
-            },
-            "transcripts": [],
-            "scorecards": [],
-            "salesperson_profiles": [],
-        }
-
-    def table(self, name):
-        return _FakeTable(name, self.store)
-
-    def rpc(self, name, params):
-        return _FakeRpc(self, name, params)
+from tests.helpers import FakeSupabase
 
 
 class ScorecardRouteTests(unittest.TestCase):
@@ -208,7 +12,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.client = TestClient(app)
 
     def test_end_session_persists_generated_scorecard(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
         feedback = {
             "rapport_score": 8,
             "needs_discovery_score": 7,
@@ -260,7 +64,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(fake_supabase.store["scorecards"][0]["overall_score"], 8)
 
     def test_end_session_updates_existing_stub_scorecard_without_creating_duplicate(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
         fake_supabase.store["scorecards"].append(
             {
                 "id": "scorecard-1",
@@ -326,7 +130,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertTrue(fake_supabase.store["scorecards"][0]["shared_with_manager"])
 
     def test_history_returns_scorecard_fields_and_share_update_preserves_record(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
         fake_supabase.store["sessions"]["session-123"].update(
             {"status": "completed", "duration_seconds": 180}
         )
@@ -370,7 +174,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(history_after_share.json()[0]["overall_score"], 7)
 
     def test_post_scorecard_creates_stub_and_get_by_scorecard_id(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
 
         with (
             patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
@@ -398,7 +202,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(fetched["session_id"], "session-123")
 
     def test_get_scorecard_can_still_lookup_by_session_id(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
         fake_supabase.store["scorecards"].append(
             {
                 "id": "scorecard-1",
@@ -417,7 +221,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(response.json()["id"], "scorecard-1")
 
     def test_post_scorecard_does_not_overwrite_existing_generated_scorecard(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
         fake_supabase.store["scorecards"].append(
             {
                 "id": "scorecard-1",
@@ -452,7 +256,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
 
     def test_end_session_value_error_creates_stub_scorecard_and_persists_it(self):
-        fake_supabase = _FakeSupabase()
+        fake_supabase = FakeSupabase()
 
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
