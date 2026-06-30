@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 
 const businessContexts = [
@@ -38,15 +38,18 @@ const focusAreas = [
   { id: "closing", title: "Closing", icon: "🏆" },
 ];
 
-export default function PracticeSetupContent() {
+export default function PracticeSetupPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const scenario = searchParams.get("scenario") || "cold_call";
+  const [scenario, setScenario] = useState("cold_call");
 
   const [businessContext, setBusinessContext] = useState("apartment_association");
   const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setScenario(params.get("scenario") || "cold_call");
+  }, []);
 
   function startPracticeCall() {
     const params = new URLSearchParams({

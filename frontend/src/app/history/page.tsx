@@ -215,14 +215,23 @@ export default function HistoryPage() {
                       Share with manager
                     </label>
 
-                    <button
-                      onClick={() =>
-                        router.push(`/scorecards?session_id=${session.id}`)
-                      }
-                      style={viewButtonStyle}
-                    >
-                      View Scorecard
-                    </button>
+                    <div style={buttonGroupStyle}>
+                      <button
+                        onClick={() => router.push(`/sessions/${session.id}`)}
+                        style={secondaryButtonStyle}
+                      >
+                        View Details
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          router.push(`/scorecards?session_id=${session.id}`)
+                        }
+                        style={viewButtonStyle}
+                      >
+                        View Scorecard
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -425,6 +434,24 @@ const viewButtonStyle: React.CSSProperties = {
   border: "none",
   background: "#006b4f",
   color: "white",
+  cursor: "pointer",
+  fontWeight: 800,
+  whiteSpace: "nowrap",
+};
+
+const buttonGroupStyle: React.CSSProperties = {
+  display: "flex",
+  gap: "10px",
+  alignItems: "center",
+  flexWrap: "wrap",
+};
+
+const secondaryButtonStyle: React.CSSProperties = {
+  padding: "10px 16px",
+  borderRadius: "12px",
+  border: "1px solid #d0d5dd",
+  background: "white",
+  color: "#006b4f",
   cursor: "pointer",
   fontWeight: 800,
   whiteSpace: "nowrap",
