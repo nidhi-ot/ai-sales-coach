@@ -142,15 +142,18 @@ async def login(data: LoginRequest) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Salesperson account not found")
 
     return {
-        "message": "Login successful",
-        "user_id": auth_result.user.id,
-        "rep_id": auth_result.user.id,
-        "email": auth_result.user.email,
-        "full_name": account["full_name"],
-        "phone_number": account["phone_number"],
-        "business_id": account["business_id"],
-        "role": account["role"],
-    }
+    "message": "Login successful",
+    "user_id": auth_result.user.id,
+    "access_token": auth_result.session.access_token
+                     if auth_result.session 
+                     else None,
+    "rep_id": auth_result.user.id,
+    "email": auth_result.user.email,
+    "full_name": account["full_name"],
+    "phone_number": account["phone_number"],
+    "business_id": account["business_id"],
+    "role": account["role"],
+}
 
 
 @router.post("/logout")
