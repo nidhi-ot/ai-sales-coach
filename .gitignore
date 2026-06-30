@@ -25,3 +25,4 @@ pnpm-debug.log*
 *.log
 frontend/.env.local
 backend/.env.local
+backend/.coverage
