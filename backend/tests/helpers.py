@@ -6,7 +6,6 @@ from copy import deepcopy
 from types import SimpleNamespace
 from typing import Any
 
-
 DEFAULT_SESSION = {
     "id": "session-123",
     "rep_id": "rep-456",
@@ -78,7 +77,9 @@ class FakeTable:
         rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
         if self.order_column is not None:
             rows.sort(
-                key=lambda row: "" if row.get(self.order_column) is None else row.get(self.order_column),
+                key=lambda row: (
+                    "" if row.get(self.order_column) is None else row.get(self.order_column)
+                ),
                 reverse=self.order_desc,
             )
         if self.limit_value is not None:
@@ -121,7 +122,11 @@ class FakeTable:
 
     def _execute_transcripts(self):
         if self.insert_payload is not None:
-            payload = self.insert_payload if isinstance(self.insert_payload, list) else [self.insert_payload]
+            payload = (
+                self.insert_payload
+                if isinstance(self.insert_payload, list)
+                else [self.insert_payload]
+            )
             rows = []
             for item in payload:
                 row = {"id": f"transcript-{len(self.store['transcripts']) + 1}", **item}
