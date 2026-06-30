@@ -152,7 +152,11 @@ export default function RegisterPage() {
 
         <p style={{ textAlign: "center", marginTop: "22px", color: "#667085" }}>
           Already have an account?{" "}
-          <button type="button" onClick={() => router.push("/")} style={linkButtonStyle}>
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            style={linkButtonStyle}
+          >
             Sign in
           </button>
         </p>
