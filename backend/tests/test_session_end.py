@@ -194,5 +194,6 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         self.assertEqual(stored_profile["call_id"], first_session["id"])
         self.assertEqual(stored_profile["weakest_dimension"], "objection_handling")
 
+
 if __name__ == "__main__":
     unittest.main()
