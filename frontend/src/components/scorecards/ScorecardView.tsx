@@ -255,7 +255,7 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
 }
 
 function formatDuration(seconds?: number | null) {
-  if (seconds == null) return "Not scored";
+  if (seconds == null) return "Pending";
   if (seconds === 0) return "0s";
 
   const minutes = Math.floor(seconds / 60);
@@ -267,13 +267,13 @@ function formatDuration(seconds?: number | null) {
 }
 
 function formatPercentage(value?: number | null) {
-  if (value == null) return "Not scored";
+  if (value == null) return "Pending";
 
   return `${value}%`;
 }
 
 function formatCount(value?: number | null) {
-  if (value == null) return "Not scored";
+  if (value == null) return "Pending";
 
   return `${value}`;
 }

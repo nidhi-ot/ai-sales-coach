@@ -217,7 +217,7 @@ function formatDate(value?: string | null) {
 }
 
 function formatDuration(totalSeconds?: number | null) {
-  if (totalSeconds == null) return "Not scored";
+  if (totalSeconds == null) return "--";
 
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;

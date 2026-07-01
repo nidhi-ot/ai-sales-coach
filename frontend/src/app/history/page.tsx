@@ -274,7 +274,7 @@ function formatScenario(value: string) {
 }
 
 function formatDuration(seconds?: number | null) {
-  if (seconds == null) return "Not scored";
+  if (seconds == null) return "--";
   if (seconds === 0) return "0s";
 
   const minutes = Math.floor(seconds / 60);
