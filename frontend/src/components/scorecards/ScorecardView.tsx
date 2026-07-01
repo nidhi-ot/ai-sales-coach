@@ -77,6 +77,7 @@ function frameworkMetrics(scorecard: Scorecard): ScoreMetric[] {
 }
 
 export default function ScorecardView({ scorecard }: ScorecardViewProps) {
+  const hasOverallScore = scorecard.overall_score != null;
   const frameworkScoreMetrics = frameworkMetrics(scorecard);
 
   return (
@@ -99,8 +100,13 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
             color: "#006b4f",
           }}
         >
-          {scorecard.overall_score ?? 0}/10
+          {hasOverallScore ? `${scorecard.overall_score}/10` : "Not scored"}
         </p>
+        {!hasOverallScore ? (
+          <p style={{ margin: "10px 0 0", color: "#667085" }}>
+            Scorecard analysis is still pending for this session.
+          </p>
+        ) : null}
       </section>
 
       <div
@@ -125,7 +131,7 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
             >
               <h2 style={{ marginTop: 0 }}>{metric.label}</h2>
               <p style={{ fontSize: "28px", fontWeight: 700, marginBottom: "8px" }}>
-                {metric.value ?? 0}/10
+                {metric.value != null ? `${metric.value}/10` : "Not scored"}
               </p>
             </section>
           ))}
@@ -149,13 +155,13 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
         >
           <h2 style={{ marginTop: 0 }}>Call Metrics</h2>
           <p style={{ color: "#344054", lineHeight: "1.8", marginBottom: 0 }}>
-            Duration: {scorecard.call_duration_seconds ?? 0}s
+            Duration: {formatDuration(scorecard.call_duration_seconds)}
             <br />
-            Rep Talk %: {scorecard.rep_talk_percentage ?? 0}%
+            Rep Talk %: {formatPercentage(scorecard.rep_talk_percentage)}
             <br />
-            Interruptions: {scorecard.interruptions_count ?? 0}
+            Interruptions: {formatCount(scorecard.interruptions_count)}
             <br />
-            Filler Words: {scorecard.filler_words_count ?? 0}
+            Filler Words: {formatCount(scorecard.filler_words_count)}
           </p>
         </section>
 
@@ -171,7 +177,7 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
           <p style={{ color: "#344054", lineHeight: "1.8", marginBottom: 0 }}>
             {frameworkScoreMetrics.map((metric, index) => (
               <span key={metric.key}>
-                {metric.label}: {metric.value ?? 0}/10
+                {metric.label}: {metric.value != null ? `${metric.value}/10` : "Not scored"}
                 {index < frameworkScoreMetrics.length - 1 ? <br /> : null}
               </span>
             ))}
@@ -246,4 +252,28 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
       </section>
     </>
   );
+}
+
+function formatDuration(seconds?: number | null) {
+  if (seconds == null) return "Pending";
+  if (seconds === 0) return "0s";
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (!minutes) return `${remainingSeconds}s`;
+
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
+function formatPercentage(value?: number | null) {
+  if (value == null) return "Pending";
+
+  return `${value}%`;
+}
+
+function formatCount(value?: number | null) {
+  if (value == null) return "Pending";
+
+  return `${value}`;
 }

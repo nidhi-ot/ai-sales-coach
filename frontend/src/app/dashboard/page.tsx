@@ -258,16 +258,17 @@ function ProgressRow({
   score,
 }: {
   label: string;
-  score: number | undefined;
+  score: number | null | undefined;
 }) {
-  const safeScore = score ?? 0;
-  const percentage = Math.min(safeScore * 10, 100);
+  const hasScore = score != null;
+  const safeScore = hasScore ? score : 0;
+  const percentage = hasScore ? Math.min(safeScore * 10, 100) : 0;
 
   return (
     <div>
       <div style={progressHeaderStyle}>
         <span>{label}</span>
-        <span>{score !== undefined ? `${safeScore.toFixed(1)}/10` : "--"}</span>
+        <span>{hasScore ? `${safeScore.toFixed(1)}/10` : "--"}</span>
       </div>
 
       <div style={progressBgStyle}>
