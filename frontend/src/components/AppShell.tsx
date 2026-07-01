@@ -11,12 +11,18 @@ export default function AppShell({
   const pathname = usePathname();
 
   function handleLogout() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_id");
     localStorage.removeItem("rep_id");
     localStorage.removeItem("business_id");
     localStorage.removeItem("full_name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("phone_number");
     localStorage.removeItem("role");
+    localStorage.removeItem("remember_me");
+    localStorage.removeItem("last_session_id");
 
-    router.push("/");;
+    router.push("/");
   }
 
   const navItems = [
