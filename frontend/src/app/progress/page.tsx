@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { useEffect, useState } from "react";
 import AppShell from "../../components/AppShell";
 
@@ -54,7 +52,7 @@ export default function ProgressPage() {
             }}
           >
             <strong>Latest session:</strong>{" "}
-            {lastSessionId ? lastSessionId : "No session captured yet"}
+            {lastSessionId ? "Session recorded" : "No session captured yet"}
           </div>
         </section>
       </div>

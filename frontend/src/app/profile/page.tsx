@@ -8,14 +8,12 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("-");
   const [phone, setPhone] = useState("-");
   const [role, setRole] = useState("rep");
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     setFullName(localStorage.getItem("full_name") || "Sales Rep");
     setEmail(localStorage.getItem("email") || "-");
     setPhone(localStorage.getItem("phone_number") || "-");
     setRole(localStorage.getItem("role") || "rep");
-    setLoaded(true);
   }, []);
 
   return (
@@ -33,9 +31,7 @@ export default function ProfilePage() {
           <div style={avatarStyle}>{fullName.charAt(0).toUpperCase()}</div>
 
           <h2 style={{ marginBottom: "4px" }}>{fullName}</h2>
-          <p style={{ color: "#667085", marginTop: 0 }}>
-            {loaded ? "Sales Representative" : "Loading profile..."}
-          </p>
+          <p style={{ color: "#667085", marginTop: 0 }}>Sales Representative</p>
 
           <div style={gridStyle}>
             <InfoCard label="Email" value={email} />
@@ -45,9 +41,7 @@ export default function ProfilePage() {
           </div>
 
           <p style={{ color: "#667085", margin: "20px 0 0" }}>
-            {loaded
-              ? "This profile mirrors the values stored in your local app session."
-              : "Fetching your local profile details..."}
+            This profile mirrors the values stored in your local app session.
           </p>
         </section>
       </div>
