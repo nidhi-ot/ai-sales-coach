@@ -2,47 +2,83 @@ import Link from "next/link";
 
 const highlights = [
   {
-    title: "Practice the hard conversations",
+    title: "Realistic AI buyer personas",
     description:
-      "Run realistic role-plays for discovery, objections, demos, and closing practice.",
+      "Practice with customers who ask practical questions, raise objections, and respond to what the rep actually says.",
   },
   {
-    title: "Turn every call into feedback",
+    title: "Instant scorecards",
     description:
-      "Use scorecards and session history to see what worked and where to improve.",
+      "Review rapport, discovery, objection handling, closing, and framework-specific feedback after each practice call.",
   },
   {
-    title: "Keep reps moving forward",
+    title: "Progress tracking",
     description:
-      "Track progress over time so the next session always has a clearer focus.",
+      "Use session history and score trends to focus the next practice call on the skill that needs the most work.",
   },
 ];
 
 const steps = [
   {
     number: "01",
-    title: "Log in or create an account",
+    title: "Choose the practice setup",
     description:
-      "Get into the app quickly and move straight into your practice workflow.",
+      "Select the scenario, customer context, sales framework, and focus area before the call begins.",
   },
   {
     number: "02",
-    title: "Choose a scenario and run a call",
+    title: "Speak with the AI customer",
     description:
-      "Pick a practice situation that matches what the team needs this week.",
+      "Run a live voice call with a realistic buyer persona and practice handling real objections out loud.",
   },
   {
     number: "03",
-    title: "Review feedback and try again",
+    title: "Review and improve",
     description:
-      "Look at scorecards, history, and coaching notes before the next session.",
+      "Use the scorecard and session history to understand what worked and what to practice next.",
+  },
+];
+
+const benefits = [
+  {
+    title: "Safer practice before real calls",
+    description:
+      "Reps can rehearse difficult conversations before speaking with live prospects or customers.",
+  },
+  {
+    title: "Consistent coaching language",
+    description:
+      "Managers and reps can discuss performance using the same scorecard categories and sales framework.",
+  },
+  {
+    title: "Built for real service conversations",
+    description:
+      "The product can support practical customer contexts like BRFs, property owners, and cleaning service buyers.",
+  },
+];
+
+const faqs = [
+  {
+    question: "Who is AI Sales Coach for?",
+    answer:
+      "It is for sales reps, managers, and teams who want a repeatable way to practice calls and improve over time.",
+  },
+  {
+    question: "What happens after a practice call?",
+    answer:
+      "The session is saved, transcripts are captured, and a scorecard shows strengths, improvement areas, and next focus areas.",
+  },
+  {
+    question: "Can the AI customer match our business context?",
+    answer:
+      "Yes. The practice setup can use business context, scenario, sales framework, and focus area to shape the AI buyer.",
   },
 ];
 
 const stats = [
-  { value: "Live", label: "buyer-style practice sessions" },
-  { value: "Fast", label: "feedback through scorecards" },
-  { value: "Clear", label: "next steps after every call" },
+  { value: "Live", label: "voice practice with AI buyers" },
+  { value: "Instant", label: "scorecards after calls" },
+  { value: "Tracked", label: "progress across sessions" },
 ];
 
 export default function HomePage() {
@@ -65,65 +101,81 @@ export default function HomePage() {
             <Link href="#contact" style={ghostButtonStyle}>
               Contact Us
             </Link>
-            <Link href="/login" style={primaryButtonStyle}>
-              Login
+            <Link href="/login" style={ghostButtonStyle}>
+              Log in
+            </Link>
+            <Link href="/register" style={primaryButtonStyle}>
+              Create account
             </Link>
           </nav>
         </header>
 
-        <div style={heroGridStyle}>
-          <div style={heroCopyStyle}>
-            <span style={pillStyle}>Built for sales reps and enablement teams</span>
-            <h1 style={titleStyle}>
-              A lighter way to practice
-              <br />
-              real sales conversations.
-            </h1>
-            <p style={leadStyle}>
-              AI Sales Coach gives your team a simple place to rehearse calls,
-              review scorecards, and keep each practice session focused on the
-              next improvement.
-            </p>
+        <section style={heroSectionStyle}>
+          <span style={pillStyle}>
+            AI-powered sales practice for real buyer conversations
+          </span>
 
-            <div style={heroActionsStyle}>
-              <Link href="/login" style={primaryButtonLargeStyle}>
-                Login to continue
-              </Link>
-              <Link href="#contact" style={secondaryButtonLargeStyle}>
-                Contact Us
-              </Link>
-            </div>
+          <h1 style={titleStyle}>Practice sales calls before they count.</h1>
 
-            <div style={statsRowStyle}>
-              {stats.map((stat) => (
-                <div key={stat.label} style={statCardStyle}>
-                  <div style={statValueStyle}>{stat.value}</div>
-                  <p style={statLabelStyle}>{stat.label}</p>
-                </div>
-              ))}
-            </div>
+          <p style={leadStyle}>
+            Train with realistic AI buyer personas, handle objections out loud,
+            and review instant scorecards that show what to improve next.
+          </p>
+
+          <div style={heroActionsStyle}>
+            <Link href="/register" style={primaryButtonLargeStyle}>
+              Start practicing
+            </Link>
+            <Link href="/login" style={secondaryButtonLargeStyle}>
+              Log in
+            </Link>
           </div>
 
-          <aside style={panelStyle}>
-            <div style={panelInnerStyle}>
-              <p style={panelKickerStyle}>Why teams use it</p>
-              <h2 style={panelTitleStyle}>Simple enough for reps, useful enough for managers.</h2>
-              <p style={panelTextStyle}>
-                The experience is designed to stay lightweight on the front end
-                while still capturing the details that matter after the call.
-              </p>
-            </div>
+          <div style={statsRowStyle}>
+            {stats.map((stat) => (
+              <div key={stat.label} style={statCardStyle}>
+                <div style={statValueStyle}>{stat.value}</div>
+                <p style={statLabelStyle}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            <div style={cardGridStyle}>
-              {highlights.map((item) => (
-                <article key={item.title} style={featureCardStyle}>
-                  <h3 style={featureTitleStyle}>{item.title}</h3>
-                  <p style={featureTextStyle}>{item.description}</p>
-                </article>
-              ))}
-            </div>
-          </aside>
-        </div>
+        <section style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <p style={sectionKickerStyle}>Product overview</p>
+            <h2 style={sectionTitleStyle}>
+              A focused practice loop for better sales conversations.
+            </h2>
+          </div>
+
+          <div style={overviewCardStyle}>
+            <p style={overviewTextStyle}>
+              AI Sales Coach helps reps prepare for customer conversations by
+              turning practice into a repeatable workflow: choose a scenario,
+              speak with a realistic AI buyer, review the scorecard, and use the
+              next session to improve the weakest skill.
+            </p>
+          </div>
+        </section>
+
+        <section style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <p style={sectionKickerStyle}>Key features</p>
+            <h2 style={sectionTitleStyle}>
+              Everything reps need to practice with purpose.
+            </h2>
+          </div>
+
+          <div style={cardsGridStyle}>
+            {highlights.map((item) => (
+              <article key={item.title} style={featureCardStyle}>
+                <h3 style={featureTitleStyle}>{item.title}</h3>
+                <p style={featureTextStyle}>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <section style={sectionStyle}>
           <div style={sectionHeaderStyle}>
@@ -142,27 +194,117 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <p style={sectionKickerStyle}>Benefits for sales teams</p>
+            <h2 style={sectionTitleStyle}>
+              Practice becomes repeatable, measurable, and easier to coach.
+            </h2>
+          </div>
+
+          <div style={cardsGridStyle}>
+            {benefits.map((item) => (
+              <article key={item.title} style={featureCardStyle}>
+                <h3 style={featureTitleStyle}>{item.title}</h3>
+                <p style={featureTextStyle}>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <p style={sectionKickerStyle}>FAQ</p>
+            <h2 style={sectionTitleStyle}>Common questions before the first practice call.</h2>
+          </div>
+
+          <div style={faqListStyle}>
+            {faqs.map((item) => (
+              <article key={item.question} style={faqItemStyle}>
+                <h3 style={faqQuestionStyle}>{item.question}</h3>
+                <p style={faqAnswerStyle}>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="contact" style={contactSectionStyle}>
           <div style={contactCardStyle}>
             <div>
-              <p style={sectionKickerStyle}>Contact Us</p>
-              <h2 style={contactTitleStyle}>Need help getting started?</h2>
+              <p style={sectionKickerStyle}>Contact Support</p>
+              <h2 style={contactTitleStyle}>
+                Need assistance with AI Sales Coach?
+              </h2>
               <p style={contactTextStyle}>
-                Use the login page to enter the app, or share this page with your
-                team if you want a cleaner entry point before sign-in.
+                Our team is ready to help with technical issues, account questions, practice sessions, scorecards, and general product support. Send us a message and we'll respond as soon as possible.
               </p>
             </div>
 
-            <div style={contactActionsStyle}>
-              <Link href="/login" style={primaryButtonLargeStyle}>
-                Login
-              </Link>
-              <Link href="/register" style={secondaryButtonLargeStyle}>
-                Create account
-              </Link>
-            </div>
+            <form
+              action="mailto:hello@aisalescoach.app"
+              method="post"
+              encType="text/plain"
+              style={contactFormStyle}
+            >
+              <div style={contactFormRowStyle}>
+                <label style={contactLabelStyle}>
+                  Your name
+                  <input name="name" style={contactInputStyle} />
+                </label>
+
+                <label style={contactLabelStyle}>
+                  Work email
+                  <input name="email" type="email" style={contactInputStyle} />
+                </label>
+              </div>
+
+              <label style={contactLabelStyle}>
+                Company
+                <input name="company" style={contactInputStyle} />
+              </label>
+
+              <label style={contactLabelStyle}>
+                What can we help with?
+                <textarea name="message" rows={5} style={contactTextareaStyle} />
+              </label>
+
+              <div style={contactActionsStyle}>
+                <button type="submit" style={contactSubmitButtonStyle}>
+                  Send
+                </button>
+                <Link href="/login" style={secondaryButtonLargeStyle}>
+                  Existing user? Log in
+                </Link>
+              </div>
+            </form>
           </div>
         </section>
+        <footer style={footerStyle}>
+          <div style={footerContentStyle}>
+            <p style={footerLogoStyle}>AI Sales Coach</p>
+
+            <p style={footerDescriptionStyle}>
+              AI-powered sales practice that helps reps rehearse realistic buyer
+              conversations, review scorecards, and improve one call at a time.
+            </p>
+
+            <div style={footerContactStyle}>
+              <p style={footerColumnTitleStyle}>contact</p>
+
+              <Link href="#contact" style={footerLargeLinkStyle}>
+                Get in touch
+              </Link>
+
+              <Link href="/login" style={footerLargeLinkStyle}>
+                Existing user? Log in →
+              </Link>
+            </div>
+
+            <div style={footerBottomStyle}>
+              © 2026 AI Sales Coach
+            </div>
+          </div>
+        </footer>
       </section>
     </main>
   );
@@ -248,11 +390,12 @@ const headerActionsStyle = {
   flexWrap: "wrap" as const,
 };
 
-const heroGridStyle = {
+const heroSectionStyle = {
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1.12fr) minmax(320px, 0.88fr)",
-  gap: "28px",
-  alignItems: "start",
+  gap: "20px",
+  padding: "56px 0 44px",
+  textAlign: "left" as const,
+  justifyItems: "start",
 };
 
 const heroCopyStyle = {
@@ -275,12 +418,12 @@ const titleStyle = {
   fontSize: "clamp(42px, 5vw, 68px)",
   lineHeight: 1.02,
   letterSpacing: "-0.04em",
-  maxWidth: "12ch",
+  maxWidth: "14ch",
 };
 
 const leadStyle = {
   margin: 0,
-  maxWidth: "60ch",
+  maxWidth: "68ch",
   fontSize: "18px",
   lineHeight: 1.7,
   color: "#4b5563",
@@ -437,6 +580,28 @@ const sectionTitleStyle = {
   maxWidth: "16ch",
 };
 
+const overviewCardStyle = {
+  background: "rgba(255,255,255,0.82)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "24px",
+  padding: "28px",
+  boxShadow: "0 18px 44px rgba(15, 23, 42, 0.07)",
+};
+
+const overviewTextStyle = {
+  margin: 0,
+  maxWidth: "78ch",
+  color: "#475467",
+  fontSize: "18px",
+  lineHeight: 1.75,
+};
+
+const cardsGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "14px",
+};
+
 const stepsGridStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -509,4 +674,139 @@ const contactActionsStyle = {
   display: "flex",
   gap: "12px",
   flexWrap: "wrap" as const,
+};
+
+const contactFormStyle = {
+  display: "grid",
+  gap: "18px",
+  minWidth: "320px",
+  flex: "1 1 520px",
+};
+
+const contactFormRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "16px",
+};
+
+const contactLabelStyle = {
+  display: "grid",
+  gap: "8px",
+  color: "#344054",
+  fontSize: "14px",
+  fontWeight: 700,
+};
+
+const contactInputStyle = {
+  width: "100%",
+  minHeight: "48px",
+  borderRadius: "14px",
+  boxSizing: "border-box" as const,
+  border: "1px solid rgba(148,163,184,0.55)",
+  background: "rgba(255,255,255,0.86)",
+  padding: "0 14px",
+  color: "#101828",
+  font: "inherit",
+  outlineColor: "#006b4f",
+};
+
+const contactTextareaStyle = {
+  ...contactInputStyle,
+  minHeight: "140px",
+  padding: "14px",
+  resize: "vertical" as const,
+};
+
+const contactSubmitButtonStyle = {
+  ...primaryButtonLargeStyle,
+  border: "none",
+  cursor: "pointer",
+  font: "inherit",
+};
+
+const faqListStyle = {
+  display: "grid",
+  gap: "12px",
+};
+
+const faqItemStyle = {
+  background: "rgba(255,255,255,0.82)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "22px",
+  padding: "22px",
+};
+
+const faqQuestionStyle = {
+  margin: 0,
+  color: "#101828",
+  fontSize: "18px",
+};
+
+const faqAnswerStyle = {
+  margin: "8px 0 0",
+  color: "#667085",
+  lineHeight: 1.65,
+};
+
+const footerStyle = {
+  marginTop: "36px",
+  marginLeft: "calc(50% - 50vw)",
+  marginRight: "calc(50% - 50vw)",
+  marginBottom: "-48px",
+  background: "linear-gradient(180deg, #101a4a 0%, #0b143b 100%)",
+  color: "#f8fbf9",
+  borderTop: "1px solid rgba(248,251,249,0.16)",
+};
+
+const footerContentStyle = {
+  maxWidth: "1200px",
+  margin: "0 auto",
+  padding: "92px 24px 42px",
+};
+
+const footerLogoStyle = {
+  margin: 0,
+  fontSize: "30px",
+  fontWeight: 900,
+};
+
+const footerDescriptionStyle = {
+  margin: "42px 0 0",
+  maxWidth: "680px",
+  color: "rgba(248,251,249,0.72)",
+  fontFamily: "Georgia, serif",
+  fontStyle: "italic" as const,
+  fontSize: "22px",
+  lineHeight: 1.75,
+};
+
+const footerContactStyle = {
+  marginTop: "62px",
+  display: "grid",
+  gap: "18px",
+  justifyItems: "start",
+};
+
+const footerColumnTitleStyle = {
+  margin: 0,
+  color: "rgba(248,251,249,0.72)",
+  fontFamily: "Georgia, serif",
+  fontStyle: "italic" as const,
+  fontSize: "18px",
+  letterSpacing: "0.04em",
+};
+
+const footerLargeLinkStyle = {
+  color: "#ffffff",
+  textDecoration: "none",
+  fontSize: "22px",
+  fontWeight: 700,
+};
+
+const footerBottomStyle = {
+  marginTop: "78px",
+  paddingTop: "34px",
+  borderTop: "1px solid rgba(248,251,249,0.16)",
+  color: "rgba(248,251,249,0.62)",
+  fontSize: "18px",
 };
