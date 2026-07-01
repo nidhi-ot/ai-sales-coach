@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const partners = [
@@ -63,7 +64,14 @@ export default function HomePage() {
     <main style={pageStyle}>
       <header style={headerStyle}>
         <div style={brandStyle}>
-          <img src="/logo.png" alt="Optimal Trappstädning" style={logoStyle} />
+          <Image
+            src="/logo.png"
+            alt="Optimal Trappstädning Logo"
+            width={64}
+            height={64}
+            style={logoStyle}
+            priority
+          />
           <div>
             <h1 style={brandTitle}>Optimal Trappstädning</h1>
             <p style={brandSub}>AI Sales Coach</p>
@@ -140,7 +148,9 @@ export default function HomePage() {
                     Practice responding when customers say the service is too
                     expensive.
                   </p>
-                  <button style={smallButton}>Start Practice →</button>
+                  <button type="button" style={smallButton}>
+                    Start Practice →
+                  </button>
                 </div>
 
                 <div style={progressCard}>
