@@ -505,7 +505,7 @@ function formatPercentage(value?: number | null) {
 function formatCount(value?: number | null) {
   if (value == null) return "Not scored";
 
-  return value;
+  return `${value}`;
 }
 
 const heroStyle: React.CSSProperties = {
