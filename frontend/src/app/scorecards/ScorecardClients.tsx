@@ -235,24 +235,22 @@ export default function ScorecardsClients() {
                 <div style={metricGridStyle}>
                   <Metric
                     title="Duration"
-                    value={formatDuration(
-                      scorecard.call_duration_seconds ?? 0
-                    )}
+                    value={formatDuration(scorecard.call_duration_seconds)}
                     icon="⏱️"
                   />
                   <Metric
                     title="Rep Talk"
-                    value={`${scorecard.rep_talk_percentage ?? 0}%`}
+                    value={formatPercentage(scorecard.rep_talk_percentage)}
                     icon="🎤"
                   />
                   <Metric
                     title="Interruptions"
-                    value={scorecard.interruptions_count ?? 0}
+                    value={formatCount(scorecard.interruptions_count)}
                     icon="⚡"
                   />
                   <Metric
                     title="Filler Words"
-                    value={scorecard.filler_words_count ?? 0}
+                    value={formatCount(scorecard.filler_words_count)}
                     icon="💬"
                   />
                 </div>
@@ -486,7 +484,8 @@ function FrameworkItem({
   );
 }
 
-function formatDuration(seconds: number) {
+function formatDuration(seconds?: number | null) {
+  if (seconds == null) return "Not scored";
   if (!seconds) return "0s";
 
   const minutes = Math.floor(seconds / 60);
@@ -495,6 +494,18 @@ function formatDuration(seconds: number) {
   if (!minutes) return `${remainingSeconds}s`;
 
   return `${minutes}m ${remainingSeconds}s`;
+}
+
+function formatPercentage(value?: number | null) {
+  if (value == null) return "Not scored";
+
+  return `${value}%`;
+}
+
+function formatCount(value?: number | null) {
+  if (value == null) return "Not scored";
+
+  return value;
 }
 
 const heroStyle: React.CSSProperties = {
