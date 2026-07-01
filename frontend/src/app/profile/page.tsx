@@ -39,6 +39,10 @@ export default function ProfilePage() {
             <InfoCard label="Role" value={role} />
             <InfoCard label="Business" value="AI Sales Coach" />
           </div>
+
+          <p style={{ color: "#667085", margin: "20px 0 0" }}>
+            This profile mirrors the values stored in your local app session.
+          </p>
         </section>
       </div>
     </AppShell>
