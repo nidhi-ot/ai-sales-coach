@@ -144,6 +144,7 @@ async def login(data: LoginRequest) -> dict[str, Any]:
     return {
         "message": "Login successful",
         "user_id": auth_result.user.id,
+        "access_token": auth_result.session.access_token if auth_result.session else None,
         "rep_id": auth_result.user.id,
         "email": auth_result.user.email,
         "full_name": account["full_name"],

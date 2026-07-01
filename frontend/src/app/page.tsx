@@ -1,299 +1,512 @@
-"use client";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+const highlights = [
+  {
+    title: "Practice the hard conversations",
+    description:
+      "Run realistic role-plays for discovery, objections, demos, and closing practice.",
+  },
+  {
+    title: "Turn every call into feedback",
+    description:
+      "Use scorecards and session history to see what worked and where to improve.",
+  },
+  {
+    title: "Keep reps moving forward",
+    description:
+      "Track progress over time so the next session always has a clearer focus.",
+  },
+];
 
-export default function LoginPage() {
-  const router = useRouter();
+const steps = [
+  {
+    number: "01",
+    title: "Log in or create an account",
+    description:
+      "Get into the app quickly and move straight into your practice workflow.",
+  },
+  {
+    number: "02",
+    title: "Choose a scenario and run a call",
+    description:
+      "Pick a practice situation that matches what the team needs this week.",
+  },
+  {
+    number: "03",
+    title: "Review feedback and try again",
+    description:
+      "Look at scorecards, history, and coaching notes before the next session.",
+  },
+];
 
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
+const stats = [
+  { value: "Live", label: "buyer-style practice sessions" },
+  { value: "Fast", label: "feedback through scorecards" },
+  { value: "Clear", label: "next steps after every call" },
+];
 
-  async function handleSignIn() {
-    setError("");
-
-    if (!identifier.trim()) {
-      setError("Please enter your email or phone number");
-      return;
-    }
-
-    if (!password.trim()) {
-      setError("Please enter your password");
-      return;
-    }
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || "Login failed");
-        return;
-      }
-
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("rep_id", data.rep_id || data.user_id);
-      localStorage.setItem("business_id", data.business_id);
-      localStorage.setItem("full_name", data.full_name || "Sales Rep");
-      localStorage.setItem("email", data.email || "");
-      localStorage.setItem("phone_number", data.phone_number || "");
-      localStorage.setItem("role", data.role || "rep");
-      localStorage.setItem("remember_me", String(rememberMe));
-
-      router.push("/dashboard");
-    } catch (error) {
-      console.error(error);
-      setError("Could not connect to backend");
-    }
-  }
-
+export default function HomePage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #f7faf8 0%, #eef7f2 100%)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "32px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          width: "1180px",
-          minHeight: "680px",
-          background: "#fff",
-          borderRadius: "32px",
-          overflow: "hidden",
-          display: "flex",
-          boxShadow: "0 28px 80px rgba(16,24,40,0.12)",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <section
-          style={{
-            width: "460px",
-            padding: "54px 50px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <img
-            src="/logo.png"
-            alt="AI Sales Coach"
-            style={{
-              width: "76px",
-              height: "76px",
-              objectFit: "contain",
-              marginBottom: "26px",
-            }}
-          />
+    <main style={pageStyle}>
+      <div style={backgroundGlowLeft} />
+      <div style={backgroundGlowRight} />
 
-          <span style={badgeStyle}>AI Sales Coach</span>
-
-          <h1
-            style={{
-              margin: "18px 0 8px",
-              color: "#101828",
-              fontSize: "34px",
-              fontWeight: 900,
-            }}
-          >
-            Welcome back!
-          </h1>
-
-          <label style={labelStyle}>Email or Phone</label>
-          <input
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Enter email or phone number"
-            style={inputStyle}
-          />
-
-          <label style={labelStyle}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            style={inputStyle}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-              fontSize: "14px",
-            }}
-          >
-            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              Remember me
-            </label>
-
-            <button type="button" style={linkButtonStyle}>
-              Forgot password?
-            </button>
+      <section style={shellStyle}>
+        <header style={headerStyle}>
+          <div style={brandWrapStyle}>
+            <img src="/logo.png" alt="AI Sales Coach" style={logoStyle} />
+            <div>
+              <p style={eyebrowStyle}>AI Sales Coach</p>
+              <p style={brandCopyStyle}>Practice calls. Get coaching. Improve faster.</p>
+            </div>
           </div>
 
-          {error && (
-            <p
-              style={{
-                color: "#b42318",
-                background: "#fef3f2",
-                border: "1px solid #fecdca",
-                padding: "12px",
-                borderRadius: "12px",
-                fontSize: "14px",
-                marginBottom: "16px",
-              }}
-            >
-              {error}
+          <nav style={headerActionsStyle} aria-label="Homepage actions">
+            <Link href="#contact" style={ghostButtonStyle}>
+              Contact Us
+            </Link>
+            <Link href="/login" style={primaryButtonStyle}>
+              Login
+            </Link>
+          </nav>
+        </header>
+
+        <div style={heroGridStyle}>
+          <div style={heroCopyStyle}>
+            <span style={pillStyle}>Built for sales reps and enablement teams</span>
+            <h1 style={titleStyle}>
+              A lighter way to practice
+              <br />
+              real sales conversations.
+            </h1>
+            <p style={leadStyle}>
+              AI Sales Coach gives your team a simple place to rehearse calls,
+              review scorecards, and keep each practice session focused on the
+              next improvement.
             </p>
-          )}
 
-          <button onClick={handleSignIn} style={buttonStyle}>
-            Sign In
-          </button>
+            <div style={heroActionsStyle}>
+              <Link href="/login" style={primaryButtonLargeStyle}>
+                Login to continue
+              </Link>
+              <Link href="#contact" style={secondaryButtonLargeStyle}>
+                Contact Us
+              </Link>
+            </div>
 
-          <p style={{ textAlign: "center", marginTop: "24px", color: "#667085" }}>
-            New here?{" "}
-            <button
-              type="button"
-              onClick={() => router.push("/register")}
-              style={linkButtonStyle}
-            >
-              Create an account
-            </button>
-          </p>
+            <div style={statsRowStyle}>
+              {stats.map((stat) => (
+                <div key={stat.label} style={statCardStyle}>
+                  <div style={statValueStyle}>{stat.value}</div>
+                  <p style={statLabelStyle}>{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          <p
-            style={{
-              marginTop: "24px",
-              textAlign: "center",
-              fontSize: "12px",
-              color: "#98a2b3",
-              lineHeight: "1.6",
-            }}
-          >
-            By continuing, you agree to our Terms of Service and Privacy Policy.
-          </p>
+          <aside style={panelStyle}>
+            <div style={panelInnerStyle}>
+              <p style={panelKickerStyle}>Why teams use it</p>
+              <h2 style={panelTitleStyle}>Simple enough for reps, useful enough for managers.</h2>
+              <p style={panelTextStyle}>
+                The experience is designed to stay lightweight on the front end
+                while still capturing the details that matter after the call.
+              </p>
+            </div>
+
+            <div style={cardGridStyle}>
+              {highlights.map((item) => (
+                <article key={item.title} style={featureCardStyle}>
+                  <h3 style={featureTitleStyle}>{item.title}</h3>
+                  <p style={featureTextStyle}>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <section style={sectionStyle}>
+          <div style={sectionHeaderStyle}>
+            <p style={sectionKickerStyle}>How it works</p>
+            <h2 style={sectionTitleStyle}>The workflow stays focused from start to finish.</h2>
+          </div>
+
+          <div style={stepsGridStyle}>
+            {steps.map((step) => (
+              <article key={step.number} style={stepCardStyle}>
+                <span style={stepNumberStyle}>{step.number}</span>
+                <h3 style={stepTitleStyle}>{step.title}</h3>
+                <p style={stepTextStyle}>{step.description}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
-        <div style={{ flex: 1, position: "relative" }}>
-          <img
-            src="/staircase.jpg"
-            alt="Building"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
+        <section id="contact" style={contactSectionStyle}>
+          <div style={contactCardStyle}>
+            <div>
+              <p style={sectionKickerStyle}>Contact Us</p>
+              <h2 style={contactTitleStyle}>Need help getting started?</h2>
+              <p style={contactTextStyle}>
+                Use the login page to enter the app, or share this page with your
+                team if you want a cleaner entry point before sign-in.
+              </p>
+            </div>
 
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.25) 100%)",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: "28px",
-              left: "28px",
-              right: "28px",
-              background: "rgba(255,255,255,0.94)",
-              padding: "24px",
-              borderRadius: "22px",
-              backdropFilter: "blur(10px)",
-              boxShadow: "0 16px 40px rgba(16,24,40,0.18)",
-            }}
-          >
-            <h3 style={{ marginTop: 0, marginBottom: "8px", fontSize: "22px" }}>
-              Practice calls. Get feedback. Improve faster.
-            </h3>
-
-            <p style={{ margin: 0, color: "#667085", lineHeight: "1.6" }}>
-              Train with realistic AI customer conversations and receive focused
-              coaching after every session.
-            </p>
+            <div style={contactActionsStyle}>
+              <Link href="/login" style={primaryButtonLargeStyle}>
+                Login
+              </Link>
+              <Link href="/register" style={secondaryButtonLargeStyle}>
+                Create account
+              </Link>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </section>
     </main>
   );
 }
 
-const badgeStyle = {
-  display: "inline-block",
-  width: "fit-content",
+const pageStyle = {
+  minHeight: "100vh",
+  position: "relative" as const,
+  overflow: "hidden",
+  background: "linear-gradient(180deg, #f8fbf9 0%, #eef6f1 100%)",
+  color: "#0f1728",
+};
+
+const backgroundGlowLeft = {
+  position: "absolute" as const,
+  left: "-120px",
+  top: "-120px",
+  width: "340px",
+  height: "340px",
+  borderRadius: "999px",
+  background: "radial-gradient(circle, rgba(0,107,79,0.14) 0%, rgba(0,107,79,0) 70%)",
+  filter: "blur(8px)",
+};
+
+const backgroundGlowRight = {
+  position: "absolute" as const,
+  right: "-140px",
+  bottom: "-120px",
+  width: "380px",
+  height: "380px",
+  borderRadius: "999px",
+  background: "radial-gradient(circle, rgba(17,24,39,0.08) 0%, rgba(17,24,39,0) 70%)",
+  filter: "blur(8px)",
+};
+
+const shellStyle = {
+  position: "relative" as const,
+  maxWidth: "1200px",
+  margin: "0 auto",
+  padding: "28px 24px 48px",
+};
+
+const headerStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "16px",
+  flexWrap: "wrap" as const,
+  marginBottom: "28px",
+};
+
+const brandWrapStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "14px",
+};
+
+const logoStyle = {
+  width: "52px",
+  height: "52px",
+  objectFit: "contain" as const,
+};
+
+const eyebrowStyle = {
+  margin: 0,
+  fontSize: "13px",
+  fontWeight: 800,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase" as const,
+  color: "#006b4f",
+};
+
+const brandCopyStyle = {
+  margin: "3px 0 0",
+  fontSize: "14px",
+  color: "#667085",
+};
+
+const headerActionsStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  flexWrap: "wrap" as const,
+};
+
+const heroGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1.12fr) minmax(320px, 0.88fr)",
+  gap: "28px",
+  alignItems: "start",
+};
+
+const heroCopyStyle = {
+  padding: "24px 0",
+};
+
+const pillStyle = {
+  display: "inline-flex",
+  alignItems: "center",
   padding: "8px 12px",
   borderRadius: "999px",
   background: "#e7f4ef",
   color: "#006b4f",
-  fontWeight: 800,
+  fontWeight: 700,
   fontSize: "13px",
 };
 
-
-
-const labelStyle = {
-  display: "block",
-  marginBottom: "8px",
-  fontWeight: 700,
-  color: "#344054",
+const titleStyle = {
+  margin: "18px 0 16px",
+  fontSize: "clamp(42px, 5vw, 68px)",
+  lineHeight: 1.02,
+  letterSpacing: "-0.04em",
+  maxWidth: "12ch",
 };
 
-const inputStyle = {
-  width: "100%",
-  padding: "15px",
-  borderRadius: "14px",
-  border: "1px solid #d0d5dd",
-  marginBottom: "18px",
-  fontSize: "15px",
-  boxSizing: "border-box" as const,
+const leadStyle = {
+  margin: 0,
+  maxWidth: "60ch",
+  fontSize: "18px",
+  lineHeight: 1.7,
+  color: "#4b5563",
 };
 
-const buttonStyle = {
-  width: "100%",
-  padding: "15px",
-  borderRadius: "14px",
-  border: "none",
+const heroActionsStyle = {
+  display: "flex",
+  gap: "12px",
+  flexWrap: "wrap" as const,
+  marginTop: "28px",
+};
+
+const primaryButtonStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "44px",
+  padding: "0 18px",
+  borderRadius: "999px",
   background: "#006b4f",
-  color: "white",
-  fontWeight: 800,
-  fontSize: "15px",
-  cursor: "pointer",
-  boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
+  color: "#fff",
+  textDecoration: "none",
+  fontWeight: 700,
+  boxShadow: "0 14px 30px rgba(0,107,79,0.18)",
 };
 
-const linkButtonStyle = {
-  border: "none",
-  background: "transparent",
+const primaryButtonLargeStyle = {
+  ...primaryButtonStyle,
+  minHeight: "52px",
+  padding: "0 24px",
+};
+
+const ghostButtonStyle = {
+  ...primaryButtonStyle,
+  background: "rgba(255,255,255,0.82)",
+  color: "#0f1728",
+  boxShadow: "inset 0 0 0 1px rgba(148,163,184,0.35)",
+};
+
+const secondaryButtonLargeStyle = {
+  ...ghostButtonStyle,
+  minHeight: "52px",
+  padding: "0 24px",
+};
+
+const statsRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "12px",
+  marginTop: "28px",
+};
+
+const statCardStyle = {
+  background: "rgba(255,255,255,0.72)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "20px",
+  padding: "18px",
+  backdropFilter: "blur(10px)",
+};
+
+const statValueStyle = {
+  fontSize: "28px",
+  fontWeight: 900,
+  lineHeight: 1,
   color: "#006b4f",
-  cursor: "pointer",
+};
+
+const statLabelStyle = {
+  margin: "10px 0 0",
+  fontSize: "14px",
+  lineHeight: 1.5,
+  color: "#475467",
+};
+
+const panelStyle = {
+  display: "grid",
+  gap: "16px",
+};
+
+const panelInnerStyle = {
+  background: "rgba(255,255,255,0.82)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "28px",
+  padding: "28px",
+  boxShadow: "0 20px 50px rgba(15, 23, 42, 0.08)",
+};
+
+const panelKickerStyle = {
+  margin: 0,
+  fontSize: "12px",
   fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase" as const,
+  color: "#006b4f",
+};
+
+const panelTitleStyle = {
+  margin: "10px 0 12px",
+  fontSize: "26px",
+  lineHeight: 1.2,
+};
+
+const panelTextStyle = {
+  margin: 0,
+  color: "#667085",
+  lineHeight: 1.7,
+};
+
+const cardGridStyle = {
+  display: "grid",
+  gap: "12px",
+};
+
+const featureCardStyle = {
+  background: "rgba(255,255,255,0.88)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "22px",
+  padding: "20px",
+};
+
+const featureTitleStyle = {
+  margin: 0,
+  fontSize: "18px",
+  color: "#101828",
+};
+
+const featureTextStyle = {
+  margin: "8px 0 0",
+  color: "#667085",
+  lineHeight: 1.6,
+};
+
+const sectionStyle = {
+  marginTop: "28px",
+};
+
+const sectionHeaderStyle = {
+  marginBottom: "18px",
+};
+
+const sectionKickerStyle = {
+  margin: 0,
+  fontSize: "12px",
+  fontWeight: 800,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase" as const,
+  color: "#006b4f",
+};
+
+const sectionTitleStyle = {
+  margin: "8px 0 0",
+  fontSize: "clamp(28px, 3vw, 40px)",
+  lineHeight: 1.15,
+  maxWidth: "16ch",
+};
+
+const stepsGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "14px",
+};
+
+const stepCardStyle = {
+  background: "rgba(255,255,255,0.78)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  borderRadius: "22px",
+  padding: "22px",
+};
+
+const stepNumberStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "44px",
+  height: "44px",
+  borderRadius: "14px",
+  background: "#e7f4ef",
+  color: "#006b4f",
+  fontWeight: 900,
+  fontSize: "14px",
+};
+
+const stepTitleStyle = {
+  margin: "16px 0 8px",
+  fontSize: "18px",
+  color: "#101828",
+};
+
+const stepTextStyle = {
+  margin: 0,
+  color: "#667085",
+  lineHeight: 1.65,
+};
+
+const contactSectionStyle = {
+  marginTop: "28px",
+};
+
+const contactCardStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "20px",
+  padding: "28px",
+  borderRadius: "28px",
+  background: "linear-gradient(135deg, rgba(0,107,79,0.08) 0%, rgba(255,255,255,0.86) 100%)",
+  border: "1px solid rgba(226,232,240,0.9)",
+  boxShadow: "0 20px 50px rgba(15, 23, 42, 0.08)",
+  flexWrap: "wrap" as const,
+};
+
+const contactTitleStyle = {
+  margin: "10px 0 10px",
+  fontSize: "28px",
+  lineHeight: 1.2,
+};
+
+const contactTextStyle = {
+  margin: 0,
+  maxWidth: "60ch",
+  color: "#667085",
+  lineHeight: 1.7,
+};
+
+const contactActionsStyle = {
+  display: "flex",
+  gap: "12px",
+  flexWrap: "wrap" as const,
 };

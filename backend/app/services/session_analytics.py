@@ -17,6 +17,14 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     return [item for item in data if isinstance(item, dict)]
 
 
+def _first_row(data: Any) -> dict[str, Any] | None:
+    if isinstance(data, dict):
+        return data
+
+    rows = _row_dicts(data)
+    return rows[0] if rows else None
+
+
 def _as_float(value: Any) -> float | None:
     """Convert to float value"""
     if value is None:
@@ -164,3 +172,84 @@ def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
         }
 
     return dimensions
+
+
+async def create_next_salesperson_profile(
+    session_id: str,
+    scorecard: dict[str, Any],
+) -> dict[str, Any]:
+    supabase = get_supabase()
+
+    session_rows = _row_dicts(
+        supabase.table("sessions")
+        .select("id, rep_id, business_id")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if not session_rows:
+        raise LookupError("Session not found")
+
+    session = session_rows[0]
+    rep_id = session["rep_id"]
+
+    existing_profile_for_call = _row_dicts(
+        supabase.table("salesperson_profiles")
+        .select("*")
+        .eq("call_id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if existing_profile_for_call:
+        return existing_profile_for_call[0]
+
+    metrics = {
+        "rapport": scorecard.get("rapport_score"),
+        "discovery": scorecard.get("needs_discovery_score"),
+        "objection_handling": scorecard.get("objection_handling_score"),
+        "closing": scorecard.get("closing_score"),
+    }
+
+    valid_scores = {
+        key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))
+    }
+
+    weakest_dimension = (
+        min(valid_scores.items(), key=lambda item: item[1])[0]
+        if valid_scores
+        else "objection_handling"
+    )
+
+    latest_rows = _row_dicts(
+        supabase.table("salesperson_profiles")
+        .select("version")
+        .eq("rep_id", rep_id)
+        .order("version", desc=True)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    latest_version = int(latest_rows[0]["version"]) if latest_rows else 0
+    next_version = latest_version + 1
+
+    result = (
+        supabase.table("salesperson_profiles")
+        .insert(
+            {
+                "rep_id": rep_id,
+                "business_id": session["business_id"],
+                "version": next_version,
+                "call_id": session_id,
+                "metric_scores": metrics,
+                "weakest_dimension": weakest_dimension,
+            }
+        )
+        .execute()
+    )
+
+    return _first_row(result.data) or {}
