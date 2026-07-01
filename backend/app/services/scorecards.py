@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+import logfire
+
 from app.db.client import get_supabase
 from app.services.gpt_scoring import gpt_analyze_transcript
 
@@ -136,12 +138,17 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
     if session is None:
         raise LookupError("Session became None unexpectedly")
 
-    feedback = await gpt_analyze_transcript(
-        rep_text=rep_text,
-        ai_text=ai_text,
-        system_instruction=session.get("metadata", {}).get("system_instruction") or "",
-        scenario_title=session.get("scenario") or "unknown",
-    )
+    with logfire.span(
+        "gpt.scorecard_analysis",
+        session_id=session_id,
+        rep_id=session["rep_id"],
+    ):
+        feedback = await gpt_analyze_transcript(
+            rep_text=rep_text,
+            ai_text=ai_text,
+            system_instruction=session.get("metadata", {}).get("system_instruction") or "",
+            scenario_title=session.get("scenario") or "unknown",
+        )
 
     framework_score = feedback.get("framework_scores", {})
 

@@ -20,5 +20,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    logfire_token: str | None = None
+    logfire_service_name: str = "ai-sales-coach-backend"
+    logfire_environment: str = "development"
+    logfire_send_to_logfire: bool = True
 
 settings = Settings()

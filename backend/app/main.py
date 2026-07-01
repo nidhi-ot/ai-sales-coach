@@ -1,8 +1,11 @@
+import logfire
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import agent, auth, profiles, realtime, scorecards, sessions
+from app.utils.observability import configure_observability
 
+configure_observability()
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -46,3 +49,6 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+logfire.instrument_fastapi(app)
+logfire.info("Logfire initialized")

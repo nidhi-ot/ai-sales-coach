@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import httpx
+import logfire
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -143,67 +144,73 @@ async def create_realtime_session(config: SessionConfig):
 
     print("🎙️ VAD config: semantic_vad, eagerness=medium")
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.openai.com/v1/realtime/client_secrets",
-                headers={
-                    "Authorization": f"Bearer {openai_api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "session": {
-                        "type": "realtime",
-                        "model": "gpt-realtime-2",
-                        "audio": {
-                            "input": {
-                                "transcription": {
-                                    "model": "whisper-1",
-                                },
-                                "turn_detection": {
-                                    "type": "semantic_vad",
-                                    "eagerness": "medium",
-                                },
-                            },
-                            "output": {
-                                "voice": "marin",
-                            },
-                        },
-                        "instructions": instructions,
+    with logfire.span(
+        "openai.realtime.session_token",
+        scenario=config.scenario,
+        rep_id=str(config.rep_id),
+    ):
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.openai.com/v1/realtime/client_secrets",
+                    headers={
+                        "Authorization": f"Bearer {openai_api_key}",
+                        "Content-Type": "application/json",
                     },
-                },
-                timeout=10.0,
-            )
-
-            if not response.is_success:
-                raise HTTPException(
-                    status_code=502,
-                    detail="OpenAI session creation failed",
+                    json={
+                        "session": {
+                            "type": "realtime",
+                            "model": "gpt-realtime-2",
+                            "audio": {
+                                "input": {
+                                    "transcription": {
+                                        "model": "whisper-1",
+                                    },
+                                    "turn_detection": {
+                                        "type": "semantic_vad",
+                                        "eagerness": "medium",
+                                    },
+                                },
+                                "output": {
+                                    "voice": "marin",
+                                },
+                            },
+                            "instructions": instructions,
+                        },
+                    },
+                    timeout=10.0,
                 )
 
-            data = response.json()
-            client_secret = data.get("value")
-            openai_session_id = data.get("session", {}).get("id")
+                if not response.is_success:
+                    raise HTTPException(
+                        status_code=502,
+                        detail="OpenAI session creation failed",
+                    )
 
-            if not client_secret or not openai_session_id:
-                raise HTTPException(
-                    status_code=502,
-                    detail="OpenAI response did not include session credentials",
+                data = response.json()
+                client_secret = data.get("value")
+                openai_session_id = data.get("session", {}).get("id")
+
+                if not client_secret or not openai_session_id:
+                    raise HTTPException(
+                        status_code=502,
+                        detail="OpenAI response did not include session credentials",
+                    )
+
+                return RealtimeSessionResponse(
+                    client_secret=client_secret,
+                    session_id=supabase_session_id,
+                    openai_session_id=openai_session_id,
+                    expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                    model="gpt-realtime-2",
                 )
 
-            return RealtimeSessionResponse(
-                client_secret=client_secret,
-                session_id=supabase_session_id,
-                openai_session_id=openai_session_id,
-                expires_at=datetime.now(UTC) + timedelta(minutes=5),
-                model="gpt-realtime-2",
-            )
-
-    except httpx.HTTPError as exc:
-        raise HTTPException(
-            status_code=502,
-            detail="OpenAI API request failed",
-        ) from exc
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="OpenAI API request failed",
+            ) from exc
 
 
 @router.get("/status")
