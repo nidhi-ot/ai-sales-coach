@@ -46,3 +46,6 @@ Use this checklist before requesting final review for Milestone 1.
 - [ ] GitHub Actions checks are green
 - [ ] Required reviewers have been added
 - [ ] Team members have tested related flows if needed
+
+## Testing 
+- [ ] Backend regression tests pass: `python -m unittest discover -s tests`
