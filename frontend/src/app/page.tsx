@@ -136,6 +136,37 @@ export default function HomePage() {
       <div style={backgroundGlowRight} />
 
       <section style={shellStyle}>
+        <style>{`
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+          .mobileHeaderMenu {
+            display: none;
+          }
+
+          .mobileHeaderMenu summary::-webkit-details-marker {
+            display: none;
+          }
+
+          @media (max-width: 820px) {
+            .desktopHeaderActions {
+              display: none !important;
+            }
+
+            .mobileHeaderMenu {
+              display: block;
+            }
+          }
+        `}</style>
+
         <header style={headerStyle}>
           <div style={brandWrapStyle}>
             <img src="/logo.png" alt="AI Sales Coach" style={logoStyle} />
@@ -145,7 +176,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <nav style={headerActionsStyle} aria-label="Homepage actions">
+          <nav
+            className="desktopHeaderActions"
+            style={headerActionsStyle}
+            aria-label="Homepage actions"
+          >
             <Link href="#contact" style={contactButtonStyle}>
               <Phone size={16} strokeWidth={2.4} />
               Contact Support
@@ -157,6 +192,24 @@ export default function HomePage() {
               Create account
             </Link>
           </nav>
+
+          <details className="mobileHeaderMenu" style={mobileMenuStyle}>
+            <summary style={mobileMenuButtonStyle} aria-label="Open menu">
+              ☰
+            </summary>
+
+            <div style={mobileMenuPanelStyle}>
+              <Link href="#contact" style={mobileMenuLinkStyle}>
+                Contact Support
+              </Link>
+              <Link href="/login" style={mobileMenuLinkStyle}>
+                Log in
+              </Link>
+              <Link href="/register" style={mobileMenuPrimaryLinkStyle}>
+                Create account
+              </Link>
+            </div>
+          </details>
         </header>
 
         <section style={heroSectionStyle}>
@@ -393,6 +446,9 @@ export default function HomePage() {
                 What can we help with?
                 <textarea name="message" rows={5} style={contactTextareaStyle} />
               </label>
+              <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
+              Sending this form opens your email client.
+            </p>
 
               <div style={contactActionsStyle}>
                 <button type="submit" style={contactSubmitButtonStyle}>
@@ -462,8 +518,6 @@ export default function HomePage() {
             <div style={footerColumnStyle}>
               <p style={footerColumnTitleStyle}>Company</p>
               <Link href="#overview" style={footerLinkStyle}>About</Link>
-              <Link href="#contact" style={footerLinkStyle}>Privacy</Link>
-              <Link href="#contact" style={footerLinkStyle}>Terms</Link>
             </div>
           </div>
         </footer>
@@ -511,20 +565,75 @@ const shellStyle = {
 const headerStyle = {
   position: "sticky" as const,
   top: 0,
-  zIndex: 20,
+  zIndex: 50,
+  background: "rgba(248, 251, 249, 0.96)",
+  backdropFilter: "blur(14px)",
+  borderBottom: "1px solid rgba(226,232,240,0.65)",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: "24px",
   flexWrap: "nowrap" as const,
+  marginLeft: "calc(50% - 50vw)",
+  marginRight: "calc(50% - 50vw)",
   marginBottom: "30px",
-  padding: "18px 0",
+  padding: "18px max(16px, calc((100vw - 1320px) / 2 + 20px))",
+};
+
+const mobileMenuStyle = {
+  position: "relative" as const,
+  flexShrink: 0,
+};
+
+const mobileMenuButtonStyle = {
+  width: "56px",
+  height: "56px",
+  borderRadius: "999px",
+  border: "1px solid #C9DAD2",
+  background: "rgba(255,255,255,0.88)",
+  color: "#101828",
+  display: "grid",
+  placeItems: "center",
+  fontSize: "28px",
+  fontWeight: 800,
+  cursor: "pointer",
+  boxShadow: "0 10px 24px rgba(16,24,40,0.08)",
+  listStyle: "none",
+};
+
+const mobileMenuPanelStyle = {
+  position: "absolute" as const,
+  right: 0,
+  top: "calc(100% + 12px)",
+  width: "220px",
+  padding: "12px",
+  borderRadius: "18px",
+  border: "1px solid #D8E5DE",
+  background: "#ffffff",
+  boxShadow: "0 18px 40px rgba(16,24,40,0.16)",
+  display: "grid",
+  gap: "8px",
+  zIndex: 80,
+};
+
+const mobileMenuLinkStyle = {
+  padding: "12px 14px",
+  borderRadius: "12px",
+  color: "#101828",
+  fontWeight: 800,
+  textDecoration: "none",
+};
+
+const mobileMenuPrimaryLinkStyle = {
+  ...mobileMenuLinkStyle,
+  background: "#007a5a",
+  color: "#ffffff",
 };
 
 const brandWrapStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
+  gap: "2px",
   flexShrink: 0,
 };
 
@@ -539,15 +648,17 @@ const eyebrowStyle = {
   margin: 0,
   fontSize: "17px",
   fontWeight: 900,
-  letterSpacing: "0.04em",
+  lineHeight: 1,
+  letterSpacing: "0.01em",
   textTransform: "uppercase" as const,
   color: "#006b4f",
 };
 
 const brandCopyStyle = {
-  margin: "2px 0 0",
+  margin: "4px 0 0",
   fontSize: "13px",
   fontWeight: 700,
+  lineHeight: 1.05,
   color: "#344054",
 };
 
@@ -1313,10 +1424,9 @@ const contactSectionStyle = {
 };
 
 const contactCardStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "20px",
+  display: "grid",
+  justifyItems: "start",
+  gap: "18px",
   padding: "28px",
   borderRadius: "28px",
   background: "linear-gradient(135deg, rgba(0,107,79,0.08) 0%, rgba(255,255,255,0.86) 100%)",
@@ -1347,8 +1457,8 @@ const contactActionsStyle = {
 const contactFormStyle = {
   display: "grid",
   gap: "18px",
-  minWidth: "320px",
-  flex: "1 1 520px",
+  width: "100%",
+  maxWidth: "650px",
 };
 
 const contactFormRowStyle = {
