@@ -4,12 +4,16 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
-from tests.helpers import FakeSupabase
+from tests.helpers import FakeSupabase, clear_auth_override, install_auth_override
 
 
 class SessionEndRouteTests(unittest.TestCase):
     def setUp(self):
+        install_auth_override()
         self.client = TestClient(app)
+
+    def tearDown(self):
+        clear_auth_override()
 
     def test_post_end_saves_transcript_and_returns_completed_session(self):
         fake_supabase = FakeSupabase()
@@ -109,10 +113,45 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(payload["profile_status"], "failed")
         self.assertEqual(payload["profile_detail"], "invalid profile version")
 
+    def test_post_end_rejects_other_rep_session(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["sessions"]["session-123"]["rep_id"] = "other-rep"
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.api.routes.sessions.analyze_transcript",
+                new=AsyncMock(return_value={"session_id": "session-123"}),
+            ) as analyze_mock,
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:03:00Z",
+                    "duration_seconds": 180,
+                    "end_reason": "manual",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Hello from rep",
+                            "timestamp_offset_ms": 1000,
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(fake_supabase.store["transcripts"], [])
+        analyze_mock.assert_not_awaited()
+
 
 class TwoCallLearningLoopRouteTests(unittest.TestCase):
     def setUp(self):
+        install_auth_override()
         self.client = TestClient(app)
+
+    def tearDown(self):
+        clear_auth_override()
 
     def test_first_call_generates_profile_version_and_second_call_consumes_it(self):
         fake_supabase = FakeSupabase(with_default_session=False)

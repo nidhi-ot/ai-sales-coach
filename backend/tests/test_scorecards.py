@@ -4,12 +4,16 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
-from tests.helpers import FakeSupabase
+from tests.helpers import FakeSupabase, clear_auth_override, install_auth_override
 
 
 class ScorecardRouteTests(unittest.TestCase):
     def setUp(self):
+        install_auth_override()
         self.client = TestClient(app)
+
+    def tearDown(self):
+        clear_auth_override()
 
     def test_end_session_persists_generated_scorecard(self):
         fake_supabase = FakeSupabase()
@@ -219,6 +223,46 @@ class ScorecardRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["id"], "scorecard-1")
+
+    def test_get_scorecard_hides_other_rep_scorecard(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["scorecards"].append(
+            {
+                "id": "scorecard-1",
+                "session_id": "session-123",
+                "rep_id": "other-rep",
+                "business_id": "business-789",
+                "feedback_summary": "Stored scorecard",
+                "shared_with_manager": False,
+            }
+        )
+
+        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase):
+            response = self.client.get("/api/v1/scorecards/scorecard-1")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_share_setting_rejects_other_rep_session(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["sessions"]["session-123"]["rep_id"] = "other-rep"
+        fake_supabase.store["scorecards"].append(
+            {
+                "id": "scorecard-1",
+                "session_id": "session-123",
+                "rep_id": "other-rep",
+                "business_id": "business-789",
+                "shared_with_manager": False,
+            }
+        )
+
+        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase):
+            response = self.client.patch(
+                "/api/v1/scorecards/session/session-123/share",
+                json={"shared_with_manager": True},
+            )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(fake_supabase.store["scorecards"][0]["shared_with_manager"])
 
     def test_post_scorecard_does_not_overwrite_existing_generated_scorecard(self):
         fake_supabase = FakeSupabase()

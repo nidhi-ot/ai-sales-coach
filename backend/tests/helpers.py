@@ -226,3 +226,20 @@ class FakeSupabase:
 
     def rpc(self, name: str, params: dict[str, Any]) -> FakeRpc:
         return FakeRpc(self, name, params)
+
+
+def install_auth_override(user_id: str = DEFAULT_SESSION["rep_id"]) -> None:
+    from app.api.deps import get_current_user
+    from app.main import app
+
+    async def _get_current_user():
+        return SimpleNamespace(id=user_id)
+
+    app.dependency_overrides[get_current_user] = _get_current_user
+
+
+def clear_auth_override() -> None:
+    from app.api.deps import get_current_user
+    from app.main import app
+
+    app.dependency_overrides.pop(get_current_user, None)

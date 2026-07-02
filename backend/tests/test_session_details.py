@@ -5,6 +5,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from tests.helpers import clear_auth_override, install_auth_override
 
 
 class _FakeTable:
@@ -32,7 +33,10 @@ class _FakeTable:
         if self.name == "sessions":
             session_id = self.filters.get("id")
             row = self.store["sessions"].get(session_id)
-            return SimpleNamespace(data=[dict(row)] if row else [])
+            if not row:
+                return SimpleNamespace(data=[])
+            matches = all(row.get(key) == value for key, value in self.filters.items())
+            return SimpleNamespace(data=[dict(row)] if matches else [])
 
         if self.name == "transcripts":
             session_id = self.filters.get("session_id")
@@ -107,7 +111,11 @@ class _FakeSupabase:
 
 class SessionDetailsRouteTests(unittest.TestCase):
     def setUp(self):
+        install_auth_override()
         self.client = TestClient(app)
+
+    def tearDown(self):
+        clear_auth_override()
 
     def test_get_session_details_returns_full_session_payload(self):
         fake_supabase = _FakeSupabase()
@@ -135,6 +143,16 @@ class SessionDetailsRouteTests(unittest.TestCase):
 
         with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
             response = self.client.get("/api/v1/sessions/unknown-session")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()["detail"], "Session not found")
+
+    def test_get_session_details_returns_404_for_other_rep_session(self):
+        fake_supabase = _FakeSupabase()
+        fake_supabase.store["sessions"]["session-123"]["rep_id"] = "other-rep"
+
+        with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
+            response = self.client.get("/api/v1/sessions/session-123")
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["detail"], "Session not found")
