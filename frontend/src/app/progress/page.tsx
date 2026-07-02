@@ -1,8 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AppShell from "../../components/AppShell";
 
 export default function ProgressPage() {
+  const [lastSessionId, setLastSessionId] = useState<string | null>(null);
+  const [hasProfileData, setHasProfileData] = useState(false);
+
+  useEffect(() => {
+    const repId = localStorage.getItem("rep_id");
+    const lastSession = localStorage.getItem("last_session_id");
+
+    setLastSessionId(lastSession);
+    setHasProfileData(Boolean(repId || lastSession));
+  }, []);
+
   return (
     <AppShell>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
@@ -18,14 +30,30 @@ export default function ProgressPage() {
           <div style={{ fontSize: "46px", marginBottom: "14px" }}>📈</div>
 
           <h2 style={{ margin: "0 0 8px", color: "#101828" }}>
-            Progress tracking coming soon
+            {hasProfileData
+              ? "Progress tracking will appear as scorecards complete"
+              : "No progress data yet"}
           </h2>
 
           <p style={{ color: "#667085", lineHeight: "1.7", maxWidth: "620px" }}>
-            Once you complete more practice calls and scorecards are generated,
-            this page will show your skill trends, strongest areas, and focus
-            areas over time.
+            {hasProfileData
+              ? "Once you complete more practice calls and scorecards are generated, this page will show your skill trends, strongest areas, and focus areas over time."
+              : "Start a practice call to generate your first scorecard. We’ll use that session data to build your progress view here."}
           </p>
+
+          <div
+            style={{
+              marginTop: "18px",
+              padding: "14px 16px",
+              borderRadius: "14px",
+              background: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              color: "#344054",
+            }}
+          >
+            <strong>Latest session:</strong>{" "}
+            {lastSessionId ? "Session recorded" : "No session captured yet"}
+          </div>
         </section>
       </div>
     </AppShell>

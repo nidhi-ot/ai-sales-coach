@@ -138,7 +138,7 @@ export default function SessionDetailsPage() {
                 <SummaryItem label="Ended" value={formatDate(details.ended_at)} />
                 <SummaryItem
                   label="Duration"
-                  value={formatDuration(details.duration ?? 0)}
+                  value={formatDuration(details.duration)}
                 />
               </div>
             </section>
@@ -216,7 +216,9 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleString();
 }
 
-function formatDuration(totalSeconds: number) {
+function formatDuration(totalSeconds?: number | null) {
+  if (totalSeconds == null) return "--";
+
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;

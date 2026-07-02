@@ -194,7 +194,7 @@ export default function HistoryPage() {
                           ? new Date(session.started_at).toLocaleString()
                           : "-"}{" "}
                         • Duration:{" "}
-                        {formatDuration(session.duration_seconds ?? 0)}
+                        {formatDuration(session.duration_seconds)}
                       </p>
                     </div>
 
@@ -273,8 +273,9 @@ function formatScenario(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatDuration(seconds: number) {
-  if (!seconds) return "0s";
+function formatDuration(seconds?: number | null) {
+  if (seconds == null) return "--";
+  if (seconds === 0) return "0s";
 
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
