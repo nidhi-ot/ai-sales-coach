@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Any, List, Literal, cast
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from app.api.authz import current_rep_id, get_owned_session, require_same_rep_id
+from app.api.deps import get_current_user
 from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
@@ -43,8 +45,8 @@ def _format_datetime(value: Any) -> str | None:
 
 
 class SessionStart(BaseModel):
-    rep_id: str
-    business_id: str
+    rep_id: str | None = None
+    business_id: str | None = None
     scenario: ScenarioSlug
     system_instruction: str
 
@@ -117,13 +119,14 @@ class SessionDetailResponse(BaseModel):
 
 
 @router.post("/")
-async def create_session(data: SessionStart):
+async def create_session(data: SessionStart, current_user=Depends(get_current_user)):
     supabase = get_supabase()
+    rep_id = current_rep_id(current_user)
 
     profile = (
         supabase.table("salesperson_profiles")
         .select("version")
-        .eq("rep_id", data.rep_id)
+        .eq("rep_id", rep_id)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -136,7 +139,7 @@ async def create_session(data: SessionStart):
         supabase.table("sessions")
         .insert(
             {
-                "rep_id": data.rep_id,
+                "rep_id": rep_id,
                 "business_id": settings.business_id,
                 "scenario": data.scenario.value,
                 "profile_version": profile_version,
@@ -155,16 +158,14 @@ async def create_session(data: SessionStart):
 
 @router.post("/{session_id}/end")
 @router.patch("/{session_id}/end")
-async def end_session(session_id: str, data: SessionEnd):
+async def end_session(
+    session_id: str,
+    data: SessionEnd,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
-
-    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    session_rows = _row_dicts(session_lookup.data)
-
-    if not session_rows:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session_row = session_rows[0]
+    rep_id = current_rep_id(current_user)
+    session_row = get_owned_session(supabase, session_id=session_id, rep_id=rep_id)
     transcript_entries_saved = 0
     profile = None
 
@@ -197,9 +198,16 @@ async def end_session(session_id: str, data: SessionEnd):
             "ended_at": data.ended_at.isoformat(),
             "duration_seconds": data.duration_seconds,
         }
-    ).eq("id", session_id).execute()
+    ).eq("id", session_id).eq("rep_id", rep_id).execute()
 
-    result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
+    result = (
+        supabase.table("sessions")
+        .select("*")
+        .eq("id", session_id)
+        .eq("rep_id", rep_id)
+        .limit(1)
+        .execute()
+    )
 
     updated_rows = _row_dicts(result.data)
     if not updated_rows:
@@ -262,8 +270,17 @@ async def end_session(session_id: str, data: SessionEnd):
 
 
 @router.post("/{session_id}/transcripts")
-async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
+async def add_transcript_entry(
+    session_id: str,
+    entry: TranscriptEntry,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    get_owned_session(
+        supabase,
+        session_id=session_id,
+        rep_id=current_rep_id(current_user),
+    )
 
     result = (
         supabase.table("transcripts")
@@ -283,8 +300,13 @@ async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
 
 
 @router.get("/{session_id}/transcripts")
-async def get_transcript(session_id: str):
+async def get_transcript(session_id: str, current_user=Depends(get_current_user)):
     supabase = get_supabase()
+    get_owned_session(
+        supabase,
+        session_id=session_id,
+        rep_id=current_rep_id(current_user),
+    )
 
     result = (
         supabase.table("transcripts")
@@ -298,8 +320,17 @@ async def get_transcript(session_id: str):
 
 
 @router.post("/{session_id}/transcripts/batch")
-async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
+async def add_transcript_batch(
+    session_id: str,
+    batch: TranscriptBatch,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    get_owned_session(
+        supabase,
+        session_id=session_id,
+        rep_id=current_rep_id(current_user),
+    )
 
     if not batch.entries:
         raise HTTPException(status_code=400, detail="Transcript batch is empty")
@@ -319,8 +350,7 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
     return {"inserted": len(inserted_rows)}
 
 
-@router.get("/rep/{rep_id}")
-async def get_rep_sessions(rep_id: str, limit: int = 20):
+def _get_rep_sessions(rep_id: str, limit: int = 20):
     supabase = get_supabase()
 
     result = (
@@ -360,32 +390,73 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
     return session_rows
 
 
+@router.get("/me")
+async def get_my_sessions(limit: int = 20, current_user=Depends(get_current_user)):
+    return _get_rep_sessions(rep_id=current_rep_id(current_user), limit=limit)
+
+
+@router.get("/rep/{rep_id}")
+async def get_rep_sessions(
+    rep_id: str,
+    limit: int = 20,
+    current_user=Depends(get_current_user),
+):
+    return _get_rep_sessions(
+        rep_id=require_same_rep_id(rep_id, current_user),
+        limit=limit,
+    )
+
+
+@router.get("/me/stats", response_model=SessionStatsResponse)
+async def get_my_stats(current_user=Depends(get_current_user)):
+    return get_session_stats(current_rep_id(current_user))
+
+
 @router.get("/stats/{rep_id}", response_model=SessionStatsResponse)
-async def get_stats(rep_id: str):
-    return get_session_stats(rep_id)
+async def get_stats(rep_id: str, current_user=Depends(get_current_user)):
+    return get_session_stats(require_same_rep_id(rep_id, current_user))
+
+
+@router.get("/me/recent", response_model=RecentSessionsResponse)
+async def get_my_recent(
+    limit: int = Query(5, ge=1, le=25),
+    current_user=Depends(get_current_user),
+):
+    return {"sessions": get_recent_sessions(rep_id=current_rep_id(current_user), limit=limit)}
 
 
 @router.get("/recent/{rep_id}", response_model=RecentSessionsResponse)
-async def get_recent(rep_id: str, limit: int = Query(5, ge=1, le=25)):
-    return {"sessions": get_recent_sessions(rep_id=rep_id, limit=limit)}
+async def get_recent(
+    rep_id: str,
+    limit: int = Query(5, ge=1, le=25),
+    current_user=Depends(get_current_user),
+):
+    return {
+        "sessions": get_recent_sessions(
+            rep_id=require_same_rep_id(rep_id, current_user),
+            limit=limit,
+        )
+    }
+
+
+@router.get("/me/dimensions", response_model=DimensionProgressResponse)
+async def get_my_dimensions(current_user=Depends(get_current_user)):
+    return {"dimensions": get_dimension_progress(current_rep_id(current_user))}
 
 
 @router.get("/dimensions/{rep_id}", response_model=DimensionProgressResponse)
-async def get_dimensions(rep_id: str):
-    return {"dimensions": get_dimension_progress(rep_id)}
+async def get_dimensions(rep_id: str, current_user=Depends(get_current_user)):
+    return {"dimensions": get_dimension_progress(require_same_rep_id(rep_id, current_user))}
 
 
 @router.get("/{session_id}", response_model=SessionDetailResponse)
-async def get_session_details(session_id: str):
+async def get_session_details(session_id: str, current_user=Depends(get_current_user)):
     supabase = get_supabase()
-
-    session_result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    session_rows = _row_dicts(session_result.data)
-
-    if not session_rows:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session_row = session_rows[0]
+    session_row = get_owned_session(
+        supabase,
+        session_id=session_id,
+        rep_id=current_rep_id(current_user),
+    )
 
     transcript_result = (
         supabase.table("transcripts")

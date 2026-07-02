@@ -1,10 +1,10 @@
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
-
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.api.authz import current_rep_id
+from app.api.deps import get_current_user
 from app.config import settings
 from app.db.client import (
     check_supabase_connection,
@@ -28,8 +28,8 @@ class VadConfig(BaseModel):
 
 class SessionConfig(BaseModel):
     scenario: ScenarioSlug
-    rep_id: UUID
-    business_id: UUID
+    rep_id: str | None = None
+    business_id: str | None = None
     business_context: str = "apartment_association"
     framework: str = "BANT"
     focus_area: str = "handling_objections"
@@ -61,14 +61,20 @@ class SupabaseStatusResponse(BaseModel):
 # Frontend live calls should use this path to create the app session,
 # inject the scenario persona, and receive OpenAI realtime credentials.
 @router.post("/session", response_model=RealtimeSessionResponse)
-async def create_realtime_session(config: SessionConfig):
+async def create_realtime_session(
+    config: SessionConfig,
+    current_user=Depends(get_current_user),
+):
+    rep_id = current_rep_id(current_user)
+    business_id = settings.business_id
+
     # Step 1: Pick the AI customer persona for the selected scenario.
     # Load the rep and business context used to build the realtime persona instructions.
     # business_profile = await get_business_profile(str(config.business_id))
     # print("BUSINESS ID RECEIVED:", str(config.business_id))
     # print("BUSINESS PROFILE RESULT:", business_profile)
 
-    rep_profile_latest = await get_latest_profile(str(config.rep_id))
+    rep_profile_latest = await get_latest_profile(rep_id)
 
     # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
     try:
@@ -103,7 +109,7 @@ async def create_realtime_session(config: SessionConfig):
         Problem, Implication, and Need Payoff.
         """
     instructions += build_learning_profile_instruction(
-        rep_id=str(config.rep_id),
+        rep_id=rep_id,
         fallback_focus_area=config.focus_area,
     )
     openai_api_key = settings.openai_api_key
@@ -119,8 +125,8 @@ async def create_realtime_session(config: SessionConfig):
     # Create the app session before opening the OpenAI realtime connection.
     try:
         db_session = await create_db_session(
-            rep_id=str(config.rep_id),
-            business_id=str(config.business_id),
+            rep_id=rep_id,
+            business_id=business_id,
             scenario=config.scenario.value,
             profile_version=profile_version,
             metadata={"system_instruction": instructions},
@@ -215,7 +221,7 @@ async def realtime_status():
 # Do not use this for live practice calls because it does not create an app session
 # and does not inject scenario/persona instructions.
 @router.post("/token", response_model=EphemeralTokenResponse)
-async def create_ephemeral_token():
+async def create_ephemeral_token(_current_user=Depends(get_current_user)):
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:

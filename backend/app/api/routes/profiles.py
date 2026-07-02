@@ -21,7 +21,7 @@ async def get_latest_salesperson_profile(
 ):
     supabase = get_supabase()
 
-    rep_id = current_user.id
+    rep_id = str(current_user.id)
 
     result = (
         supabase.table("salesperson_profiles")

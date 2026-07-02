@@ -1,6 +1,4 @@
 from enum import Enum
-from uuid import UUID
-
 from pydantic import BaseModel, Field
 
 
@@ -12,8 +10,8 @@ class ScenarioSlug(str, Enum):
 
 
 class BeforeCallContextRequest(BaseModel):
-    rep_id: UUID
-    business_id: UUID
+    rep_id: str | None = None
+    business_id: str | None = None
     scenario: ScenarioSlug
 
 
@@ -25,8 +23,8 @@ class ScenarioSummary(BaseModel):
 
 
 class BeforeCallContextResponse(BaseModel):
-    rep_id: UUID
-    business_id: UUID
+    rep_id: str
+    business_id: str
     scenario: ScenarioSummary
     profile_version: int
     weakest_dimension: str | None = None
