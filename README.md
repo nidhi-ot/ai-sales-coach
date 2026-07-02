@@ -122,14 +122,28 @@ From `frontend/`:
 
 Run the walking skeleton script from the repo root:
 
-- `bash scripts/test-walking-skeleton.sh`
+- `WALKING_SKELETON_REP_ID=<rep-uuid> bash scripts/test-walking-skeleton.sh`
+
+Optional overrides:
+
+- `WALKING_SKELETON_BUSINESS_ID=<business-profile-uuid>`
+- `BASE_URL=http://localhost:8000`
+- `SCENARIO=cold_call`
+
+If you use `backend/scripts/seed_data.py`, pass the printed rep ID and business ID.
 
 This script checks:
 
 - backend health
 - API health
-- realtime token endpoint
+- realtime status endpoint
 - Supabase status endpoint
+- before-call context assembly
+- canonical realtime session creation
+- session cleanup through the after-call endpoint
+
+The realtime session check requires valid backend `OPENAI_API_KEY` and Supabase
+settings. It creates and then ends a practice session.
 
 See also:
 

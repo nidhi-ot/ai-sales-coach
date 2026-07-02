@@ -14,8 +14,10 @@ Use this checklist before requesting final review for Milestone 1.
 - [ ] Backend starts successfully with `uvicorn app.main:app --reload`
 - [ ] `GET /health` returns `200`
 - [ ] `GET /api/v1/health` returns `200`
-- [ ] `POST /api/v1/realtime/token` returns a response with `client_secret`
+- [ ] `GET /api/v1/realtime/status` returns `200`
 - [ ] `GET /api/v1/realtime/supabase-status` returns a success response
+- [ ] `POST /api/v1/agent/before-call` returns a system instruction for a valid rep/business
+- [ ] `POST /api/v1/realtime/session` returns `client_secret`, `session_id`, and `openai_session_id`
 
 ## Frontend Verification
 
@@ -34,11 +36,15 @@ Use this checklist before requesting final review for Milestone 1.
 
 ## Walking Skeleton
 
-- [ ] Run `bash scripts/test-walking-skeleton.sh`
+- [ ] Run `WALKING_SKELETON_REP_ID=<rep-uuid> bash scripts/test-walking-skeleton.sh`
+- [ ] If using seeded data, set `WALKING_SKELETON_BUSINESS_ID=<business-profile-uuid>`
 - [ ] Backend health check passes
 - [ ] API health check passes
-- [ ] Realtime token endpoint check passes
+- [ ] Realtime status check passes
 - [ ] Supabase status check passes
+- [ ] Before-call context assembly check passes
+- [ ] Canonical realtime session check passes
+- [ ] Session cleanup check passes
 
 ## PR Readiness
 
@@ -46,3 +52,6 @@ Use this checklist before requesting final review for Milestone 1.
 - [ ] GitHub Actions checks are green
 - [ ] Required reviewers have been added
 - [ ] Team members have tested related flows if needed
+
+## Testing 
+- [ ] Backend regression tests pass: `python -m unittest discover -s tests`
