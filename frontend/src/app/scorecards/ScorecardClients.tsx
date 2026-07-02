@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch } from "../../lib/api";
 
 type FrameworkScores = {
   budget?: number;
@@ -123,7 +123,7 @@ export default function ScorecardsClients() {
 
     async function loadScorecard() {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${API_BASE_URL}/scorecards/${resolvedSessionId}`
         );
 

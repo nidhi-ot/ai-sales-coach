@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch, getAccessToken } from "../../lib/api";
 
 type Session = {
   id: string;
@@ -21,14 +21,14 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const repId = localStorage.getItem("rep_id");
+    const token = getAccessToken();
 
-    if (!repId) {
+    if (!token) {
       setLoading(false);
       return;
     }
 
-    fetch(`${API_BASE_URL}/sessions/rep/${repId}`)
+    authFetch(`${API_BASE_URL}/sessions/me`)
       .then((res) => res.json())
       .then((data) => {
         const safeSessions = Array.isArray(data)
@@ -58,7 +58,7 @@ export default function HistoryPage() {
     );
 
     try {
-      await fetch(
+      await authFetch(
         `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
         {
           method: "PATCH",

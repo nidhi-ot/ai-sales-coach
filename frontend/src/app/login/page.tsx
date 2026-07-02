@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { API_BASE_URL } from "../../lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +46,6 @@ export default function LoginPage() {
 
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("access_token", data.access_token || "");
-      localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
       localStorage.setItem("full_name", data.full_name || "Sales Rep");
       localStorage.setItem("email", data.email || "");

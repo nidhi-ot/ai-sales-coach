@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "../../../components/AppShell";
-import { API_BASE_URL } from "../../../lib/api";
+import { API_BASE_URL, authFetch } from "../../../lib/api";
 
 type SessionTranscriptEntry = {
   speaker: "rep" | "ai_customer";
@@ -45,7 +45,7 @@ export default function SessionDetailsPage() {
 
     async function loadDetails() {
       try {
-        const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
+        const response = await authFetch(`${API_BASE_URL}/sessions/${sessionId}`);
         const data = await response.json();
 
         if (!response.ok) {

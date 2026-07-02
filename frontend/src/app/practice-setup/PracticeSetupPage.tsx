@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch, getAccessToken } from "../../lib/api";
 
 type LearningProfile = {
   version: number;
@@ -76,15 +76,11 @@ export default function PracticeSetupPage() {
     const params = new URLSearchParams(window.location.search);
     setScenario(params.get("scenario") || "cold_call");
 
-    const token = localStorage.getItem("access_token");
+    const token = getAccessToken();
 
     if (!token) return;
 
-    fetch(`${API_BASE_URL}/profile/me/latest`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    authFetch(`${API_BASE_URL}/profile/me/latest`)
       .then((res) => {
         if (!res.ok) return null;
         return res.json();

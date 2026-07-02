@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import AppShell from "../../components/AppShell";
+import { getAccessToken } from "../../lib/api";
 
 export default function ProgressPage() {
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
   const [hasProfileData, setHasProfileData] = useState(false);
 
   useEffect(() => {
-    const repId = localStorage.getItem("rep_id");
+    const token = getAccessToken();
     const lastSession = localStorage.getItem("last_session_id");
 
     setLastSessionId(lastSession);
-    setHasProfileData(Boolean(repId || lastSession));
+    setHasProfileData(Boolean(token || lastSession));
   }, []);
 
   return (

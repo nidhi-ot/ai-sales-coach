@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch, getAccessToken } from "../../lib/api";
 
 type DashboardStats = {
   total_calls: number;
@@ -57,18 +57,18 @@ export default function DashboardPage() {
 
     async function loadDashboardData() {
   try {
-    const repId = localStorage.getItem("rep_id");
+    const token = getAccessToken();
 
-    if (!repId) {
+    if (!token) {
       setLoading(false);
       return;
     }
 
     const [statsResponse, recentResponse, dimensionsResponse] =
       await Promise.all([
-        fetch(`${API_BASE_URL}/sessions/stats/${repId}`),
-        fetch(`${API_BASE_URL}/sessions/recent/${repId}?limit=5`),
-        fetch(`${API_BASE_URL}/sessions/dimensions/${repId}`),
+        authFetch(`${API_BASE_URL}/sessions/me/stats`),
+        authFetch(`${API_BASE_URL}/sessions/me/recent?limit=5`),
+        authFetch(`${API_BASE_URL}/sessions/me/dimensions`),
       ]);
 
     if (statsResponse.ok) {

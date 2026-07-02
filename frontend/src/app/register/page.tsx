@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { API_BASE_URL } from "../../lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,11 +68,11 @@ export default function RegisterPage() {
       }
 
       localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("rep_id", data.rep_id || data.user_id);
+      localStorage.setItem("access_token", data.access_token || "");
       localStorage.setItem("business_id", data.business_id);
       localStorage.setItem("full_name", data.full_name);
 
-      router.push("/dashboard");
+      router.push(data.access_token ? "/dashboard" : "/login");
     } catch (error) {
       console.error(error);
       setError("Could not connect to backend");
