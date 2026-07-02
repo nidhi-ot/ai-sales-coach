@@ -362,7 +362,7 @@ export default function HomePage() {
                 Need assistance with AI Sales Coach?
               </h2>
               <p style={contactTextStyle}>
-                Our team is ready to help with technical issues, account questions, practice sessions, scorecards, and general product support. Send us a message and we'll respond as soon as possible.
+                Our team is ready to help with technical issues, account questions, practice sessions, scorecards, and general product support. Send us a message and we&apos;ll respond as soon as possible.
               </p>
             </div>
 
