@@ -1,8 +1,10 @@
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
+from app.api.deps import get_current_user
 from app.main import app
 from tests.helpers import FakeSupabase
 
@@ -10,6 +12,10 @@ from tests.helpers import FakeSupabase
 class ScorecardRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-456")
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
 
     def test_end_session_persists_generated_scorecard(self):
         fake_supabase = FakeSupabase()

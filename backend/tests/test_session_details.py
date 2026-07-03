@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from app.api.deps import get_current_user
 from app.main import app
 
 
@@ -108,6 +109,10 @@ class _FakeSupabase:
 class SessionDetailsRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-456")
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
 
     def test_get_session_details_returns_full_session_payload(self):
         fake_supabase = _FakeSupabase()
