@@ -2,9 +2,10 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
 from app.db.client import (
     check_supabase_connection,
@@ -61,7 +62,12 @@ class SupabaseStatusResponse(BaseModel):
 # Frontend live calls should use this path to create the app session,
 # inject the scenario persona, and receive OpenAI realtime credentials.
 @router.post("/session", response_model=RealtimeSessionResponse)
-async def create_realtime_session(config: SessionConfig):
+async def create_realtime_session(
+    config: SessionConfig,
+    current_user=Depends(get_current_user),
+):
+    ensure_rep_access(str(current_user.id), str(config.rep_id))
+
     # Step 1: Pick the AI customer persona for the selected scenario.
     # Load the rep and business context used to build the realtime persona instructions.
     # business_profile = await get_business_profile(str(config.business_id))
@@ -215,7 +221,9 @@ async def realtime_status():
 # Do not use this for live practice calls because it does not create an app session
 # and does not inject scenario/persona instructions.
 @router.post("/token", response_model=EphemeralTokenResponse)
-async def create_ephemeral_token():
+async def create_ephemeral_token(
+    current_user=Depends(get_current_user),
+):
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
@@ -250,16 +258,18 @@ async def create_ephemeral_token():
                 model="gpt-realtime-2",
             )
 
-    except httpx.HTTPError as exc:
+    except httpx.HTTPError:
         raise HTTPException(
             status_code=500,
-            detail=f"OpenAI API error: {str(exc)}",
+            detail="OpenAI API request failed",
         )
 
 
 # To check supabase connectivity
 @router.get("/supabase-status", response_model=SupabaseStatusResponse)
-async def supabase_status():
+async def supabase_status(
+    current_user=Depends(get_current_user),
+):
     if not settings.supabase_url or not settings.supabase_service_role_key:
         raise HTTPException(
             status_code=500,
@@ -269,8 +279,8 @@ async def supabase_status():
     try:
         result = await check_supabase_connection()
         return SupabaseStatusResponse(**result)
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=f"Supabase connection error: {str(exc)}",
+            detail="Supabase connection error",
         )

@@ -11,6 +11,9 @@ FOCUS_AREA="${FOCUS_AREA:-handling_objections}"
 
 REP_ID="${WALKING_SKELETON_REP_ID:-${REP_ID:-}}"
 BUSINESS_ID="${WALKING_SKELETON_BUSINESS_ID:-${BUSINESS_ID:-aa1712fd-ad13-433b-a353-a047dedb74d0}}"
+LOGIN_IDENTIFIER="${WALKING_SKELETON_LOGIN_IDENTIFIER:-${LOGIN_IDENTIFIER:-}}"
+LOGIN_PASSWORD="${WALKING_SKELETON_LOGIN_PASSWORD:-${LOGIN_PASSWORD:-}}"
+AUTH_TOKEN=""
 
 TMP_RESPONSE_FILE="$(mktemp "${TMPDIR:-/tmp}/walking-skeleton-response.XXXXXX")"
 TMP_REQUEST_FILE="$(mktemp "${TMPDIR:-/tmp}/walking-skeleton-request.XXXXXX")"
@@ -45,6 +48,12 @@ run_request() {
     curl_args+=(
       -H "Content-Type: application/json"
       --data-binary "@${body_file}"
+    )
+  fi
+
+  if [[ -n "$AUTH_TOKEN" ]]; then
+    curl_args+=(
+      -H "Authorization: Bearer ${AUTH_TOKEN}"
     )
   fi
 
@@ -229,6 +238,71 @@ with open(sys.argv[1], "w", encoding="utf-8") as handle:
 PY
 }
 
+login() {
+  if [[ -z "$LOGIN_IDENTIFIER" || -z "$LOGIN_PASSWORD" ]]; then
+    echo "FAIL: missing login credentials"
+    echo "Set WALKING_SKELETON_LOGIN_IDENTIFIER and WALKING_SKELETON_LOGIN_PASSWORD."
+    exit 1
+  fi
+
+  "$PYTHON_BIN" - "$TMP_REQUEST_FILE" "$LOGIN_IDENTIFIER" "$LOGIN_PASSWORD" <<'PY'
+import json
+import sys
+
+output_file, identifier, password = sys.argv[1:]
+
+with open(output_file, "w", encoding="utf-8") as handle:
+    json.dump(
+        {
+            "identifier": identifier,
+            "password": password,
+        },
+        handle,
+    )
+PY
+
+  local status_code
+  if ! status_code=$(run_request "POST" "${API_BASE_URL}/auth/login" "$TMP_REQUEST_FILE"); then
+    fail_request "login" "${API_BASE_URL}/auth/login" "${status_code:-curl_error}"
+  fi
+
+  if [[ ! "$status_code" =~ ^2 ]]; then
+    fail_request "login" "${API_BASE_URL}/auth/login" "$status_code"
+  fi
+
+  AUTH_TOKEN=$("$PYTHON_BIN" - "$TMP_RESPONSE_FILE" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    payload = json.load(handle)
+
+token = payload.get("access_token")
+if not token:
+    raise SystemExit(1)
+
+print(token)
+PY
+)
+
+  if [[ -z "$REP_ID" ]]; then
+    REP_ID=$("$PYTHON_BIN" - "$TMP_RESPONSE_FILE" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    payload = json.load(handle)
+
+rep_id = payload.get("rep_id") or payload.get("user_id")
+if not rep_id:
+    raise SystemExit(1)
+
+print(rep_id)
+PY
+)
+  fi
+}
+
 echo "=== Walking Skeleton Integration Test ==="
 echo "Backend: ${BASE_URL}"
 echo "API: ${API_BASE_URL}"
@@ -236,9 +310,12 @@ echo "API: ${API_BASE_URL}"
 check_json_field "backend health" "GET" "${BASE_URL}/health" "status"
 check_json_field "API health" "GET" "${API_BASE_URL}/health" "status"
 check_json_field "realtime status" "GET" "${API_BASE_URL}/realtime/status" "status"
-check_json_field "Supabase connection" "GET" "${API_BASE_URL}/realtime/supabase-status" "status"
 
 require_realtime_config
+
+login
+
+check_json_field "Supabase connection" "GET" "${API_BASE_URL}/realtime/supabase-status" "status"
 
 echo "Using scenario=${SCENARIO}"
 echo "Using rep_id=${REP_ID}"

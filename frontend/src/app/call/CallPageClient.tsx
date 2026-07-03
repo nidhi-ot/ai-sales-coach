@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch } from "../../lib/api";
 
 type CallStatus =
   | "ready"
@@ -149,7 +149,7 @@ export default function CallPage() {
     endReason: string,
     entries: TranscriptEntry[]
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${API_BASE_URL}/sessions/${sessionIdToEnd}/end`,
       {
         method: "POST",
@@ -213,7 +213,7 @@ export default function CallPage() {
 
       localStreamRef.current = stream;
 
-      const response = await fetch(`${API_BASE_URL}/realtime/session`, {
+      const response = await authFetch(`${API_BASE_URL}/realtime/session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

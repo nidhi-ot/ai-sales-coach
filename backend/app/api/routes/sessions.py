@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Any, List, Literal, cast
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
 from app.db.client import get_supabase
 from app.models.agent import ScenarioSlug
@@ -25,6 +26,17 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     return [item for item in data if isinstance(item, dict)]
 
 
+def _require_row_value(row: dict[str, Any], field: str, entity: str) -> str:
+    value = row.get(field)
+    if value is None:
+        raise HTTPException(
+            status_code=500,
+            detail=f"{entity} is missing {field}",
+        )
+
+    return str(value)
+
+
 def _format_datetime(value: Any) -> str | None:
     if value is None:
         return None
@@ -40,6 +52,23 @@ def _format_datetime(value: Any) -> str | None:
             return value
 
     return str(value)
+
+
+def _get_owned_session(
+    supabase: Any,
+    session_id: str,
+    current_user_id: str,
+) -> dict[str, Any]:
+    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
+    session_rows = _row_dicts(session_lookup.data)
+
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session_row = session_rows[0]
+    rep_id = _require_row_value(session_row, "rep_id", "Session")
+    ensure_rep_access(str(current_user_id), rep_id)
+    return session_row
 
 
 class SessionStart(BaseModel):
@@ -117,8 +146,12 @@ class SessionDetailResponse(BaseModel):
 
 
 @router.post("/")
-async def create_session(data: SessionStart):
+async def create_session(
+    data: SessionStart,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    ensure_rep_access(str(current_user.id), data.rep_id)
 
     profile = (
         supabase.table("salesperson_profiles")
@@ -155,16 +188,14 @@ async def create_session(data: SessionStart):
 
 @router.post("/{session_id}/end")
 @router.patch("/{session_id}/end")
-async def end_session(session_id: str, data: SessionEnd):
+async def end_session(
+    session_id: str,
+    data: SessionEnd,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
 
-    session_lookup = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    session_rows = _row_dicts(session_lookup.data)
-
-    if not session_rows:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session_row = session_rows[0]
+    session_row = _get_owned_session(supabase, session_id, str(current_user.id))
     transcript_entries_saved = 0
     profile = None
 
@@ -262,8 +293,13 @@ async def end_session(session_id: str, data: SessionEnd):
 
 
 @router.post("/{session_id}/transcripts")
-async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
+async def add_transcript_entry(
+    session_id: str,
+    entry: TranscriptEntry,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    _get_owned_session(supabase, session_id, str(current_user.id))
 
     result = (
         supabase.table("transcripts")
@@ -283,8 +319,12 @@ async def add_transcript_entry(session_id: str, entry: TranscriptEntry):
 
 
 @router.get("/{session_id}/transcripts")
-async def get_transcript(session_id: str):
+async def get_transcript(
+    session_id: str,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    _get_owned_session(supabase, session_id, str(current_user.id))
 
     result = (
         supabase.table("transcripts")
@@ -298,8 +338,13 @@ async def get_transcript(session_id: str):
 
 
 @router.post("/{session_id}/transcripts/batch")
-async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
+async def add_transcript_batch(
+    session_id: str,
+    batch: TranscriptBatch,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    _get_owned_session(supabase, session_id, str(current_user.id))
 
     if not batch.entries:
         raise HTTPException(status_code=400, detail="Transcript batch is empty")
@@ -320,8 +365,13 @@ async def add_transcript_batch(session_id: str, batch: TranscriptBatch):
 
 
 @router.get("/rep/{rep_id}")
-async def get_rep_sessions(rep_id: str, limit: int = 20):
+async def get_rep_sessions(
+    rep_id: str,
+    limit: int = 20,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
+    ensure_rep_access(str(current_user.id), rep_id)
 
     result = (
         supabase.table("sessions")
@@ -361,31 +411,35 @@ async def get_rep_sessions(rep_id: str, limit: int = 20):
 
 
 @router.get("/stats/{rep_id}", response_model=SessionStatsResponse)
-async def get_stats(rep_id: str):
+async def get_stats(rep_id: str, current_user=Depends(get_current_user)):
+    ensure_rep_access(str(current_user.id), rep_id)
     return get_session_stats(rep_id)
 
 
 @router.get("/recent/{rep_id}", response_model=RecentSessionsResponse)
-async def get_recent(rep_id: str, limit: int = Query(5, ge=1, le=25)):
+async def get_recent(
+    rep_id: str,
+    limit: int = Query(5, ge=1, le=25),
+    current_user=Depends(get_current_user),
+):
+    ensure_rep_access(str(current_user.id), rep_id)
     return {"sessions": get_recent_sessions(rep_id=rep_id, limit=limit)}
 
 
 @router.get("/dimensions/{rep_id}", response_model=DimensionProgressResponse)
-async def get_dimensions(rep_id: str):
+async def get_dimensions(rep_id: str, current_user=Depends(get_current_user)):
+    ensure_rep_access(str(current_user.id), rep_id)
     return {"dimensions": get_dimension_progress(rep_id)}
 
 
 @router.get("/{session_id}", response_model=SessionDetailResponse)
-async def get_session_details(session_id: str):
+async def get_session_details(
+    session_id: str,
+    current_user=Depends(get_current_user),
+):
     supabase = get_supabase()
 
-    session_result = supabase.table("sessions").select("*").eq("id", session_id).limit(1).execute()
-    session_rows = _row_dicts(session_result.data)
-
-    if not session_rows:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session_row = session_rows[0]
+    session_row = _get_owned_session(supabase, session_id, str(current_user.id))
 
     transcript_result = (
         supabase.table("transcripts")
