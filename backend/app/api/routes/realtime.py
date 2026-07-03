@@ -109,18 +109,18 @@ async def create_realtime_session(
 
     instructions += f"""
 
-Practice setup:
-- Sales framework: {resolved_framework}
-- Focus area: {config.focus_area}
+        Practice setup:
+        - Sales framework: {resolved_framework}
+        - Focus area: {config.focus_area}
 
-Use this setup when acting as the AI customer.
+        Use this setup when acting as the AI customer.
 
-If the framework is BANT, focus on Budget, Authority, Need, and Timeline.
+        If the framework is BANT, focus on Budget, Authority, Need, and Timeline.
 
-If the framework is MEDDIC, follow the MEDDIC methodology.
+        If the framework is MEDDIC, follow the MEDDIC methodology.
 
-If the framework is SPIN, focus on Situation, Problem, Implication, and Need Payoff.
-"""
+        If the framework is SPIN, focus on Situation, Problem, Implication, and Need Payoff.
+        """
 
     instructions += build_learning_profile_instruction(
         rep_id=str(config.rep_id),

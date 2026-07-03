@@ -6,9 +6,9 @@ from pydantic import BaseModel
 
 from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
-from app.db.client import get_supabase
+from app.db.client import get_business_profile, get_supabase
 from app.models.agent import ScenarioSlug
-from app.services.scenarios import get_scenario_config
+from app.services.scenarios import get_scenario_config, normalize_framework
 from app.services.scorecards import analyze_transcript, create_scorecard_stub
 from app.services.session_analytics import (
     create_next_salesperson_profile,
@@ -164,6 +164,11 @@ async def create_session(
 
     profile_rows = _row_dicts(profile.data)
     profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
+    business_id = settings.business_id
+    business_profile = await get_business_profile(business_id)
+    resolved_framework = normalize_framework(
+        business_profile.get("framework") if business_profile else None
+    )
 
     result = (
         supabase.table("sessions")
@@ -176,6 +181,7 @@ async def create_session(
                 "status": "active",
                 "metadata": {
                     "system_instruction": data.system_instruction,
+                    "framework": resolved_framework,
                 },
             }
         )
