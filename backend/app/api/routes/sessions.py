@@ -165,7 +165,7 @@ async def create_session(
     profile_rows = _row_dicts(profile.data)
     profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
     business_id = settings.business_id
-    business_profile = get_business_profile(business_id)
+    business_profile = await get_business_profile(business_id)
     resolved_framework = normalize_framework(
         business_profile.get("framework") if business_profile else None
     )
