@@ -10,12 +10,10 @@ from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
 from app.db.client import (
     check_supabase_connection,
+    create_session as create_db_session,
     get_business_profile,
     get_latest_profile,
     get_supabase,
-)
-from app.db.client import (
-    create_session as create_db_session,
 )
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context

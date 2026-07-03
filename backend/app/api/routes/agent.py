@@ -1,4 +1,3 @@
-import data
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import ensure_rep_access, get_current_user
@@ -33,7 +32,7 @@ async def assemble_before_call_context(
         context = assemble_call_context(
             rep_profile=rep_profile,
             business_profile=None,
-            scenario=data.scenario,
+            scenario=request.scenario,
         )
     except UnsupportedScenarioError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
