@@ -35,11 +35,7 @@ async def get_business_team_overview(
     supabase = get_supabase()
 
     business_result = (
-        supabase.table("business_profiles")
-        .select("*")
-        .eq("id", business_id)
-        .limit(1)
-        .execute()
+        supabase.table("business_profiles").select("*").eq("id", business_id).limit(1).execute()
     )
     business_rows = _row_dicts(business_result.data)
 
