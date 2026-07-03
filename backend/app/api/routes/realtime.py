@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 import httpx
@@ -59,8 +60,10 @@ class SupabaseStatusResponse(BaseModel):
     row_count: int
 
 
-def _first_row(data):
-    return data[0] if isinstance(data, list) and data else None
+def _first_row(data: Any) -> dict[str, Any] | None:
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        return data[0]
+    return None
 
 
 async def _get_account_business_id(user_id: str) -> str:
@@ -89,25 +92,19 @@ async def create_realtime_session(
     ensure_rep_access(str(current_user.id), str(config.rep_id))
 
     business_id = await _get_account_business_id(str(current_user.id))
-
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
     business_profile = await get_business_profile(business_id)
-
-    resolved_framework = (
-        business_profile.get("framework")
-        if business_profile and business_profile.get("framework")
-        else "BANT"
-    )
 
     try:
         context = assemble_call_context(
             rep_profile=rep_profile_latest,
-            scenario=config.scenario,
             business_profile=business_profile,
+            scenario=config.scenario,
         )
     except UnsupportedScenarioError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    resolved_framework = context["framework"]
     instructions = context["system_instruction"]
 
     instructions += f"""
