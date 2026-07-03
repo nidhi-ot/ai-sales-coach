@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agent, auth, profiles, realtime, scorecards, sessions
+from app.api.routes import agent, auth, manager, profiles, realtime, scorecards, sessions
 
 
 def create_app() -> FastAPI:
@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
     app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
     app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
+    app.include_router(manager.router, prefix="/api/v1/manager", tags=["manager"])
     app.include_router(
         scorecards.router,
         prefix="/api/v1/scorecards",
