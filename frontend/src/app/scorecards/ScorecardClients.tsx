@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL, authFetch } from "../../lib/api";
 
 type FrameworkScores = {
   budget?: number;
@@ -111,12 +111,14 @@ export default function ScorecardsClients() {
   const [sessionId, setSessionId] = useState<string | null>(querySessionId);
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasNoPractice, setHasNoPractice] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadScorecard() {
       setLoading(true);
       setError("");
+      setHasNoPractice(false);
       setScorecard(null);
 
       try {
@@ -126,11 +128,11 @@ export default function ScorecardsClients() {
           const repId = localStorage.getItem("rep_id");
 
           if (!repId) {
-            setError("No session ID found.");
+            setHasNoPractice(true);
             return;
           }
 
-          const recentResponse = await fetch(
+          const recentResponse = await authFetch(
             `${API_BASE_URL}/sessions/recent/${repId}?limit=1`
           );
 
@@ -144,7 +146,7 @@ export default function ScorecardsClients() {
           const latestSession = (recentData.sessions as RecentSession[] | undefined)?.[0];
 
           if (!latestSession?.id) {
-            setError("No session ID found.");
+            setHasNoPractice(true);
             return;
           }
 
@@ -153,7 +155,9 @@ export default function ScorecardsClients() {
 
         setSessionId(resolvedSessionId);
 
-        const response = await fetch(`${API_BASE_URL}/scorecards/${resolvedSessionId}`);
+        const response = await authFetch(
+          `${API_BASE_URL}/scorecards/${resolvedSessionId}`
+        );
 
         const data = await response.json();
 
@@ -231,6 +235,27 @@ export default function ScorecardsClients() {
             <p style={{ color: "#667085", margin: 0 }}>
               Loading scorecard...
             </p>
+          </section>
+        ) : hasNoPractice ? (
+          <section style={panelStyle}>
+            <div style={{ display: "grid", gap: "14px" }}>
+              <div>
+                <h2 style={{ margin: 0, color: "#101828" }}>
+                  No practice session yet
+                </h2>
+
+                <p style={{ color: "#667085", margin: "8px 0 0" }}>
+                  Start your first practice session to generate a scorecard.
+                </p>
+              </div>
+
+              <button
+                onClick={() => router.push("/scenarios")}
+                style={primaryButtonStyle}
+              >
+                Start Practice
+              </button>
+            </div>
           </section>
         ) : error ? (
           <section style={panelStyle}>

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.deps import ensure_rep_access, get_current_user
 from app.db.client import get_business_profile, get_latest_profile
 from app.models.agent import (
     BeforeCallContextRequest,
@@ -17,7 +18,10 @@ router = APIRouter()
 @router.post("/before-call", response_model=BeforeCallContextResponse)
 async def assemble_before_call_context(
     request: BeforeCallContextRequest,
+    current_user=Depends(get_current_user),
 ) -> BeforeCallContextResponse:
+    ensure_rep_access(str(current_user.id), str(request.rep_id))
+
     rep_profile = await get_latest_profile(str(request.rep_id))
     business_profile = await get_business_profile(str(request.business_id))
 
