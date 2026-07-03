@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
-import { API_BASE_URL, authFetch } from "../../lib/api";
+import { API_BASE_URL } from "../../lib/api";
 
 type FrameworkScores = {
   budget?: number;
@@ -36,10 +36,6 @@ type ScoreMetric = {
   value: number | null | undefined;
   icon: string;
   warning?: boolean;
-};
-
-type RecentSession = {
-  id: string;
 };
 
 const scoreMetrics = (scorecard: Scorecard): ScoreMetric[] => [
@@ -114,64 +110,92 @@ export default function ScorecardsClients() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let ignore = false;
+
+    async function authenticatedFetch(path: string) {
+      const token = localStorage.getItem("access_token");
+
+      return fetch(`${API_BASE_URL}${path}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    }
+
+    async function resolveSessionId() {
+      const storedSessionId = localStorage.getItem("last_session_id");
+
+      if (querySessionId || storedSessionId) {
+        return querySessionId || storedSessionId;
+      }
+
+      const recentResponse = await authenticatedFetch("/sessions/me/recent?limit=1");
+      const recentData = await recentResponse.json().catch(() => ({}));
+
+      if (recentResponse.status === 401) {
+        throw new Error("Please log in again before viewing your scorecard.");
+      }
+
+      if (!recentResponse.ok) {
+        throw new Error(recentData.detail || "Could not load your latest session.");
+      }
+
+      const latestSessionId = recentData.sessions?.[0]?.id;
+
+      if (latestSessionId) {
+        localStorage.setItem("last_session_id", latestSessionId);
+      }
+
+      return latestSessionId || null;
+    }
+
     async function loadScorecard() {
       setLoading(true);
       setError("");
-      setScorecard(null);
 
       try {
-        let resolvedSessionId = querySessionId;
+        const resolvedSessionId = await resolveSessionId();
 
         if (!resolvedSessionId) {
-          const repId = localStorage.getItem("rep_id");
-
-          if (!repId) {
-            setError("No session ID found.");
-            return;
-          }
-
-          const recentResponse = await fetch(
-            `${API_BASE_URL}/sessions/recent/${repId}?limit=1`
-          );
-
-          if (!recentResponse.ok) {
-            setError("Could not load recent sessions.");
-            return;
-          }
-
-          const recentData = await recentResponse.json();
-
-          const latestSession = (recentData.sessions as RecentSession[] | undefined)?.[0];
-
-          if (!latestSession?.id) {
-            setError("No session ID found.");
-            return;
-          }
-
-          resolvedSessionId = latestSession.id;
+          setError("No completed session found yet.");
+          return;
         }
 
-        setSessionId(resolvedSessionId);
+        if (!ignore) {
+          setSessionId(resolvedSessionId);
+        }
 
-        const response = await fetch(`${API_BASE_URL}/scorecards/${resolvedSessionId}`);
+        const response = await authenticatedFetch(`/scorecards/${resolvedSessionId}`);
+        const data = await response.json().catch(() => ({}));
 
-        const data = await response.json();
+        if (response.status === 401) {
+          setError("Please log in again before viewing your scorecard.");
+          return;
+        }
 
         if (!response.ok) {
           setError(data.detail || "Scorecard not found.");
           return;
         }
 
-        setScorecard(data);
+        if (!ignore) {
+          setScorecard(data);
+        }
       } catch (error) {
         console.error("Failed to load scorecard:", error);
-        setError("Could not connect to backend.");
+        setError(
+          error instanceof Error ? error.message : "Could not connect to backend."
+        );
       } finally {
-        setLoading(false);
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     }
 
     loadScorecard();
+
+    return () => {
+      ignore = true;
+    };
   }, [querySessionId]);
 
   const overallScore = scorecard?.overall_score ?? null;
