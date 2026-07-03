@@ -8,7 +8,7 @@ CREATE TABLE business_profiles (
   products TEXT,
   icp TEXT,
   objections TEXT,
-  language TEXT DEFAULT 'en', 
+  language TEXT DEFAULT 'en' CHECK (language ~ '^[a-z]{2}(-[A-Z]{2})?$'), 
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

@@ -13,7 +13,6 @@ business = (
         {
             "name": "AI Sales Coach",
             "framework": "BANT",
-
             # New B1 fields
             "products": (
                 "AI-powered sales practice software where reps rehearse realistic "
@@ -28,7 +27,6 @@ business = (
                 "we already use Gong or enablement tools"
             ),
             "language": "en",
-
             # Existing context data (keep this)
             "context_data": {
                 "service": (
