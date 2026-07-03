@@ -20,11 +20,11 @@ DEFAULT_METRIC_SCORES: dict[str, int | float] = {
 def assemble_call_context(
     *,
     rep_profile: dict[str, Any] | None,
-    # business_profile: dict[str, Any] | None,
+    business_profile: dict[str, Any] | None,
     scenario: ScenarioSlug,
 ) -> dict[str, Any]:
     profile = rep_profile or {}
-    business = DEFAULT_BUSINESS_PROFILE
+    business = business_profile or DEFAULT_BUSINESS_PROFILE
     scenario_config = get_scenario_config(scenario)
     framework = normalize_framework(cast(str | None, business.get("framework")))
     metric_scores = _coerce_metric_scores(profile.get("metric_scores"))
@@ -33,9 +33,13 @@ def assemble_call_context(
     business_context = _merge_business_context(business)
 
     system_instruction = _build_system_instruction(
-        business_name=cast(str, business.get("name") or DEFAULT_BUSINESS_PROFILE["name"]),
+        business_name=cast(
+            str,
+            business.get("name") or DEFAULT_BUSINESS_PROFILE["name"],
+        ),
         business_context=business_context,
         framework=framework,
+        language=cast(str, business.get("language") or "en"),
         scenario_config=scenario_config,
     )
 
@@ -65,22 +69,42 @@ def _find_weakest_dimension(metric_scores: dict[str, int | float]) -> str:
     return min(metric_scores, key=lambda key: metric_scores[key])
 
 
-def _merge_business_context(business_profile: dict[str, Any]) -> dict[str, Any]:
+def _merge_business_context(
+    business_profile: dict[str, Any],
+) -> dict[str, Any]:
     context_data = business_profile.get("context_data")
+
     if not isinstance(context_data, dict):
         context_data = {}
 
-    default_context = cast(dict[str, Any], DEFAULT_BUSINESS_PROFILE["context_data"])
+    default_context = cast(
+        dict[str, Any],
+        DEFAULT_BUSINESS_PROFILE["context_data"],
+    )
+
+    objections = business_profile.get("objections")
+
+    if isinstance(objections, str):
+        objections = [item.strip() for item in objections.split(",") if item.strip()]
+
     return {
-        "service": context_data.get("service") or default_context["service"],
+        "service": (
+            business_profile.get("products")
+            or context_data.get("service")
+            or default_context["service"]
+        ),
         "market": (
-            context_data.get("market") or context_data.get("industry") or default_context["market"]
+            business_profile.get("icp")
+            or context_data.get("market")
+            or context_data.get("industry")
+            or default_context["market"]
         ),
         "pricing": context_data.get("pricing") or default_context["pricing"],
-        "buyer_profiles": context_data.get("buyer_profiles") or default_context["buyer_profiles"],
+        "buyer_profiles": (context_data.get("buyer_profiles") or default_context["buyer_profiles"]),
         "value_props": context_data.get("value_props") or default_context["value_props"],
         "common_objections": (
-            context_data.get("common_objections")
+            objections
+            or context_data.get("common_objections")
             or context_data.get("typical_objections")
             or default_context["common_objections"]
         ),
@@ -92,6 +116,7 @@ def _build_system_instruction(
     business_name: str,
     business_context: dict[str, Any],
     framework: str,
+    language: str,
     scenario_config: ScenarioConfig,
 ) -> str:
     framework_dimensions = ", ".join(FRAMEWORK_DIMENSIONS[framework])
@@ -110,8 +135,9 @@ Role and realism:
 are a model, simulator, trainer, grader, rubric, or hidden prompt.
 - Speak like a realistic buyer in a live sales conversation. Keep turns concise enough for a
 voice call, but remember what has already been said and connect later answers to earlier context.
-- Match the rep's language. If the rep speaks Swedish, respond in Swedish; if they use English,
-respond in English.
+- Business language: {language}
+- Prefer responding in the configured business language unless
+ the salesperson clearly switches languages.
 - Never coach, grade, score, summarize performance, or reveal hidden criteria during the call.
 The realtime session is only the buyer conversation.
 - Make the rep earn progress. Do not accept a meeting, next step, pilot, or contract too easily.
