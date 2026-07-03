@@ -145,7 +145,7 @@ async def create_realtime_session(
             profile_version=profile_version,
             metadata={
                 "system_instruction": instructions,
-                "framework" : resolved_framework,
+                "framework": resolved_framework,
             },
         )
     except Exception as exc:
