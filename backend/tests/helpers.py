@@ -19,6 +19,19 @@ DEFAULT_SESSION = {
     "metadata": {"system_instruction": "Test scenario"},
 }
 
+DEFAULT_BUSINESS_PROFILE = {
+    "id": "business-789",
+    "name": "Optimal Trappstadning",
+    "framework": "BANT",
+    "context_data": {"industry": "SaaS"},
+    "products": "AI sales coaching",
+    "icp": "Sales teams",
+    "objections": "Too expensive",
+    "language": "en",
+    "created_at": "2026-06-25T10:00:00+00:00",
+    "updated_at": "2026-06-25T10:00:00+00:00",
+}
+
 
 class FakeTable:
     def __init__(self, name: str, store: dict[str, Any]):
@@ -98,6 +111,12 @@ class FakeTable:
 
         if self.name == "salesperson_profiles":
             return self._execute_salesperson_profiles()
+
+        if self.name == "salesperson_accounts":
+            return SimpleNamespace(data=self._selected_rows())
+
+        if self.name == "business_profiles":
+            return SimpleNamespace(data=self._selected_rows())
 
         raise AssertionError(f"Unexpected table access: {self.name}")
 
@@ -217,9 +236,12 @@ class FakeSupabase:
             "transcripts": [],
             "scorecards": [],
             "salesperson_profiles": [],
+            "salesperson_accounts": [],
+            "business_profiles": [],
         }
         if with_default_session:
             self.store["sessions"][DEFAULT_SESSION["id"]] = deepcopy(DEFAULT_SESSION)
+            self.store["business_profiles"].append(deepcopy(DEFAULT_BUSINESS_PROFILE))
 
     def table(self, name: str) -> FakeTable:
         return FakeTable(name, self.store)

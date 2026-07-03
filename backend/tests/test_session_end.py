@@ -1,8 +1,10 @@
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
+from app.api.deps import get_current_user
 from app.main import app
 from tests.helpers import FakeSupabase
 
@@ -10,6 +12,10 @@ from tests.helpers import FakeSupabase
 class SessionEndRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-456")
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
 
     def test_post_end_saves_transcript_and_returns_completed_session(self):
         fake_supabase = FakeSupabase()
@@ -113,6 +119,10 @@ class SessionEndRouteTests(unittest.TestCase):
 class TwoCallLearningLoopRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-456")
+
+    def tearDown(self):
+        app.dependency_overrides.clear()
 
     def test_first_call_generates_profile_version_and_second_call_consumes_it(self):
         fake_supabase = FakeSupabase(with_default_session=False)
