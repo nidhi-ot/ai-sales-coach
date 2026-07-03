@@ -9,9 +9,13 @@ from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
 from app.db.client import (
     check_supabase_connection,
+    get_business_profile,
     get_latest_profile,
+    get_supabase,
 )
-from app.db.client import create_session as create_db_session
+from app.db.client import (
+    create_session as create_db_session,
+)
 from app.models.agent import ScenarioSlug
 from app.services.context import assemble_call_context
 from app.services.scenarios import (
@@ -31,8 +35,6 @@ class SessionConfig(BaseModel):
     scenario: ScenarioSlug
     rep_id: UUID
     business_id: UUID
-    business_context: str = "apartment_association"
-    framework: str = "BANT"
     focus_area: str = "handling_objections"
     vad: VadConfig | None = None
 
@@ -57,10 +59,28 @@ class SupabaseStatusResponse(BaseModel):
     row_count: int
 
 
-# Need to add logfire
-# Canonical live-practice bootstrap endpoint.
-# Frontend live calls should use this path to create the app session,
-# inject the scenario persona, and receive OpenAI realtime credentials.
+def _first_row(data):
+    return data[0] if isinstance(data, list) and data else None
+
+
+async def _get_account_business_id(user_id: str) -> str:
+    result = (
+        get_supabase()
+        .table("salesperson_accounts")
+        .select("business_id")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    account = _first_row(result.data)
+
+    if not account or not account.get("business_id"):
+        raise HTTPException(status_code=403, detail="Salesperson account not found")
+
+    return str(account["business_id"])
+
+
 @router.post("/session", response_model=RealtimeSessionResponse)
 async def create_realtime_session(
     config: SessionConfig,
@@ -68,50 +88,48 @@ async def create_realtime_session(
 ):
     ensure_rep_access(str(current_user.id), str(config.rep_id))
 
-    # Step 1: Pick the AI customer persona for the selected scenario.
-    # Load the rep and business context used to build the realtime persona instructions.
-    # business_profile = await get_business_profile(str(config.business_id))
-    # print("BUSINESS ID RECEIVED:", str(config.business_id))
-    # print("BUSINESS PROFILE RESULT:", business_profile)
+    business_id = await _get_account_business_id(str(current_user.id))
 
     rep_profile_latest = await get_latest_profile(str(config.rep_id))
+    business_profile = await get_business_profile(business_id)
 
-    # Step 2: Assemble the system instruction for the OpenAI session, combining the scenario
+    resolved_framework = (
+        business_profile.get("framework")
+        if business_profile and business_profile.get("framework")
+        else "BANT"
+    )
+
     try:
         context = assemble_call_context(
             rep_profile=rep_profile_latest,
             scenario=config.scenario,
+            business_profile=business_profile,
         )
     except UnsupportedScenarioError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    scenario_config = context["scenario"]
-    print(f"\n📋 Scenario Selected: {scenario_config.title}")
-    print(f"🎯 Objective: {scenario_config.objective}\n")
 
     instructions = context["system_instruction"]
 
     instructions += f"""
 
-        Practice setup:
-        - Business context: {config.business_context}
-        - Sales framework: {config.framework}
-        - Focus area: {config.focus_area}
+Practice setup:
+- Sales framework: {resolved_framework}
+- Focus area: {config.focus_area}
 
-        Use this setup when acting as the AI customer.
+Use this setup when acting as the AI customer.
 
-        If the framework is BANT, focus on Budget,
-        Authority, Need, and Timeline.
+If the framework is BANT, focus on Budget, Authority, Need, and Timeline.
 
-        If the framework is MEDDIC, follow the MEDDIC methodology.
+If the framework is MEDDIC, follow the MEDDIC methodology.
 
-        If the framework is SPIN, focus on Situation,
-        Problem, Implication, and Need Payoff.
-        """
+If the framework is SPIN, focus on Situation, Problem, Implication, and Need Payoff.
+"""
+
     instructions += build_learning_profile_instruction(
         rep_id=str(config.rep_id),
         fallback_focus_area=config.focus_area,
     )
+
     openai_api_key = settings.openai_api_key
 
     if not openai_api_key:
@@ -122,14 +140,16 @@ async def create_realtime_session(
 
     profile_version = rep_profile_latest["version"] if rep_profile_latest else 0
 
-    # Create the app session before opening the OpenAI realtime connection.
     try:
         db_session = await create_db_session(
             rep_id=str(config.rep_id),
-            business_id=str(config.business_id),
+            business_id=business_id,
             scenario=config.scenario.value,
             profile_version=profile_version,
-            metadata={"system_instruction": instructions},
+            metadata={
+                "system_instruction": instructions,
+                "framework": resolved_framework,
+            },
         )
     except Exception as exc:
         raise HTTPException(
@@ -143,11 +163,7 @@ async def create_realtime_session(
             detail="Failed to create Supabase session",
         )
 
-    # Store the database session ID separately from the OpenAI realtime session
-    # ID. The database ID is used for transcripts and later session updates.
     supabase_session_id = db_session["id"]
-
-    print("🎙️ VAD config: semantic_vad, eagerness=medium")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -163,17 +179,13 @@ async def create_realtime_session(
                         "model": "gpt-realtime-2",
                         "audio": {
                             "input": {
-                                "transcription": {
-                                    "model": "whisper-1",
-                                },
+                                "transcription": {"model": "whisper-1"},
                                 "turn_detection": {
                                     "type": "semantic_vad",
                                     "eagerness": "medium",
                                 },
                             },
-                            "output": {
-                                "voice": "marin",
-                            },
+                            "output": {"voice": "marin"},
                         },
                         "instructions": instructions,
                     },
@@ -217,9 +229,6 @@ async def realtime_status():
     return {"status": "ok"}
 
 
-# Legacy spike-only token endpoint.
-# Do not use this for live practice calls because it does not create an app session
-# and does not inject scenario/persona instructions.
 @router.post("/token", response_model=EphemeralTokenResponse)
 async def create_ephemeral_token(
     current_user=Depends(get_current_user),
@@ -258,14 +267,13 @@ async def create_ephemeral_token(
                 model="gpt-realtime-2",
             )
 
-    except httpx.HTTPError:
+    except httpx.HTTPError as exc:
         raise HTTPException(
             status_code=500,
             detail="OpenAI API request failed",
-        )
+        ) from exc
 
 
-# To check supabase connectivity
 @router.get("/supabase-status", response_model=SupabaseStatusResponse)
 async def supabase_status(
     current_user=Depends(get_current_user),
@@ -279,8 +287,8 @@ async def supabase_status(
     try:
         result = await check_supabase_connection()
         return SupabaseStatusResponse(**result)
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=500,
             detail="Supabase connection error",
-        )
+        ) from exc
