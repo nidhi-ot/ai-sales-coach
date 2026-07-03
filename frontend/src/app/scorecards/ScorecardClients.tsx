@@ -134,12 +134,12 @@ export default function ScorecardsClients() {
             `${API_BASE_URL}/sessions/recent/${repId}?limit=1`
           );
 
-          const recentData = await recentResponse.json();
-
           if (!recentResponse.ok) {
             setError("Could not load recent sessions.");
             return;
           }
+
+          const recentData = await recentResponse.json();
 
           const latestSession = (recentData.sessions as RecentSession[] | undefined)?.[0];
 
