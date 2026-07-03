@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from app.api.deps import ensure_rep_access, get_current_user
 from app.config import settings
-from app.db.client import get_supabase, get_business_profile
+from app.db.client import get_business_profile, get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scenarios import get_scenario_config, normalize_framework
 from app.services.scorecards import analyze_transcript, create_scorecard_stub
