@@ -128,7 +128,7 @@ export default function ScorecardsClients() {
           const repId = localStorage.getItem("rep_id");
 
           if (!repId) {
-            setHasNoPractice(true);
+            router.push("/login");
             return;
           }
 

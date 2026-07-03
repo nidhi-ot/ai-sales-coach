@@ -17,6 +17,17 @@ def _row_dicts(data: object) -> list[dict[str, object]]:
     return [row for row in data if isinstance(row, dict)]
 
 
+def _require_row_value(row: dict[str, object], field: str, entity: str) -> str:
+    value = row.get(field)
+    if value is None:
+        raise HTTPException(
+            status_code=500,
+            detail=f"{entity} is missing {field}",
+        )
+
+    return str(value)
+
+
 class ScorecardStub(BaseModel):
     session_id: str
     rep_id: str
@@ -48,8 +59,8 @@ async def create_scorecard(
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = session_rows[0]
-    rep_id = str(session["rep_id"])
-    business_id = str(session["business_id"])
+    rep_id = _require_row_value(session, "rep_id", "Session")
+    business_id = _require_row_value(session, "business_id", "Session")
     ensure_rep_access(str(current_user.id), rep_id)
 
     return await create_scorecard_stub(
@@ -85,7 +96,8 @@ async def get_scorecard(
         raise HTTPException(status_code=404, detail="Scorecard not found")
 
     scorecard = scorecard_rows[0]
-    ensure_rep_access(str(current_user.id), str(scorecard["rep_id"]))
+    rep_id = _require_row_value(scorecard, "rep_id", "Scorecard")
+    ensure_rep_access(str(current_user.id), rep_id)
 
     return scorecard
 
@@ -109,7 +121,8 @@ async def update_share_setting(
     if not scorecard_rows:
         raise HTTPException(status_code=404, detail="Scorecard not found")
 
-    ensure_rep_access(str(current_user.id), str(scorecard_rows[0]["rep_id"]))
+    rep_id = _require_row_value(scorecard_rows[0], "rep_id", "Scorecard")
+    ensure_rep_access(str(current_user.id), rep_id)
 
     (
         supabase.table("scorecards")

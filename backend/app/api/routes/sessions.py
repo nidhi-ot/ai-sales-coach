@@ -26,6 +26,17 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     return [item for item in data if isinstance(item, dict)]
 
 
+def _require_row_value(row: dict[str, Any], field: str, entity: str) -> str:
+    value = row.get(field)
+    if value is None:
+        raise HTTPException(
+            status_code=500,
+            detail=f"{entity} is missing {field}",
+        )
+
+    return str(value)
+
+
 def _format_datetime(value: Any) -> str | None:
     if value is None:
         return None
@@ -55,7 +66,8 @@ def _get_owned_session(
         raise HTTPException(status_code=404, detail="Session not found")
 
     session_row = session_rows[0]
-    ensure_rep_access(str(current_user_id), str(session_row["rep_id"]))
+    rep_id = _require_row_value(session_row, "rep_id", "Session")
+    ensure_rep_access(str(current_user_id), rep_id)
     return session_row
 
 

@@ -51,6 +51,7 @@ export async function authFetch(input: RequestInfo | URL, init?: RequestInit) {
   if (response.status === 401 && typeof window !== "undefined") {
     clearAuthStorage();
     window.location.assign("/login");
+    throw new Error("Unauthorized");
   }
 
   return response;
