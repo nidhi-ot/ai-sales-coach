@@ -13,6 +13,21 @@ business = (
         {
             "name": "AI Sales Coach",
             "framework": "BANT",
+            # New B1 fields
+            "products": (
+                "AI-powered sales practice software where reps rehearse realistic "
+                "calls with buyer personas before speaking with live prospects"
+            ),
+            "icp": (
+                "B2B SaaS companies with growing sales teams, onboarding pressure, "
+                "and sales managers who need scalable coaching"
+            ),
+            "objections": (
+                "AI cant replace coaching, too expensive, my team wont adopt it, "
+                "we already use Gong or enablement tools"
+            ),
+            "language": "en",
+            # Existing context data (keep this)
             "context_data": {
                 "service": (
                     "AI-powered sales practice software where reps rehearse realistic calls "
@@ -23,13 +38,13 @@ business = (
                     "and stretched sales managers"
                 ),
                 "pricing": (
-                    "30-day pilot for 5 to 15 reps, then around $79 per rep per month plus a "
-                    "$499 per month manager workspace"
+                    "30-day pilot for 5 to 15 reps, then around $79 per rep per month "
+                    "plus a $499 per month manager workspace"
                 ),
                 "buyer_profiles": [
                     "Head of Sales or VP Sales",
-                    "Sales enablement leader",
-                    "Founder-led SaaS team",
+                    "Sales Enablement Leader",
+                    "Founder-led SaaS Team",
                 ],
                 "common_objections": [
                     "AI cant replace coaching",
@@ -40,17 +55,16 @@ business = (
                     "we do not have time to set this up",
                 ],
                 "value_props": [
-                    "reps practice realistic calls before live pipeline is at risk",
+                    "Reps practice realistic calls before live pipeline is at risk",
                     "AI buyers stay in character across a full call",
-                    "managers create repeatable coaching moments without joining every role-play",
-                    "custom personas reflect the team's ICP and real objections",
+                    "Managers create repeatable coaching moments without joining every role-play",
+                    "Custom personas reflect the team's ICP and real objections",
                 ],
             },
         }
     )
     .execute()
 )
-
 business_id = business.data[0]["id"]
 
 print(f"Created business: {business_id}")
