@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from fastapi import Depends, Header, HTTPException
@@ -110,7 +110,7 @@ async def get_current_account(
     )
 
 
-def require_role(required_role: str) -> Callable[..., CurrentAccount]:
+def require_role(required_role: str) -> Callable[..., Coroutine[Any, Any, CurrentAccount]]:
     normalized_required_role = str(required_role).strip().lower()
 
     async def _dependency(
