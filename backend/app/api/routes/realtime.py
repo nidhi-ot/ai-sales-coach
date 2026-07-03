@@ -258,7 +258,7 @@ async def create_ephemeral_token(
                 model="gpt-realtime-2",
             )
 
-    except httpx.HTTPError as exc:
+    except httpx.HTTPError:
         raise HTTPException(
             status_code=500,
             detail="OpenAI API request failed",
@@ -279,7 +279,7 @@ async def supabase_status(
     try:
         result = await check_supabase_connection()
         return SupabaseStatusResponse(**result)
-    except Exception as exc:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail="Supabase connection error",
