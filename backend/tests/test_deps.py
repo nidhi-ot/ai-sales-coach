@@ -54,7 +54,7 @@ class _FakeSupabase:
 
 
 class AccountDependencyTests(unittest.IsolatedAsyncioTestCase):
-    async def test_get_current_account_defaults_missing_role_to_rep(self):
+    async def test_get_current_account_rejects_missing_role(self):
         fake_supabase = _FakeSupabase(
             [
                 {
@@ -65,14 +65,12 @@ class AccountDependencyTests(unittest.IsolatedAsyncioTestCase):
         )
 
         with patch("app.api.deps.get_supabase", return_value=fake_supabase):
-            account = await get_current_account(
-                current_user=SimpleNamespace(id="rep-123"),
-            )
+            with self.assertRaises(HTTPException) as ctx:
+                await get_current_account(
+                    current_user=SimpleNamespace(id="rep-123"),
+                )
 
-        self.assertEqual(
-            account,
-            CurrentAccount(id="rep-123", role="rep", business_id="business-123"),
-        )
+        self.assertEqual(ctx.exception.status_code, 403)
 
     async def test_get_current_account_rejects_missing_business(self):
         fake_supabase = _FakeSupabase(

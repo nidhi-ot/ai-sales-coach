@@ -14,8 +14,9 @@ This lets the app protect manager-only data and keep access inside the correct b
 
 - `get_current_user()` already checks the login token.
 - `get_current_account()` now loads the matching row from `salesperson_accounts`.
+- missing roles are rejected with `403` instead of silently falling back to `rep`.
 - `require_role("manager")` blocks non-managers.
-- `ensure_business_access(...)` blocks cross-business access.
+- `ensure_business_access(...)` blocks cross-business access for non-admins.
 
 We also added a manager route:
 
@@ -24,8 +25,8 @@ We also added a manager route:
 That route:
 
 - requires manager access
-- only allows the manager to read their own business
-- returns the business profile and team list
+- allows admins to read any business
+- returns the business profile and the business's rep list
 
 ## Frontend impact
 
@@ -43,6 +44,7 @@ This work prevents:
 
 - reps from calling manager endpoints
 - managers from reading another business
+- accounts with no role from being treated as reps
 - future admin features from becoming unsafe
 
 It gives us a clean base for team dashboards, business-level views, and admin settings later.
@@ -61,6 +63,7 @@ Useful checks:
 - rep calling manager endpoint should return `403`
 - manager calling their own business should return `200`
 - manager calling another business should return `403`
+- admin should be able to read any business
 - admin should pass the manager route check
 
 ## Current status

@@ -101,7 +101,10 @@ async def get_current_account(
     if not business_id:
         raise HTTPException(status_code=403, detail="Account business not found")
 
-    role = str(account.get("role") or "rep").strip().lower()
+    role = str(account.get("role") or "").strip().lower()
+
+    if not role:
+        raise HTTPException(status_code=403, detail="Account role not found")
 
     return CurrentAccount(
         id=str(account["id"]),

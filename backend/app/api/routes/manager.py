@@ -30,7 +30,8 @@ async def get_business_team_overview(
     business_id: str,
     current_account: CurrentAccount = Depends(require_role("manager")),
 ):
-    ensure_business_access(current_account.business_id, business_id)
+    if current_account.role != "admin":
+        ensure_business_access(current_account.business_id, business_id)
 
     supabase = get_supabase()
 
@@ -46,6 +47,7 @@ async def get_business_team_overview(
         supabase.table("salesperson_accounts")
         .select("id, full_name, phone_number, business_id, role")
         .eq("business_id", business_id)
+        .eq("role", "rep")
         .execute()
     )
     reps = _row_dicts(team_result.data)

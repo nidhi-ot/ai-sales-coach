@@ -109,19 +109,38 @@ class ManagerRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["business"]["id"], "business-789")
-        self.assertEqual(payload["rep_count"], 2)
-        self.assertEqual(len(payload["reps"]), 2)
+        self.assertEqual(payload["rep_count"], 1)
+        self.assertEqual(len(payload["reps"]), 1)
+        self.assertEqual(payload["reps"][0]["role"], "rep")
 
-    def test_admin_can_access_manager_route(self):
-        fake_supabase = self._make_fake_supabase(["business-789"])
+    def test_admin_can_access_a_different_business(self):
+        fake_supabase = self._make_fake_supabase(["business-x", "business-y"])
         fake_supabase.store["salesperson_accounts"].append(
             {
                 "id": "admin-123",
                 "full_name": "Test Admin",
                 "phone_number": "0700000002",
-                "business_id": "business-789",
+                "business_id": "business-x",
                 "role": "admin",
             }
+        )
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "rep-999",
+                    "full_name": "Other Rep",
+                    "phone_number": "0700000999",
+                    "business_id": "business-y",
+                    "role": "rep",
+                },
+                {
+                    "id": "manager-999",
+                    "full_name": "Other Manager",
+                    "phone_number": "0700000998",
+                    "business_id": "business-y",
+                    "role": "manager",
+                },
+            ]
         )
         self._set_current_user("admin-123")
 
@@ -129,10 +148,14 @@ class ManagerRouteTests(unittest.TestCase):
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
             patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
         ):
-            response = self.client.get("/api/v1/manager/business/business-789/team")
+            response = self.client.get("/api/v1/manager/business/business-y/team")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["business"]["id"], "business-789")
+        payload = response.json()
+        self.assertEqual(payload["business"]["id"], "business-y")
+        self.assertEqual(payload["rep_count"], 1)
+        self.assertEqual(len(payload["reps"]), 1)
+        self.assertEqual(payload["reps"][0]["id"], "rep-999")
 
 
 if __name__ == "__main__":
