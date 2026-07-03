@@ -52,6 +52,7 @@ export default function LoginPage() {
       localStorage.setItem("phone_number", data.phone_number || "");
       localStorage.setItem("role", data.role || "rep");
       localStorage.setItem("remember_me", String(rememberMe));
+      localStorage.removeItem("last_session_id");
 
       router.push("/dashboard");
     } catch (error) {

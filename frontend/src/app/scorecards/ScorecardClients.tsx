@@ -38,6 +38,10 @@ type ScoreMetric = {
   warning?: boolean;
 };
 
+type RecentSession = {
+  id: string;
+};
+
 const scoreMetrics = (scorecard: Scorecard): ScoreMetric[] => [
   {
     key: "overall",
@@ -110,22 +114,46 @@ export default function ScorecardsClients() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const resolvedSessionId =
-      querySessionId || localStorage.getItem("last_session_id");
-
-    if (!resolvedSessionId) {
-      setError("No session ID found.");
-      setLoading(false);
-      return;
-    }
-
-    setSessionId(resolvedSessionId);
-
     async function loadScorecard() {
+      setLoading(true);
+      setError("");
+      setScorecard(null);
+
       try {
-        const response = await authFetch(
-          `${API_BASE_URL}/scorecards/${resolvedSessionId}`
-        );
+        let resolvedSessionId = querySessionId;
+
+        if (!resolvedSessionId) {
+          const repId = localStorage.getItem("rep_id");
+
+          if (!repId) {
+            setError("No session ID found.");
+            return;
+          }
+
+          const recentResponse = await fetch(
+            `${API_BASE_URL}/sessions/recent/${repId}?limit=1`
+          );
+
+          if (!recentResponse.ok) {
+            setError("Could not load recent sessions.");
+            return;
+          }
+
+          const recentData = await recentResponse.json();
+
+          const latestSession = (recentData.sessions as RecentSession[] | undefined)?.[0];
+
+          if (!latestSession?.id) {
+            setError("No session ID found.");
+            return;
+          }
+
+          resolvedSessionId = latestSession.id;
+        }
+
+        setSessionId(resolvedSessionId);
+
+        const response = await fetch(`${API_BASE_URL}/scorecards/${resolvedSessionId}`);
 
         const data = await response.json();
 
