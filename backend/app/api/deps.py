@@ -8,6 +8,11 @@ def get_settings():
     return settings
 
 
+def ensure_rep_access(current_user_id: str, rep_id: str) -> None:
+    if str(current_user_id) != str(rep_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
 async def get_current_user(
     authorization: str | None = Header(default=None),
 ):
