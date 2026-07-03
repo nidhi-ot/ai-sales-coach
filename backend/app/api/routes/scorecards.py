@@ -10,6 +10,13 @@ from app.services.scorecards import (
 router = APIRouter()
 
 
+def _row_dicts(data: object) -> list[dict[str, object]]:
+    if not isinstance(data, list):
+        return []
+
+    return [row for row in data if isinstance(row, dict)]
+
+
 class ScorecardStub(BaseModel):
     session_id: str
     rep_id: str
@@ -35,16 +42,20 @@ async def create_scorecard(
         .execute()
     )
 
-    if not session_result.data:
+    session_rows = _row_dicts(session_result.data)
+
+    if not session_rows:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    session = session_result.data[0]
-    ensure_rep_access(current_user.id, session["rep_id"])
+    session = session_rows[0]
+    rep_id = str(session["rep_id"])
+    business_id = str(session["business_id"])
+    ensure_rep_access(str(current_user.id), rep_id)
 
     return await create_scorecard_stub(
         session_id=data.session_id,
-        rep_id=session["rep_id"],
-        business_id=session["business_id"],
+        rep_id=rep_id,
+        business_id=business_id,
     )
 
 
@@ -58,8 +69,9 @@ async def get_scorecard(
     supabase = get_supabase()
 
     result = supabase.table("scorecards").select("*").eq("id", scorecard_id).limit(1).execute()
+    scorecard_rows = _row_dicts(result.data)
 
-    if not result.data:
+    if not scorecard_rows:
         result = (
             supabase.table("scorecards")
             .select("*")
@@ -67,12 +79,13 @@ async def get_scorecard(
             .limit(1)
             .execute()
         )
+        scorecard_rows = _row_dicts(result.data)
 
-    if not result.data:
+    if not scorecard_rows:
         raise HTTPException(status_code=404, detail="Scorecard not found")
 
-    scorecard = result.data[0]
-    ensure_rep_access(current_user.id, scorecard["rep_id"])
+    scorecard = scorecard_rows[0]
+    ensure_rep_access(str(current_user.id), str(scorecard["rep_id"]))
 
     return scorecard
 
@@ -91,11 +104,12 @@ async def update_share_setting(
         .limit(1)
         .execute()
     )
+    scorecard_rows = _row_dicts(result.data)
 
-    if not result.data:
+    if not scorecard_rows:
         raise HTTPException(status_code=404, detail="Scorecard not found")
 
-    ensure_rep_access(current_user.id, result.data[0]["rep_id"])
+    ensure_rep_access(str(current_user.id), str(scorecard_rows[0]["rep_id"]))
 
     (
         supabase.table("scorecards")
