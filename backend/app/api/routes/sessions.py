@@ -207,14 +207,22 @@ async def end_session(
 
     existing_transcripts = _row_dicts(
         supabase.table("transcripts")
-        .select("id")
+        .select("speaker,text,timestamp_offset_ms")
         .eq("session_id", session_id)
-        .limit(1)
         .execute()
         .data
     )
 
-    if data.entries and not existing_transcripts:
+    existing_transcript_keys = {
+        (
+            str(row.get("speaker")),
+            str(row.get("text")),
+            row.get("timestamp_offset_ms"),
+        )
+        for row in existing_transcripts
+    }
+
+    if data.entries:
         inserts = [
             {
                 "session_id": session_id,
@@ -223,10 +231,17 @@ async def end_session(
                 "timestamp_offset_ms": entry.timestamp_offset_ms,
             }
             for entry in data.entries
+            if (
+                entry.speaker,
+                entry.text,
+                entry.timestamp_offset_ms,
+            )
+            not in existing_transcript_keys
         ]
 
-        transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
-        transcript_entries_saved = len(_row_dicts(transcript_result.data))
+        if inserts:
+            transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
+            transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
     supabase.table("sessions").update(
         {
