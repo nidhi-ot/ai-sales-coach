@@ -59,8 +59,10 @@ export default function CallPage() {
   const callStartedAtRef = useRef<Date | null>(null);
   const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
   const transcriptFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const transcriptFlushInFlightRef = useRef(false);
+  const transcriptFlushPromiseRef = useRef<Promise<void> | null>(null);
 
-  async function flushTranscriptBuffer() {
+  const flushTranscriptBuffer = useCallback(async () => {
     const sessionToFlush = sessionId;
     const pendingEntries = transcriptBufferRef.current;
 
@@ -68,32 +70,49 @@ export default function CallPage() {
       return;
     }
 
+    if (transcriptFlushInFlightRef.current && transcriptFlushPromiseRef.current) {
+      await transcriptFlushPromiseRef.current;
+      return;
+    }
+
+    transcriptFlushInFlightRef.current = true;
     transcriptBufferRef.current = [];
 
-    try {
-      const response = await authFetch(
-        `${API_BASE_URL}/sessions/${sessionToFlush}/transcripts/batch`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            entries: pendingEntries,
-          }),
-        }
-      );
+    const flushPromise = (async () => {
+      try {
+        const response = await authFetch(
+          `${API_BASE_URL}/sessions/${sessionToFlush}/transcripts/batch`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              entries: pendingEntries,
+            }),
+          }
+        );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Transcript flush failed:", errorText);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Transcript flush failed:", errorText);
+          transcriptBufferRef.current = pendingEntries;
+        }
+      } catch (error) {
+        console.error("Transcript flush failed:", error);
         transcriptBufferRef.current = pendingEntries;
       }
-    } catch (error) {
-      console.error("Transcript flush failed:", error);
-      transcriptBufferRef.current = pendingEntries;
+    })();
+
+    transcriptFlushPromiseRef.current = flushPromise;
+
+    try {
+      await flushPromise;
+    } finally {
+      transcriptFlushInFlightRef.current = false;
+      transcriptFlushPromiseRef.current = null;
     }
-  }
+  }, [sessionId]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -440,7 +459,7 @@ export default function CallPage() {
           transcriptFlushTimerRef.current = null;
         }
       };
-    }, [status, sessionId]);
+    }, [status, sessionId, flushTranscriptBuffer]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
@@ -462,18 +481,27 @@ export default function CallPage() {
 
   useEffect(() => {
     const handlePageHide = () => {
-      if (!sessionId || transcriptBufferRef.current.length === 0) {
+      const pendingEntries = transcriptBufferRef.current;
+
+      if (!sessionId || pendingEntries.length === 0) {
         return;
       }
 
-      const payload = JSON.stringify({
-        entries: transcriptBufferRef.current,
-      });
+      transcriptBufferRef.current = [];
 
-      navigator.sendBeacon(
-        `${API_BASE_URL}/sessions/${sessionId}/transcripts/batch`,
-        payload
-      );
+      void authFetch(`${API_BASE_URL}/sessions/${sessionId}/transcripts/batch`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entries: pendingEntries,
+        }),
+        keepalive: true,
+      }).catch((error) => {
+        console.error("Transcript flush failed:", error);
+        transcriptBufferRef.current = pendingEntries;
+      });
     };
 
     window.addEventListener("pagehide", handlePageHide);

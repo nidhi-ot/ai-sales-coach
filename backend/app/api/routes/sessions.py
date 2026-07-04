@@ -205,24 +205,26 @@ async def end_session(
     transcript_entries_saved = 0
     profile = None
 
-    existing_transcripts = _row_dicts(
-        supabase.table("transcripts")
-        .select("speaker,text,timestamp_offset_ms")
-        .eq("session_id", session_id)
-        .execute()
-        .data
-    )
-
-    existing_transcript_keys = {
-        (
-            str(row.get("speaker")),
-            str(row.get("text")),
-            row.get("timestamp_offset_ms"),
-        )
-        for row in existing_transcripts
-    }
+    existing_transcript_keys: set[tuple[str, str, int | None]] = set()
 
     if data.entries:
+        existing_transcripts = _row_dicts(
+            supabase.table("transcripts")
+            .select("speaker,text,timestamp_offset_ms")
+            .eq("session_id", session_id)
+            .execute()
+            .data
+        )
+
+        existing_transcript_keys = {
+            (
+                str(row.get("speaker")),
+                str(row.get("text")),
+                row.get("timestamp_offset_ms"),
+            )
+            for row in existing_transcripts
+        }
+
         inserts = [
             {
                 "session_id": session_id,
@@ -242,7 +244,7 @@ async def end_session(
         if inserts:
             transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
             transcript_entries_saved = len(_row_dicts(transcript_result.data))
-
+            
     supabase.table("sessions").update(
         {
             "status": "completed",
