@@ -244,7 +244,7 @@ async def end_session(
         if inserts:
             transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
             transcript_entries_saved = len(_row_dicts(transcript_result.data))
-            
+
     supabase.table("sessions").update(
         {
             "status": "completed",
