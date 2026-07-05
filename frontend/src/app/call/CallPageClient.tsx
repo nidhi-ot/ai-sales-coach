@@ -58,6 +58,61 @@ export default function CallPage() {
   const callRunRef = useRef(0);
   const callStartedAtRef = useRef<Date | null>(null);
   const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
+  const transcriptFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const transcriptFlushInFlightRef = useRef(false);
+  const transcriptFlushPromiseRef = useRef<Promise<void> | null>(null);
+
+  const flushTranscriptBuffer = useCallback(async () => {
+    const sessionToFlush = sessionId;
+    const pendingEntries = transcriptBufferRef.current;
+
+    if (!sessionToFlush || pendingEntries.length === 0) {
+      return;
+    }
+
+    if (transcriptFlushInFlightRef.current && transcriptFlushPromiseRef.current) {
+      await transcriptFlushPromiseRef.current;
+      return;
+    }
+
+    transcriptFlushInFlightRef.current = true;
+    transcriptBufferRef.current = [];
+
+    const flushPromise = (async () => {
+      try {
+        const response = await authFetch(
+          `${API_BASE_URL}/sessions/${sessionToFlush}/transcripts/batch`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              entries: pendingEntries,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Transcript flush failed:", errorText);
+          transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
+        }
+      } catch (error) {
+        console.error("Transcript flush failed:", error);
+        transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
+      }
+    })();
+
+    transcriptFlushPromiseRef.current = flushPromise;
+
+    try {
+      await flushPromise;
+    } finally {
+      transcriptFlushInFlightRef.current = false;
+      transcriptFlushPromiseRef.current = null;
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -340,7 +395,7 @@ export default function CallPage() {
     setStatus("active");
   }
 
-  async function handleEndCall() {
+    async function handleEndCall() {
     setStatus("ending");
     setError("");
     callRunRef.current += 1;
@@ -350,7 +405,6 @@ export default function CallPage() {
     const durationSeconds = callStartedAtRef.current
       ? Math.round((endedAt.getTime() - callStartedAtRef.current.getTime()) / 1000)
       : 0;
-    const entries = [...transcriptBufferRef.current];
 
     cleanupCallResources();
 
@@ -360,6 +414,10 @@ export default function CallPage() {
     }
 
     try {
+      await flushTranscriptBuffer();
+
+      const entries = [...transcriptBufferRef.current];
+
       await endBackendSession(
         sessionIdToEnd,
         endedAt,
@@ -383,6 +441,27 @@ export default function CallPage() {
   }
 
   useEffect(() => {
+      if (status !== "active" && status !== "holding") {
+        if (transcriptFlushTimerRef.current) {
+          clearInterval(transcriptFlushTimerRef.current);
+          transcriptFlushTimerRef.current = null;
+        }
+        return;
+      }
+
+      transcriptFlushTimerRef.current = setInterval(() => {
+        void flushTranscriptBuffer();
+      }, 15000);
+
+      return () => {
+        if (transcriptFlushTimerRef.current) {
+          clearInterval(transcriptFlushTimerRef.current);
+          transcriptFlushTimerRef.current = null;
+        }
+      };
+    }, [status, sessionId, flushTranscriptBuffer]);
+
+  useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
 
     if (status === "active" || status === "holding") {
@@ -399,6 +478,38 @@ export default function CallPage() {
       if (timer) clearInterval(timer);
     };
   }, [status]);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      const pendingEntries = transcriptBufferRef.current;
+
+      if (!sessionId || pendingEntries.length === 0) {
+        return;
+      }
+
+      transcriptBufferRef.current = [];
+
+      void authFetch(`${API_BASE_URL}/sessions/${sessionId}/transcripts/batch`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entries: pendingEntries,
+        }),
+        keepalive: true,
+      }).catch((error) => {
+        console.error("Transcript flush failed:", error);
+        transcriptBufferRef.current = pendingEntries;
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [sessionId]);
 
   useEffect(() => {
     return () => {

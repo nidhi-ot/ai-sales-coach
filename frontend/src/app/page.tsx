@@ -165,6 +165,71 @@ export default function HomePage() {
               display: block;
             }
           }
+
+          @media (max-width: 900px) {
+            .footerContent {
+              grid-template-columns: 1fr !important;
+            }
+
+            .footerColumns {
+              margin-left: 64px;
+            }
+          }
+
+          @media (max-width: 560px) {
+            .footerColumns {
+              margin-left: 0;
+            }
+          }
+
+          @media (max-width: 980px) {
+            .heroSection {
+              padding-bottom: 54px !important;
+            }
+
+            .heroPreview {
+              min-height: 540px !important;
+              transform: scale(0.9);
+              transform-origin: center top;
+            }
+          }
+
+          @media (max-width: 720px) {
+            .heroSection {
+              padding: 34px 20px 82px !important;
+              margin-left: -20px !important;
+              margin-right: -20px !important;
+              border-radius: 24px !important;
+            }
+
+            .heroPreview {
+              min-height: 500px !important;
+              transform: scale(0.74);
+            }
+
+            .phoneBack {
+              left: 42px !important;
+            }
+
+            .phoneFront {
+              right: 36px !important;
+            }
+          }
+
+          @media (max-width: 520px) {
+            .heroPreview {
+              min-height: 430px !important;
+              transform: scale(0.62);
+            }
+
+            .phoneBack {
+              left: 20px !important;
+            }
+
+            .phoneFront {
+              right: 18px !important;
+            }
+          }
         `}</style>
 
         <header style={headerStyle}>
@@ -212,7 +277,7 @@ export default function HomePage() {
           </details>
         </header>
 
-        <section style={heroSectionStyle}>
+        <section className="heroSection" style={heroSectionStyle}>
           <div style={heroCopyStyle}>
             <span style={pillStyle}>
               AI-powered sales practice for real buyer conversations
@@ -248,8 +313,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <aside style={heroPreviewStyle} aria-label="AI Sales Coach mobile product preview">
-            <div style={{ ...phoneMockupStyle, ...phoneBackStyle }}>
+          <aside className="heroPreview" style={heroPreviewStyle} aria-label="AI Sales Coach mobile product preview">
+            <div className="phoneBack" style={{ ...phoneMockupStyle, ...phoneBackStyle }}>
               <div style={phoneStatusBarStyle}>
                 <span>9:41</span>
                 <span style={phoneSpeakerStyle} />
@@ -277,7 +342,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div style={{ ...phoneMockupStyle, ...phoneFrontStyle }}>
+            <div className="phoneFront" style={{ ...phoneMockupStyle, ...phoneFrontStyle }}>
               <div style={phoneStatusBarStyle}>
                 <span>9:41</span>
                 <span style={phoneSpeakerStyle} />
@@ -462,62 +527,64 @@ export default function HomePage() {
           </div>
         </section>
         <footer style={footerStyle}>
-          <div style={footerContentStyle}>
-              <div style={footerBrandStyle}>
-                <img src="/logo.png" alt="AI Sales Coach" style={footerLogoImageStyle} />
+          <div className="footerContent" style={footerContentStyle}>
+            <div style={footerBrandStyle}>
+              <img src="/logo.png" alt="AI Sales Coach" style={footerLogoImageStyle} />
 
-                <div>
-                  <p style={footerLogoStyle}>AI SALES COACH</p>
+              <div>
+                <p style={footerLogoStyle}>AI SALES COACH</p>
 
-                  <p style={footerDescriptionStyle}>
-                    AI-powered sales practice that helps reps rehearse realistic buyer
-                    conversations, review scorecards, and improve one call at a time.
-                  </p>
+                <p style={footerDescriptionStyle}>
+                  AI-powered sales practice that helps reps rehearse realistic buyer
+                  conversations, review scorecards, and improve one call at a time.
+                </p>
 
-                  <div style={footerSocialStyle}>
-                    <a
-                      href="https://www.linkedin.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={footerSocialLinkStyle}
-                    >
-                      in
-                    </a>
-                    <a
-                      href="https://www.instagram.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={footerSocialLinkStyle}
-                    >
-                      ◙
-                    </a>
-                  </div>
-
-                  <p style={footerBottomStyle}>
-                    © 2026 AI Sales Coach. All rights reserved.
-                  </p>
+                <div style={footerSocialStyle}>
+                  <a
+                    href="https://www.linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={footerSocialLinkStyle}
+                  >
+                    in
+                  </a>
+                  <a
+                    href="https://www.instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={footerSocialLinkStyle}
+                  >
+                    ◙
+                  </a>
                 </div>
+
+                <p style={footerBottomStyle}>
+                  © 2026 AI Sales Coach. All rights reserved.
+                </p>
+              </div>
+            </div>
+
+            <div className="footerColumns" style={footerColumnsStyle}>
+              <div style={footerColumnStyle}>
+                <p style={footerColumnTitleStyle}>Product</p>
+                <Link href="#how-it-works" style={footerLinkStyle}>How it works</Link>
+                <Link href="#features" style={footerLinkStyle}>Features</Link>
+                <Link href="#benefits" style={footerLinkStyle}>For teams</Link>
+                <Link href="/login" style={footerLinkStyle}>Log In</Link>
               </div>
 
-            <div style={footerColumnStyle}>
-              <p style={footerColumnTitleStyle}>Product</p>
-              <Link href="#how-it-works" style={footerLinkStyle}>How it works</Link>
-              <Link href="#features" style={footerLinkStyle}>Features</Link>
-              <Link href="#benefits" style={footerLinkStyle}>For teams</Link>
-              <Link href="/login" style={footerLinkStyle}>Log In</Link>
-            </div>
+              <div style={footerColumnStyle}>
+                <p style={footerColumnTitleStyle}>Resources</p>
+                <Link href="#contact" style={footerLinkStyle}>Help center</Link>
+                <Link href="#how-it-works" style={footerLinkStyle}>Guides</Link>
+                <Link href="#faq" style={footerLinkStyle}>FAQ</Link>
+                <Link href="#contact" style={footerLinkStyle}>Contact support</Link>
+              </div>
 
-            <div style={footerColumnStyle}>
-              <p style={footerColumnTitleStyle}>Resources</p>
-              <Link href="#contact" style={footerLinkStyle}>Help center</Link>
-              <Link href="#how-it-works" style={footerLinkStyle}>Guides</Link>
-              <Link href="#faq" style={footerLinkStyle}>FAQ</Link>
-              <Link href="#contact" style={footerLinkStyle}>Contact support</Link>
-            </div>
-
-            <div style={footerColumnStyle}>
-              <p style={footerColumnTitleStyle}>Company</p>
-              <Link href="#overview" style={footerLinkStyle}>About</Link>
+              <div style={footerColumnStyle}>
+                <p style={footerColumnTitleStyle}>Company</p>
+                <Link href="#overview" style={footerLinkStyle}>About</Link>
+              </div>
             </div>
           </div>
         </footer>
@@ -529,7 +596,7 @@ export default function HomePage() {
 const pageStyle = {
   minHeight: "100vh",
   position: "relative" as const,
-  overflow: "hidden",
+  overflow: "hidden" as const,
   background: "linear-gradient(180deg, #f8fbf9 0%, #eef6f1 100%)",
   color: "#0f1728",
 };
@@ -1111,7 +1178,7 @@ const proofCardsStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
   gap: "22px",
-  margin: "8px 0 50px",
+  margin: "28px 0 50px",
   scrollMarginTop: "120px",
 };
 
@@ -1584,8 +1651,8 @@ const footerContentStyle = {
   maxWidth: "1280px",
   margin: "0 auto",
   padding: "28px 32px 20px",
-  display: "flex",
-  flexWrap: "wrap" as const,
+  display: "grid",
+  gridTemplateColumns: "minmax(320px, 1fr) minmax(420px, 1.6fr)",
   gap: "32px 64px",
   alignItems: "flex-start",
 };
@@ -1635,11 +1702,16 @@ const footerSocialLinkStyle = {
   textDecoration: "none",
 };
 
+const footerColumnsStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+  gap: "32px 64px",
+};
+
 const footerColumnStyle = {
   display: "grid",
   gap: "10px",
-  flex: "1 1 140px",
-  minWidth: "130px",
+  alignContent: "start",
 };
 
 const footerColumnTitleStyle = {
