@@ -96,11 +96,11 @@ export default function CallPage() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Transcript flush failed:", errorText);
-          transcriptBufferRef.current = pendingEntries;
+          transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
         }
       } catch (error) {
         console.error("Transcript flush failed:", error);
-        transcriptBufferRef.current = pendingEntries;
+        transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
       }
     })();
 
