@@ -1,7 +1,24 @@
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import agent, auth, manager, profiles, realtime, scorecards, sessions
+from app.services.sweeper import run_sweeper
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    sweeper_task = asyncio.create_task(run_sweeper())
+    app.state.sweeper_task = sweeper_task
+
+    try:
+        yield
+    finally:
+        sweeper_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await sweeper_task
 
 
 def create_app() -> FastAPI:
@@ -9,6 +26,7 @@ def create_app() -> FastAPI:
         title="AI Sales Coach API",
         version="0.1.0",
         description="Backend API for AI Sales Coach.",
+        lifespan=lifespan,
     )
 
     app.add_middleware(
