@@ -37,9 +37,7 @@ def _parse_datetime(value: Any) -> datetime | None:
 async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
     supabase = get_supabase()
     now_utc = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    max_elapsed = timedelta(
-        seconds=settings.max_call_seconds + settings.max_call_grace_seconds
-    )
+    max_elapsed = timedelta(seconds=settings.max_call_seconds + settings.max_call_grace_seconds)
     completed_count = 0
 
     active_sessions = _row_dicts(

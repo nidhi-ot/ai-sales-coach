@@ -169,11 +169,13 @@ async def _request_valid_feedback(client: AsyncOpenAI, prompt: str) -> Scorecard
                 },
                 {
                     "role": "user",
-                    "content": prompt
-                    if attempt == 0
-                    else (
-                        f"{prompt}\n\nYour previous response was invalid. "
-                        "Return only valid JSON matching the requested schema."
+                    "content": (
+                        prompt
+                        if attempt == 0
+                        else (
+                            f"{prompt}\n\nYour previous response was invalid. "
+                            "Return only valid JSON matching the requested schema."
+                        )
                     ),
                 },
             ],

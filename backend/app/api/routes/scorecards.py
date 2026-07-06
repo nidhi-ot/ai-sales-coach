@@ -176,11 +176,7 @@ async def reprocess_scorecard(
             raise HTTPException(status_code=409, detail="Scorecard is not failed or stubbed")
 
     transcript_result = (
-        supabase.table("transcripts")
-        .select("id")
-        .eq("session_id", session_id)
-        .limit(1)
-        .execute()
+        supabase.table("transcripts").select("id").eq("session_id", session_id).limit(1).execute()
     )
     if not _row_dicts(transcript_result.data):
         raise HTTPException(status_code=400, detail="No stored transcripts to reprocess")

@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.services.sweeper import run_sweeper
 from app.api.routes import (
     admin,
     agent,
@@ -15,6 +14,7 @@ from app.api.routes import (
     scorecards,
     sessions,
 )
+from app.services.sweeper import run_sweeper
 
 
 @asynccontextmanager

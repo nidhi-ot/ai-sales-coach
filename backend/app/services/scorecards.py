@@ -45,9 +45,10 @@ def _count_filler_words(text: str) -> int:
 
 
 def is_stub_scorecard(scorecard: dict[str, Any]) -> bool:
-    return scorecard.get("overall_score") is None or scorecard.get(
-        "feedback_summary"
-    ) == STUB_FEEDBACK_SUMMARY
+    return (
+        scorecard.get("overall_score") is None
+        or scorecard.get("feedback_summary") == STUB_FEEDBACK_SUMMARY
+    )
 
 
 def _scorecard_base_payload(
