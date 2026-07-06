@@ -106,6 +106,8 @@ CREATE TABLE transcripts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_transcripts_session ON transcripts(session_id, timestamp_offset_ms);
+CREATE UNIQUE INDEX idx_transcripts_session_timestamp_speaker
+  ON transcripts(session_id, timestamp_offset_ms, speaker);
 
 -- 5. Scorecards (per-call analysis)
 CREATE TABLE scorecards (
@@ -137,6 +139,11 @@ CREATE TABLE scorecards (
   
   -- Sharing controls
   shared_with_manager BOOLEAN DEFAULT FALSE,
+
+  -- Durable background scoring lifecycle
+  status TEXT DEFAULT 'processing' CHECK (status IN ('processing', 'generated', 'failed')),
+  error_message TEXT,
+  processing_started_at TIMESTAMPTZ,
   
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

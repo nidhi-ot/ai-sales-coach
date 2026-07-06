@@ -2,8 +2,34 @@ import json
 from typing import Any
 
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from app.config import settings
+
+
+class ScorecardFeedback(BaseModel):
+    rapport_score: int = Field(ge=1, le=10)
+    needs_discovery_score: int = Field(ge=1, le=10)
+    objection_handling_score: int = Field(ge=1, le=10)
+    closing_score: int = Field(ge=1, le=10)
+    overall_score: int = Field(ge=1, le=10)
+    budget_score: int = Field(ge=1, le=10)
+    authority_score: int = Field(ge=1, le=10)
+    need_score: int = Field(ge=1, le=10)
+    timeline_score: int = Field(ge=1, le=10)
+    bant_overall_score: int = Field(ge=1, le=10)
+    framework_scores: dict[str, int] = Field(default_factory=dict)
+    strengths: list[str]
+    improvement_areas: list[str]
+    feedback_summary: str
+
+    @field_validator("strengths", "improvement_areas", mode="before")
+    @classmethod
+    def _coerce_string_list(cls, value: Any) -> list[str]:
+        if not isinstance(value, list):
+            raise ValueError("Must be a list")
+
+        return [str(item) for item in value]
 
 
 async def gpt_analyze_transcript(
@@ -100,28 +126,77 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
 and areas for improvement.",
 }}"""
 
-    response = await client.chat.completions.create(
-        model=settings.openai_analysis_model,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert sales coach. Analyze sales calls and provide "
-                    "constructive feedback. Always respond with valid JSON only."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        max_completion_tokens=1000,
-    )
+    feedback = await _request_valid_feedback(client=client, prompt=prompt)
 
-    content = response.choices[0].message.content
-    if content is None:
-        raise ValueError("GPT returned empty response")
-    response_text = content.strip()
+    return {
+        # Sales Execution Skills
+        "rapport_score": feedback.rapport_score,
+        "needs_discovery_score": feedback.needs_discovery_score,
+        "objection_handling_score": feedback.objection_handling_score,
+        "closing_score": feedback.closing_score,
+        "overall_score": feedback.overall_score,
+        # BANT Framework Scores
+        "budget_score": feedback.budget_score,
+        "authority_score": feedback.authority_score,
+        "need_score": feedback.need_score,
+        "timeline_score": feedback.timeline_score,
+        "bant_overall_score": feedback.bant_overall_score,
+        "framework_scores": {
+            "budget": feedback.budget_score,
+            "authority": feedback.authority_score,
+            "need": feedback.need_score,
+            "timeline": feedback.timeline_score,
+        },
+        "strengths": feedback.strengths,
+        "improvement_areas": feedback.improvement_areas,
+        "feedback_summary": feedback.feedback_summary,
+    }
+
+
+async def _request_valid_feedback(client: AsyncOpenAI, prompt: str) -> ScorecardFeedback:
+    last_error: Exception | None = None
+
+    for attempt in range(2):
+        response = await client.chat.completions.create(
+            model=settings.openai_analysis_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an expert sales coach. Analyze sales calls and provide "
+                        "constructive feedback. Always respond with valid JSON only."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        prompt
+                        if attempt == 0
+                        else (
+                            f"{prompt}\n\nYour previous response was invalid. "
+                            "Return only valid JSON matching the requested schema."
+                        )
+                    ),
+                },
+            ],
+            max_completion_tokens=1000,
+        )
+
+        content = response.choices[0].message.content
+        if content is None:
+            last_error = ValueError("GPT returned empty response")
+            continue
+
+        try:
+            return _parse_feedback(content)
+        except (json.JSONDecodeError, ValidationError, ValueError) as exc:
+            last_error = exc
+
+    raise ValueError(f"GPT returned invalid scorecard JSON: {last_error}") from last_error
+
+
+def _parse_feedback(response_text: str) -> ScorecardFeedback:
+    response_text = response_text.strip()
 
     # Handle potential markdown code blocks in response
     if response_text.startswith("```json"):
@@ -132,51 +207,5 @@ and areas for improvement.",
     if response_text.endswith("```"):
         response_text = response_text[:-3]
 
-    response_text = response_text.strip()
-
-    feedback = json.loads(response_text)
-
-    # Validate and normalize response
-    normalized = {
-        # Sales Execution Skills
-        "rapport_score": _bounded_score(feedback.get("rapport_score", 5)),
-        "needs_discovery_score": _bounded_score(feedback.get("needs_discovery_score", 5)),
-        "objection_handling_score": _bounded_score(feedback.get("objection_handling_score", 5)),
-        "closing_score": _bounded_score(feedback.get("closing_score", 5)),
-        "overall_score": _bounded_score(feedback.get("overall_score", 5)),
-        # BANT Framework Scores
-        "budget_score": _bounded_score(feedback.get("budget_score", 5)),
-        "authority_score": _bounded_score(feedback.get("authority_score", 5)),
-        "need_score": _bounded_score(feedback.get("need_score", 5)),
-        "timeline_score": _bounded_score(feedback.get("timeline_score", 5)),
-        "bant_overall_score": _bounded_score(feedback.get("bant_overall_score", 5)),
-        "framework_scores": {
-            "budget": _bounded_score(feedback.get("budget_score", 5)),
-            "authority": _bounded_score(feedback.get("authority_score", 5)),
-            "need": _bounded_score(feedback.get("need_score", 5)),
-            "timeline": _bounded_score(feedback.get("timeline_score", 5)),
-        },
-        "strengths": feedback.get("strengths", []),
-        "improvement_areas": feedback.get("improvement_areas", []),
-        "feedback_summary": feedback.get("feedback_summary", ""),
-    }
-
-    # Ensure strengths and improvement_areas are lists of strings
-    if not isinstance(normalized["strengths"], list):
-        normalized["strengths"] = []
-    if not isinstance(normalized["improvement_areas"], list):
-        normalized["improvement_areas"] = []
-
-    normalized["strengths"] = [str(s) for s in normalized["strengths"]]
-    normalized["improvement_areas"] = [str(s) for s in normalized["improvement_areas"]]
-
-    return normalized
-
-
-def _bounded_score(score: int) -> int:
-    """Ensure score is between 1 and 10."""
-    try:
-        score_int = int(score)
-    except (ValueError, TypeError):
-        score_int = 5
-    return max(1, min(10, score_int))
+    feedback = json.loads(response_text.strip())
+    return ScorecardFeedback.model_validate(feedback)

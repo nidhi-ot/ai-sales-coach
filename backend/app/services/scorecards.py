@@ -1,8 +1,10 @@
 import re
+from datetime import datetime, timezone
 from typing import Any
 
 from app.db.client import get_supabase
 from app.services.gpt_scoring import gpt_analyze_transcript
+from app.services.session_analytics import create_next_salesperson_profile
 
 FILLER_WORDS = {
     "actually",
@@ -15,6 +17,15 @@ FILLER_WORDS = {
     "uh",
     "you know",
 }
+
+SCORECARD_STATUS_PROCESSING = "processing"
+SCORECARD_STATUS_GENERATED = "generated"
+SCORECARD_STATUS_FAILED = "failed"
+STUB_FEEDBACK_SUMMARY = "Analysis pending (stub)."
+PROCESSING_FEEDBACK_SUMMARY = "Analysis processing."
+FAILED_FEEDBACK_SUMMARY = (
+    "Analysis failed. Reprocess this scorecard after transcripts are available."
+)
 
 
 def _row_dicts(data: Any) -> list[dict[str, Any]]:
@@ -36,6 +47,131 @@ def _word_count(text: str) -> int:
 def _count_filler_words(text: str) -> int:
     normalized = text.lower()
     return sum(len(re.findall(rf"\b{re.escape(word)}\b", normalized)) for word in FILLER_WORDS)
+
+
+def is_stub_scorecard(scorecard: dict[str, Any]) -> bool:
+    return (
+        scorecard.get("overall_score") is None
+        or scorecard.get("feedback_summary") == STUB_FEEDBACK_SUMMARY
+    )
+
+
+def _scorecard_base_payload(
+    session_id: str,
+    rep_id: str,
+    business_id: str,
+    *,
+    status: str,
+    feedback_summary: str,
+    error_message: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "session_id": session_id,
+        "rep_id": rep_id,
+        "business_id": business_id,
+        "call_duration_seconds": 0,
+        "rep_talk_percentage": 0.0,
+        "interruptions_count": 0,
+        "filler_words_count": 0,
+        "rapport_score": None,
+        "needs_discovery_score": None,
+        "objection_handling_score": None,
+        "closing_score": None,
+        "overall_score": None,
+        "strengths": [],
+        "improvement_areas": [],
+        "framework_scores": {},
+        "feedback_summary": feedback_summary,
+        "status": status,
+        "error_message": error_message,
+        "processing_started_at": (
+            datetime.now(timezone.utc).isoformat()
+            if status == SCORECARD_STATUS_PROCESSING
+            else None
+        ),
+    }
+
+
+def _get_session_for_scorecard(supabase: Any, session_id: str) -> dict[str, Any]:
+    session = _first_row(
+        supabase.table("sessions")
+        .select("id, rep_id, business_id, duration_seconds")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not session:
+        raise LookupError("Session not found")
+
+    return session
+
+
+async def mark_scorecard_processing(session_id: str) -> dict[str, Any]:
+    supabase = get_supabase()
+    session = _get_session_for_scorecard(supabase, session_id)
+    payload = _scorecard_base_payload(
+        session_id=session_id,
+        rep_id=str(session["rep_id"]),
+        business_id=str(session["business_id"]),
+        status=SCORECARD_STATUS_PROCESSING,
+        feedback_summary=PROCESSING_FEEDBACK_SUMMARY,
+    )
+
+    duration_seconds = session.get("duration_seconds")
+    if isinstance(duration_seconds, int):
+        payload["call_duration_seconds"] = duration_seconds
+
+    result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
+    return _first_row(result.data) or payload
+
+
+async def mark_scorecard_failed(session_id: str, error_message: str) -> dict[str, Any]:
+    supabase = get_supabase()
+    session = _get_session_for_scorecard(supabase, session_id)
+    existing = _first_row(
+        supabase.table("scorecards")
+        .select("*")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+
+    if existing:
+        existing_summary = existing.get("feedback_summary")
+        feedback_summary = (
+            existing_summary
+            if existing_summary
+            and existing_summary not in {PROCESSING_FEEDBACK_SUMMARY, STUB_FEEDBACK_SUMMARY}
+            else FAILED_FEEDBACK_SUMMARY
+        )
+
+        result = (
+            supabase.table("scorecards")
+            .update(
+                {
+                    "status": SCORECARD_STATUS_FAILED,
+                    "error_message": error_message,
+                    "feedback_summary": feedback_summary,
+                    "processing_started_at": None,
+                }
+            )
+            .eq("session_id", session_id)
+            .execute()
+        )
+        return _first_row(result.data) or existing
+
+    payload = _scorecard_base_payload(
+        session_id=session_id,
+        rep_id=str(session["rep_id"]),
+        business_id=str(session["business_id"]),
+        status=SCORECARD_STATUS_FAILED,
+        feedback_summary=FAILED_FEEDBACK_SUMMARY,
+        error_message=error_message,
+    )
+    result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
+    return _first_row(result.data) or payload
 
 
 async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
@@ -74,7 +210,9 @@ async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
                 "strengths": [],
                 "improvement_areas": [],
                 "framework_scores": {},
-                "feedback_summary": "Analysis pending (stub).",
+                "feedback_summary": STUB_FEEDBACK_SUMMARY,
+                "status": SCORECARD_STATUS_FAILED,
+                "error_message": "Scorecard is a stub and has not been analyzed.",
             },
             on_conflict="session_id",
         )
@@ -162,8 +300,30 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "improvement_areas": feedback["improvement_areas"],
         "framework_scores": framework_score,
         "feedback_summary": feedback["feedback_summary"],
+        "status": SCORECARD_STATUS_GENERATED,
+        "error_message": None,
+        "processing_started_at": None,
     }
 
     result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
     scorecard = _first_row(result.data)
     return scorecard or payload
+
+
+async def run_scorecard_pipeline(session_id: str) -> dict[str, Any] | None:
+    """Generate a scorecard and next profile outside the end-call request."""
+
+    try:
+        scorecard = await analyze_transcript(session_id)
+    except Exception as exc:
+        await mark_scorecard_failed(session_id, str(exc))
+        return None
+
+    try:
+        await create_next_salesperson_profile(session_id, scorecard)
+    except Exception:
+        # Profile generation is downstream learning-loop work. A valid scorecard
+        # should remain generated even if profile versioning needs a later retry.
+        pass
+
+    return scorecard
