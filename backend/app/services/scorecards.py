@@ -22,6 +22,10 @@ SCORECARD_STATUS_PROCESSING = "processing"
 SCORECARD_STATUS_GENERATED = "generated"
 SCORECARD_STATUS_FAILED = "failed"
 STUB_FEEDBACK_SUMMARY = "Analysis pending (stub)."
+PROCESSING_FEEDBACK_SUMMARY = "Analysis processing."
+FAILED_FEEDBACK_SUMMARY = (
+    "Analysis failed. Reprocess this scorecard after transcripts are available."
+)
 
 
 def _row_dicts(data: Any) -> list[dict[str, Any]]:
@@ -111,7 +115,7 @@ async def mark_scorecard_processing(session_id: str) -> dict[str, Any]:
         rep_id=str(session["rep_id"]),
         business_id=str(session["business_id"]),
         status=SCORECARD_STATUS_PROCESSING,
-        feedback_summary="Analysis processing.",
+        feedback_summary=PROCESSING_FEEDBACK_SUMMARY,
     )
 
     duration_seconds = session.get("duration_seconds")
@@ -134,16 +138,22 @@ async def mark_scorecard_failed(session_id: str, error_message: str) -> dict[str
         .data
     )
 
-    failure_summary = "Analysis failed. Reprocess this scorecard after transcripts are available."
-
     if existing:
+        existing_summary = existing.get("feedback_summary")
+        feedback_summary = (
+            existing_summary
+            if existing_summary
+            and existing_summary not in {PROCESSING_FEEDBACK_SUMMARY, STUB_FEEDBACK_SUMMARY}
+            else FAILED_FEEDBACK_SUMMARY
+        )
+
         result = (
             supabase.table("scorecards")
             .update(
                 {
                     "status": SCORECARD_STATUS_FAILED,
                     "error_message": error_message,
-                    "feedback_summary": existing.get("feedback_summary") or failure_summary,
+                    "feedback_summary": feedback_summary,
                     "processing_started_at": None,
                 }
             )
@@ -157,7 +167,7 @@ async def mark_scorecard_failed(session_id: str, error_message: str) -> dict[str
         rep_id=str(session["rep_id"]),
         business_id=str(session["business_id"]),
         status=SCORECARD_STATUS_FAILED,
-        feedback_summary=failure_summary,
+        feedback_summary=FAILED_FEEDBACK_SUMMARY,
         error_message=error_message,
     )
     result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
