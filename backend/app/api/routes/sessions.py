@@ -70,6 +70,7 @@ def _get_owned_session(
     ensure_rep_access(str(current_user_id), rep_id)
     return session_row
 
+
 def _validated_duration_seconds(duration_seconds: int) -> int:
     if duration_seconds < 0:
         raise HTTPException(status_code=400, detail="duration_seconds cannot be negative")
