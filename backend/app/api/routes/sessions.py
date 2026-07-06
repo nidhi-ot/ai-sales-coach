@@ -219,16 +219,26 @@ async def end_session(
     transcript_entries_saved = 0
     profile = None
 
-    existing_transcripts = _row_dicts(
-        supabase.table("transcripts")
-        .select("id")
-        .eq("session_id", session_id)
-        .limit(1)
-        .execute()
-        .data
-    )
+    existing_transcript_keys: set[tuple[str, str, int | None]] = set()
 
-    if data.entries and not existing_transcripts:
+    if data.entries:
+        existing_transcripts = _row_dicts(
+            supabase.table("transcripts")
+            .select("speaker,text,timestamp_offset_ms")
+            .eq("session_id", session_id)
+            .execute()
+            .data
+        )
+
+        existing_transcript_keys = {
+            (
+                str(row.get("speaker")),
+                str(row.get("text")),
+                row.get("timestamp_offset_ms"),
+            )
+            for row in existing_transcripts
+        }
+
         inserts = [
             {
                 "session_id": session_id,
@@ -237,10 +247,17 @@ async def end_session(
                 "timestamp_offset_ms": entry.timestamp_offset_ms,
             }
             for entry in data.entries
+            if (
+                entry.speaker,
+                entry.text,
+                entry.timestamp_offset_ms,
+            )
+            not in existing_transcript_keys
         ]
 
-        transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
-        transcript_entries_saved = len(_row_dicts(transcript_result.data))
+        if inserts:
+            transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
+            transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
     duration_seconds = _validated_duration_seconds(data.duration_seconds)
 
