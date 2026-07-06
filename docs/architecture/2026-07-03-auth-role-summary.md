@@ -70,3 +70,23 @@ Useful checks:
 
 The role access foundation is in place locally.
 The new manager route is working and covered by tests.
+
+## N3: Admin framework control
+
+Admins can now change the company sales framework with:
+
+- `PATCH /api/v1/admin/business/framework`
+
+Allowed values:
+
+- `BANT`
+- `MEDDIC`
+- `SPIN`
+
+This route:
+
+- is admin-only
+- updates the framework for the admin's own business
+- returns a warning that the change only affects future sessions and should not happen often
+
+Managers and reps are blocked with `403`.
