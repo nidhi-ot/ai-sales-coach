@@ -35,7 +35,7 @@ def _first_row(data: Any) -> dict[str, Any] | None:
 
 
 async def get_current_user(
-    authorization: str | None = Header(default=None),
+    authorization: str | None = Header(default=None, alias="Authorization"),
 ):
     if authorization is None:
         raise HTTPException(
