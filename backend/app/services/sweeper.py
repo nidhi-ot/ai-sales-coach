@@ -70,8 +70,15 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
             }
         ).eq("id", str(session_id)).execute()
 
-        await mark_scorecard_processing(str(session_id))
-        await run_scorecard_pipeline(str(session_id))
+        try:
+            await mark_scorecard_processing(str(session_id))
+            await run_scorecard_pipeline(str(session_id))
+        except Exception:
+            logger.exception(
+                "Failed to start scoring for swept session %s; no auto-recovery path exists",
+                session_id,
+            )
+            continue
         completed_count += 1
 
     return completed_count
