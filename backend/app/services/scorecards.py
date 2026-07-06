@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from typing import Any
 
 from app.db.client import get_supabase
@@ -79,6 +80,9 @@ def _scorecard_base_payload(
         "feedback_summary": feedback_summary,
         "status": status,
         "error_message": error_message,
+        "processing_started_at": datetime.now(timezone.utc).isoformat()
+        if status == SCORECARD_STATUS_PROCESSING
+        else None,
     }
 
 
@@ -138,6 +142,7 @@ async def mark_scorecard_failed(session_id: str, error_message: str) -> dict[str
                     "status": SCORECARD_STATUS_FAILED,
                     "error_message": error_message,
                     "feedback_summary": existing.get("feedback_summary") or failure_summary,
+                    "processing_started_at": None,
                 }
             )
             .eq("session_id", session_id)
@@ -285,6 +290,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "feedback_summary": feedback["feedback_summary"],
         "status": SCORECARD_STATUS_GENERATED,
         "error_message": None,
+        "processing_started_at": None,
     }
 
     result = supabase.table("scorecards").upsert(payload, on_conflict="session_id").execute()
@@ -294,7 +300,6 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
 
 async def run_scorecard_pipeline(session_id: str) -> dict[str, Any] | None:
     """Generate a scorecard and next profile outside the end-call request."""
-    await mark_scorecard_processing(session_id)
 
     try:
         scorecard = await analyze_transcript(session_id)

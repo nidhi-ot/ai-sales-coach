@@ -5,7 +5,7 @@ from typing import Any
 
 from app.config import settings
 from app.db.client import get_supabase
-from app.services.scorecards import run_scorecard_pipeline
+from app.services.scorecards import SCORECARD_STATUS_PROCESSING, run_scorecard_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -66,16 +66,49 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
             }
         ).eq("id", str(session_id)).execute()
 
-        asyncio.create_task(run_scorecard_pipeline(str(session_id)))
+        await run_scorecard_pipeline(str(session_id))
         completed_count += 1
 
     return completed_count
+
+
+async def recover_stale_processing_scorecards_once(now: datetime | None = None) -> int:
+    supabase = get_supabase()
+    now_utc = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    stale_after = timedelta(seconds=max(settings.sweeper_interval_seconds * 2, 120))
+    recovered_count = 0
+
+    processing_scorecards = _row_dicts(
+        supabase.table("scorecards")
+        .select("session_id, status, processing_started_at, created_at")
+        .eq("status", SCORECARD_STATUS_PROCESSING)
+        .execute()
+        .data
+    )
+
+    for scorecard in processing_scorecards:
+        session_id = scorecard.get("session_id")
+        processing_started_at = _parse_datetime(scorecard.get("processing_started_at"))
+        if processing_started_at is None:
+            processing_started_at = _parse_datetime(scorecard.get("created_at"))
+
+        if not session_id:
+            continue
+
+        if processing_started_at is not None and now_utc - processing_started_at < stale_after:
+            continue
+
+        await run_scorecard_pipeline(str(session_id))
+        recovered_count += 1
+
+    return recovered_count
 
 
 async def run_sweeper() -> None:
     while True:
         try:
             await sweep_expired_sessions_once()
+            await recover_stale_processing_scorecards_once()
         except asyncio.CancelledError:
             raise
         except Exception:

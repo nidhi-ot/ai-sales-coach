@@ -143,6 +143,7 @@ CREATE TABLE scorecards (
   -- Durable background scoring lifecycle
   status TEXT DEFAULT 'processing' CHECK (status IN ('processing', 'generated', 'failed')),
   error_message TEXT,
+  processing_started_at TIMESTAMPTZ,
   
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
