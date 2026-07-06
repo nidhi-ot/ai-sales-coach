@@ -39,7 +39,7 @@ class ScorecardRouteTests(unittest.TestCase):
                 new=AsyncMock(return_value=feedback),
             ),
             patch(
-                "app.api.routes.sessions.create_next_salesperson_profile",
+                "app.services.scorecards.create_next_salesperson_profile",
                 new=AsyncMock(return_value={"id": "profile-1"}),
             ),
         ):
@@ -65,9 +65,10 @@ class ScorecardRouteTests(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["score_card_status"], "generated")
+        self.assertEqual(response.json()["score_card_status"], "processing")
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
         self.assertEqual(fake_supabase.store["scorecards"][0]["overall_score"], 8)
+        self.assertEqual(fake_supabase.store["scorecards"][0]["status"], "generated")
 
     def test_end_session_updates_existing_stub_scorecard_without_creating_duplicate(self):
         fake_supabase = FakeSupabase()
@@ -102,7 +103,7 @@ class ScorecardRouteTests(unittest.TestCase):
                 new=AsyncMock(return_value=feedback),
             ),
             patch(
-                "app.api.routes.sessions.create_next_salesperson_profile",
+                "app.services.scorecards.create_next_salesperson_profile",
                 new=AsyncMock(return_value={"id": "profile-1"}),
             ),
         ):
@@ -269,7 +270,7 @@ class ScorecardRouteTests(unittest.TestCase):
             patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
             patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
             patch(
-                "app.api.routes.sessions.analyze_transcript",
+                "app.services.scorecards.gpt_analyze_transcript",
                 new=AsyncMock(side_effect=ValueError("Transcript incomplete")),
             ),
         ):
@@ -291,13 +292,14 @@ class ScorecardRouteTests(unittest.TestCase):
 
             self.assertEqual(response.status_code, 200)
             payload = response.json()
-            self.assertEqual(payload["score_card_status"], "pending_transcript")
+            self.assertEqual(payload["score_card_status"], "processing")
             self.assertEqual(payload["transcript_entries_saved"], 1)
-            self.assertEqual(payload["score_card"]["feedback_summary"], "Analysis pending (stub).")
+            self.assertEqual(payload["score_card"]["feedback_summary"], "Analysis processing.")
 
             get_response = self.client.get(f"/api/v1/scorecards/{payload['score_card']['id']}")
 
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
+        self.assertEqual(fake_supabase.store["scorecards"][0]["status"], "failed")
         self.assertEqual(get_response.status_code, 200)
         fetched = get_response.json()
         self.assertEqual(fetched["id"], payload["score_card"]["id"])

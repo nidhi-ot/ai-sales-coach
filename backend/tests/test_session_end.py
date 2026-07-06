@@ -19,18 +19,18 @@ class SessionEndRouteTests(unittest.TestCase):
 
     def test_post_end_saves_transcript_and_returns_completed_session(self):
         fake_supabase = FakeSupabase()
-        fake_scorecard = {"session_id": "session-123", "overall_score": 8}
+        fake_scorecard = {"session_id": "session-123", "status": "processing"}
 
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
             patch(
-                "app.api.routes.sessions.analyze_transcript",
+                "app.api.routes.sessions.mark_scorecard_processing",
                 new=AsyncMock(return_value=fake_scorecard),
-            ) as analyze_mock,
+            ) as processing_mock,
             patch(
-                "app.api.routes.sessions.create_next_salesperson_profile",
-                new=AsyncMock(return_value={"id": "profile-1"}),
-            ) as profile_mock,
+                "app.api.routes.sessions.run_scorecard_pipeline",
+                new=AsyncMock(return_value=None),
+            ) as pipeline_mock,
         ):
             response = self.client.post(
                 "/api/v1/sessions/session-123/end",
@@ -55,10 +55,8 @@ class SessionEndRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["score_card_status"], "generated")
+        self.assertEqual(payload["score_card_status"], "processing")
         self.assertEqual(payload["score_card"], fake_scorecard)
-        self.assertEqual(payload["profile_status"], "generated")
-        self.assertEqual(payload["profile"], {"id": "profile-1"})
         self.assertEqual(payload["transcript_entries_saved"], 2)
 
         session = payload["session"]
@@ -73,23 +71,23 @@ class SessionEndRouteTests(unittest.TestCase):
 
         self.assertEqual(len(fake_supabase.store["transcripts"]), 2)
         self.assertEqual(fake_supabase.store["transcripts"][0]["session_id"], "session-123")
-        analyze_mock.assert_awaited_once_with("session-123")
-        profile_mock.assert_awaited_once_with("session-123", fake_scorecard)
+        processing_mock.assert_awaited_once_with("session-123")
+        pipeline_mock.assert_awaited_once_with("session-123")
 
-    def test_post_end_keeps_generated_scorecard_status_when_profile_creation_fails(self):
+    def test_post_end_returns_processing_without_waiting_for_analysis_result(self):
         fake_supabase = FakeSupabase()
-        fake_scorecard = {"session_id": "session-123", "overall_score": 8}
+        fake_scorecard = {"session_id": "session-123", "status": "processing"}
 
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
             patch(
-                "app.api.routes.sessions.analyze_transcript",
+                "app.api.routes.sessions.mark_scorecard_processing",
                 new=AsyncMock(return_value=fake_scorecard),
             ),
             patch(
-                "app.api.routes.sessions.create_next_salesperson_profile",
-                new=AsyncMock(side_effect=ValueError("invalid profile version")),
-            ),
+                "app.api.routes.sessions.run_scorecard_pipeline",
+                new=AsyncMock(return_value=None),
+            ) as pipeline_mock,
         ):
             response = self.client.post(
                 "/api/v1/sessions/session-123/end",
@@ -109,11 +107,49 @@ class SessionEndRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["score_card_status"], "generated")
+        self.assertEqual(payload["score_card_status"], "processing")
         self.assertEqual(payload["score_card"], fake_scorecard)
-        self.assertIsNone(payload["profile"])
-        self.assertEqual(payload["profile_status"], "failed")
-        self.assertEqual(payload["profile_detail"], "invalid profile version")
+        pipeline_mock.assert_awaited_once_with("session-123")
+
+    def test_transcript_batch_skips_duplicate_session_timestamp_speaker_keys(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["transcripts"].append(
+            {
+                "id": "transcript-1",
+                "session_id": "session-123",
+                "speaker": "rep",
+                "text": "Already saved",
+                "timestamp_offset_ms": 1000,
+            }
+        )
+
+        with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/transcripts/batch",
+                json={
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Duplicate text should not matter",
+                            "timestamp_offset_ms": 1000,
+                        },
+                        {
+                            "speaker": "ai_customer",
+                            "text": "New speaker at same timestamp is allowed",
+                            "timestamp_offset_ms": 1000,
+                        },
+                        {
+                            "speaker": "ai_customer",
+                            "text": "Duplicate inside same batch",
+                            "timestamp_offset_ms": 1000,
+                        },
+                    ]
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["inserted"], 1)
+        self.assertEqual(len(fake_supabase.store["transcripts"]), 2)
 
 
 class TwoCallLearningLoopRouteTests(unittest.TestCase):
@@ -136,11 +172,12 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
 
         with (
             patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
             patch("app.services.session_analytics.get_supabase", return_value=fake_supabase),
             patch(
-                "app.api.routes.sessions.analyze_transcript",
+                "app.services.scorecards.gpt_analyze_transcript",
                 new=AsyncMock(return_value=scorecard),
-            ) as analyze_mock,
+            ) as gpt_mock,
         ):
             first_start = self.client.post(
                 "/api/v1/sessions/",
@@ -179,9 +216,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
 
             self.assertEqual(first_end.status_code, 200)
             ended_payload = first_end.json()
-            self.assertEqual(ended_payload["profile_status"], "generated")
-            self.assertEqual(ended_payload["profile"]["version"], 1)
-            self.assertEqual(ended_payload["profile"]["call_id"], first_session["id"])
+            self.assertEqual(ended_payload["score_card_status"], "processing")
 
             second_start = self.client.post(
                 "/api/v1/sessions/",
@@ -198,7 +233,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         self.assertEqual(second_session["profile_version"], 1)
         self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 1)
 
-        analyze_mock.assert_awaited_once_with(first_session["id"])
+        gpt_mock.assert_awaited_once()
         self.assertEqual(fake_supabase.rpc_calls, [])
         stored_profile = fake_supabase.store["salesperson_profiles"][0]
         self.assertEqual(stored_profile["call_id"], first_session["id"])
