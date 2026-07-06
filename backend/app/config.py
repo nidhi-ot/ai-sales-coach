@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     app_name: str = "AI Sales Coach API"
     environment: str = "development"
     api_prefix: str = "/api/v1"
+    frontend_url: str = "http://127.0.0.1:3000"
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""

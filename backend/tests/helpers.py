@@ -52,6 +52,10 @@ class FakeTable:
         self.filters[key] = value
         return self
 
+    def is_(self, key: str, value: Any) -> "FakeTable":
+        self.filters[key] = value
+        return self
+
     def in_(self, key: str, values: list[Any]) -> "FakeTable":
         self.in_filters[key] = set(values)
         return self

@@ -76,6 +76,42 @@ def _invite_is_valid(invite: dict[str, Any]) -> bool:
     return expires_at > now
 
 
+def _consume_invite(
+    supabase,
+    invite_token: str,
+    email: str,
+) -> dict[str, Any]:
+    invite_result = (
+        supabase.table("invites").select("*").eq("token", invite_token).limit(1).execute()
+    )
+    invite = first_row(invite_result.data)
+
+    if not invite or not _invite_is_valid(invite):
+        raise HTTPException(status_code=403, detail="Invalid or expired invite")
+
+    invite_email = _normalize_email(cast(str, invite.get("email", "")))
+    if invite_email != _normalize_email(email):
+        raise HTTPException(status_code=403, detail="Invite email does not match")
+
+    consume_result = (
+        supabase.table("invites")
+        .update({"used_at": datetime.now(timezone.utc).isoformat()})
+        .eq("id", invite["id"])
+        .is_("used_at", None)
+        .execute()
+    )
+    consumed_invite = first_row(consume_result.data)
+
+    if not consumed_invite:
+        raise HTTPException(status_code=403, detail="Invalid or expired invite")
+
+    return consumed_invite
+
+
+def _release_invite(supabase, invite_id: str) -> None:
+    supabase.table("invites").update({"used_at": None}).eq("id", invite_id).execute()
+
+
 @router.post("/register")
 async def register(data: RegisterRequest) -> dict[str, Any]:
     supabase = get_supabase()
@@ -85,19 +121,10 @@ async def register(data: RegisterRequest) -> dict[str, Any]:
     business_id = OPTIMAL_BUSINESS_ID
     role = "rep"
 
+    invite: dict[str, Any] | None = None
+
     if invite_token:
-        invite_result = (
-            supabase.table("invites").select("*").eq("token", invite_token).limit(1).execute()
-        )
-        invite = first_row(invite_result.data)
-
-        if not invite or not _invite_is_valid(invite):
-            raise HTTPException(status_code=403, detail="Invalid or expired invite")
-
-        invite_email = _normalize_email(cast(str, invite.get("email", "")))
-        if invite_email != _normalize_email(data.email):
-            raise HTTPException(status_code=403, detail="Invite email does not match")
-
+        invite = _consume_invite(supabase, invite_token, data.email)
         business_id = str(invite["business_id"])
         role = str(invite["role"])
     elif not settings.allow_open_signup:
@@ -106,6 +133,7 @@ async def register(data: RegisterRequest) -> dict[str, Any]:
             detail="An invite token is required to create an account",
         )
 
+    created_user_id: str | None = None
     try:
         auth_result = supabase.auth.admin.create_user(
             {
@@ -115,34 +143,44 @@ async def register(data: RegisterRequest) -> dict[str, Any]:
             }
         )
     except AuthApiError as exc:
+        if invite is not None:
+            _release_invite(supabase, str(invite["id"]))
         status_code = 409 if "already been registered" in str(exc) else 400
         raise HTTPException(status_code=status_code, detail=str(exc)) from exc
 
     if not auth_result.user:
+        if invite is not None:
+            _release_invite(supabase, str(invite["id"]))
         raise HTTPException(status_code=400, detail="Unable to create user")
 
-    account_result = (
-        supabase.table("salesperson_accounts")
-        .insert(
-            {
-                "id": auth_result.user.id,
-                "email": data.email,
-                "full_name": data.full_name,
-                "phone_number": data.phone_number,
-                "employee_id": employee_id,
-                "business_id": business_id,
-                "role": role,
-            }
-        )
-        .execute()
-    )
+    created_user_id = auth_result.user.id
 
-    if invite_token:
-        supabase.table("invites").update(
-            {
-                "used_at": datetime.now(timezone.utc).isoformat(),
-            }
-        ).eq("token", invite_token).execute()
+    try:
+        account_result = (
+            supabase.table("salesperson_accounts")
+            .insert(
+                {
+                    "id": auth_result.user.id,
+                    "email": data.email,
+                    "full_name": data.full_name,
+                    "phone_number": data.phone_number,
+                    "employee_id": employee_id,
+                    "business_id": business_id,
+                    "role": role,
+                }
+            )
+            .execute()
+        )
+    except Exception as exc:
+        if created_user_id:
+            try:
+                supabase.auth.admin.delete_user(created_user_id)
+            except Exception:
+                pass
+
+        if invite is not None:
+            _release_invite(supabase, str(invite["id"]))
+        raise HTTPException(status_code=400, detail="Unable to create account") from exc
 
     account = first_row(account_result.data)
 

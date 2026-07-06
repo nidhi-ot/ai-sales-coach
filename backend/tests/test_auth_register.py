@@ -25,6 +25,9 @@ class _CreateUserAdmin:
             user=SimpleNamespace(id=user_id, email=self.email),
         )
 
+    def delete_user(self, _user_id):  # pragma: no cover - rollback helper
+        return SimpleNamespace()
+
 
 class _ConflictAdmin:
     def create_user(self, _payload):

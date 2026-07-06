@@ -3,9 +3,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentAccount, require_role
+from app.config import settings
 from app.db.client import get_supabase
 
 router = APIRouter()
@@ -35,7 +36,7 @@ class UpdateBusinessFrameworkResponse(BaseModel):
 class CreateInviteRequest(BaseModel):
     email: str
     role: Literal["rep", "manager", "admin"] = "rep"
-    expires_in_days: int = 7
+    expires_in_days: int = Field(default=7, gt=0, le=30)
 
 
 class CreateInviteResponse(BaseModel):
@@ -135,7 +136,7 @@ async def create_invite(
         business_id=str(current_account.business_id),
         role=data.role,
         token=token,
-        registration_link=f"/register?invite={token}",
+        registration_link=f"{settings.frontend_url.rstrip('/')}/register?invite={token}",
         expires_at=expires_at.isoformat(),
         warning=FRAMEWORK_WARNING,
     )
