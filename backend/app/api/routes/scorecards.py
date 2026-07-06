@@ -5,6 +5,7 @@ from app.api.deps import ensure_rep_access, get_current_user
 from app.db.client import get_supabase
 from app.services.scorecards import (
     SCORECARD_STATUS_FAILED,
+    SCORECARD_STATUS_PROCESSING,
     create_scorecard_stub,
     is_stub_scorecard,
     mark_scorecard_processing,
@@ -172,6 +173,9 @@ async def reprocess_scorecard(
     if scorecard_rows:
         scorecard = scorecard_rows[0]
         status = scorecard.get("status")
+        if status == SCORECARD_STATUS_PROCESSING:
+            raise HTTPException(status_code=409, detail="Scorecard is already processing")
+
         if status != SCORECARD_STATUS_FAILED and not is_stub_scorecard(scorecard):
             raise HTTPException(status_code=409, detail="Scorecard is not failed or stubbed")
 

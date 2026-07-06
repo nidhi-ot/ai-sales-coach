@@ -262,6 +262,31 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(payload["feedback_summary"], "Generated scorecard")
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
 
+    def test_reprocess_rejects_scorecard_already_processing(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["scorecards"].append(
+            {
+                "id": "scorecard-1",
+                "session_id": "session-123",
+                "rep_id": "rep-456",
+                "business_id": "business-789",
+                "overall_score": None,
+                "status": "processing",
+                "feedback_summary": "Analysis processing.",
+                "shared_with_manager": False,
+            }
+        )
+
+        with (
+            patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.scorecards.run_scorecard_pipeline", new=AsyncMock()) as pipeline,
+        ):
+            response = self.client.post("/api/v1/scorecards/session/session-123/reprocess")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["detail"], "Scorecard is already processing")
+        pipeline.assert_not_awaited()
+
     def test_end_session_value_error_creates_stub_scorecard_and_persists_it(self):
         fake_supabase = FakeSupabase()
 
