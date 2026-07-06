@@ -71,6 +71,13 @@ def _get_owned_session(
     return session_row
 
 
+def _validated_duration_seconds(duration_seconds: int) -> int:
+    if duration_seconds < 0:
+        raise HTTPException(status_code=400, detail="duration_seconds cannot be negative")
+
+    return min(duration_seconds, settings.max_call_seconds)
+
+
 class SessionStart(BaseModel):
     rep_id: str
     business_id: str
@@ -245,11 +252,13 @@ async def end_session(
             transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
             transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
+    duration_seconds = _validated_duration_seconds(data.duration_seconds)
+
     supabase.table("sessions").update(
         {
             "status": "completed",
             "ended_at": data.ended_at.isoformat(),
-            "duration_seconds": data.duration_seconds,
+            "duration_seconds": duration_seconds,
         }
     ).eq("id", session_id).execute()
 

@@ -46,6 +46,7 @@ class RealtimeSessionResponse(BaseModel):
     openai_session_id: str
     expires_at: datetime
     model: str
+    max_call_seconds: int
 
 
 class EphemeralTokenResponse(BaseModel):
@@ -146,6 +147,8 @@ async def create_realtime_session(
             metadata={
                 "system_instruction": instructions,
                 "framework": resolved_framework,
+                "max_call_seconds": settings.max_call_seconds,
+                "max_call_grace_seconds": settings.max_call_grace_seconds,
             },
         )
     except Exception as exc:
@@ -212,6 +215,7 @@ async def create_realtime_session(
                 openai_session_id=openai_session_id,
                 expires_at=datetime.now(UTC) + timedelta(minutes=5),
                 model="gpt-realtime-2",
+                max_call_seconds=settings.max_call_seconds,
             )
 
     except httpx.HTTPError as exc:
