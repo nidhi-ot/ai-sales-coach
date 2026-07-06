@@ -400,11 +400,15 @@ export default function CallPage() {
     const audioTracks = localStreamRef.current?.getAudioTracks();
     if (!audioTracks || audioTracks.length === 0) return;
 
-    const newMutedState = !isMuted;
-    audioTracks.forEach((track) => {
-      track.enabled = !newMutedState;
+    setIsMuted((currentMutedState) => {
+      const newMutedState = !currentMutedState;
+
+      audioTracks.forEach((track) => {
+        track.enabled = !newMutedState;
+      });
+
+      return newMutedState;
     });
-    setIsMuted(newMutedState);
   }
 
   function resumeCall() {
