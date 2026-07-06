@@ -477,15 +477,3 @@ const primaryButtonStyle: React.CSSProperties = {
   cursor: "pointer",
   boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
 };
-
-const selectStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "16px",
-  borderRadius: "16px",
-  border: "1px solid #d0d5dd",
-  background: "white",
-  color: "#101828",
-  fontWeight: 700,
-  fontSize: "15px",
-  cursor: "pointer",
-};
