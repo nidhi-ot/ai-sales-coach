@@ -41,12 +41,16 @@ export default function CallPage() {
     "apartment_association"
   );
   const [focusArea, setFocusArea] = useState("handling_objections");
+  const [isMuted, setIsMuted] = useState(false);
 
   const [status, setStatus] = useState<CallStatus>("ready");
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [openaiSessionId, setOpenaiSessionId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [maxCallSeconds, setMaxCallSeconds] = useState<number | null>(null);
+  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
+  const autoEndTriggeredRef = useRef(false);
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -234,6 +238,9 @@ export default function CallPage() {
     setSessionId(null);
     setOpenaiSessionId(null);
     setElapsedSeconds(0);
+    setMaxCallSeconds(null);
+    setCountdownSeconds(null);
+    setIsMuted(false);
 
     callRunRef.current += 1;
     const runId = callRunRef.current;
@@ -242,6 +249,7 @@ export default function CallPage() {
 
     callStartedAtRef.current = null;
     transcriptBufferRef.current = [];
+    autoEndTriggeredRef.current = false;
 
     function isCurrentCallRun() {
       return !abortController.signal.aborted && callRunRef.current === runId;
@@ -286,6 +294,10 @@ export default function CallPage() {
       });
 
       const data = await response.json();
+      if (typeof data.max_call_seconds === "number") {
+        setMaxCallSeconds(data.max_call_seconds);
+        setCountdownSeconds(data.max_call_seconds);
+      }
 
       if (!isCurrentCallRun()) {
         cleanupCallResources();
@@ -384,97 +396,129 @@ export default function CallPage() {
     setStatus("holding");
   }
 
+  function toggleMute() {
+    const audioTracks = localStreamRef.current?.getAudioTracks();
+    if (!audioTracks || audioTracks.length === 0) return;
+
+    const newMutedState = !isMuted;
+    audioTracks.forEach((track) => {
+      track.enabled = !newMutedState;
+    });
+    setIsMuted(newMutedState);
+  }
+
   function resumeCall() {
     localStreamRef.current?.getAudioTracks().forEach((track) => {
-      track.enabled = true;
+      track.enabled = !isMuted;
     });
 
     setStatus("active");
   }
 
-    async function handleEndCall() {
-    setStatus("ending");
-    setError("");
-    callRunRef.current += 1;
+    async function handleEndCall(endReason: "manual" | "timeout" = "manual") {
+      setStatus("ending");
+      setError("");
+      setIsMuted(false);
+      callRunRef.current += 1;
+      autoEndTriggeredRef.current = true;
 
-    const sessionIdToEnd = sessionId;
-    const endedAt = new Date();
-    const durationSeconds = callStartedAtRef.current
-      ? Math.round((endedAt.getTime() - callStartedAtRef.current.getTime()) / 1000)
-      : 0;
+      const sessionIdToEnd = sessionId;
+      const endedAt = new Date();
+      const durationSeconds = callStartedAtRef.current
+        ? Math.round((endedAt.getTime() - callStartedAtRef.current.getTime()) / 1000)
+        : 0;
 
-    cleanupCallResources();
+      cleanupCallResources();
 
-    if (!sessionIdToEnd) {
-      setStatus("ended");
-      return;
-    }
-
-    try {
-      await flushTranscriptBuffer();
-
-      const entries = [...transcriptBufferRef.current];
-
-      await endBackendSession(
-        sessionIdToEnd,
-        endedAt,
-        durationSeconds,
-        "manual",
-        entries
-      );
-      localStorage.setItem("last_session_id", sessionIdToEnd);
-    } catch (error) {
-      console.error(error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Call ended locally, but ending the backend session failed."
-      );
-    } finally {
-      callStartedAtRef.current = null;
-      transcriptBufferRef.current = [];
-      setStatus("ended");
-    }
-  }
-
-  useEffect(() => {
-      if (status !== "active" && status !== "holding") {
-        if (transcriptFlushTimerRef.current) {
-          clearInterval(transcriptFlushTimerRef.current);
-          transcriptFlushTimerRef.current = null;
-        }
+      if (!sessionIdToEnd) {
+        setStatus("ended");
         return;
       }
 
-      transcriptFlushTimerRef.current = setInterval(() => {
-        void flushTranscriptBuffer();
-      }, 15000);
+      try {
+        await flushTranscriptBuffer();
 
-      return () => {
-        if (transcriptFlushTimerRef.current) {
-          clearInterval(transcriptFlushTimerRef.current);
-          transcriptFlushTimerRef.current = null;
-        }
-      };
-    }, [status, sessionId, flushTranscriptBuffer]);
+        const entries = [...transcriptBufferRef.current];
 
-  useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null;
-
-    if (status === "active" || status === "holding") {
-      timer = setInterval(() => {
-        if (callStartedAtRef.current) {
-          setElapsedSeconds(
-            Math.floor((Date.now() - callStartedAtRef.current.getTime()) / 1000)
-          );
-        }
-      }, 1000);
+        await endBackendSession(
+          sessionIdToEnd,
+          endedAt,
+          durationSeconds,
+          endReason,
+          entries
+        );
+        localStorage.setItem("last_session_id", sessionIdToEnd);
+      } catch (error) {
+        console.error(error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Call ended locally, but ending the backend session failed."
+        );
+      } finally {
+        callStartedAtRef.current = null;
+        transcriptBufferRef.current = [];
+        setStatus("ended");
+        setIsMuted(false);
+        setCountdownSeconds(null);
+        setMaxCallSeconds(null);
+      }
     }
 
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [status]);
+    useEffect(() => {
+        if (status !== "active" && status !== "holding") {
+          if (transcriptFlushTimerRef.current) {
+            clearInterval(transcriptFlushTimerRef.current);
+            transcriptFlushTimerRef.current = null;
+          }
+          return;
+        }
+
+        transcriptFlushTimerRef.current = setInterval(() => {
+          void flushTranscriptBuffer();
+        }, 15000);
+
+        return () => {
+          if (transcriptFlushTimerRef.current) {
+            clearInterval(transcriptFlushTimerRef.current);
+            transcriptFlushTimerRef.current = null;
+          }
+        };
+      }, [status, sessionId, flushTranscriptBuffer]);
+
+    useEffect(() => {
+      let timer: ReturnType<typeof setInterval> | null = null;
+
+      if (status === "active" || status === "holding") {
+        timer = setInterval(() => {
+          if (callStartedAtRef.current) {
+            const nextElapsedSeconds = Math.floor(
+              (Date.now() - callStartedAtRef.current.getTime()) / 1000
+            );
+
+            setElapsedSeconds(nextElapsedSeconds);
+
+            if (maxCallSeconds !== null) {
+              const nextCountdownSeconds = Math.max(
+                0,
+                maxCallSeconds - nextElapsedSeconds
+              );
+
+              setCountdownSeconds(nextCountdownSeconds);
+
+              if (nextCountdownSeconds === 0 && !autoEndTriggeredRef.current) {
+                autoEndTriggeredRef.current = true;
+                void handleEndCall("timeout");
+              }
+            }
+          }
+        }, 1000);
+      }
+
+      return () => {
+        if (timer) clearInterval(timer);
+      };
+    }, [status, maxCallSeconds]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -543,12 +587,24 @@ export default function CallPage() {
             </div>
           </div>
 
-          <div style={timerBoxStyle}>
+          <div
+            style={{
+              ...timerBoxStyle,
+              ...(countdownSeconds !== null && countdownSeconds <= 60
+                ? { borderColor: "#f79009", background: "#fffaeb" }
+                : {}),
+            }}
+          >
             <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              Call Time
+              Time Left
             </p>
-            <strong style={{ fontSize: "24px" }}>
-              {formatTime(elapsedSeconds)}
+            <strong
+              style={{
+                fontSize: "24px",
+                color: countdownSeconds !== null && countdownSeconds <= 60 ? "#b54708" : undefined,
+              }}
+            >
+              {countdownSeconds !== null ? formatTime(countdownSeconds) : formatTime(elapsedSeconds)}
             </strong>
           </div>
         </section>
@@ -609,10 +665,21 @@ export default function CallPage() {
 
             {status === "active" && (
               <>
+                <button
+                  onClick={toggleMute}
+                  style={{
+                    ...secondaryButton,
+                    ...(isMuted
+                      ? { background: "#fee2e2", color: "#991b1b", border: "1px solid #fca5a5" }
+                      : {}),
+                  }}
+                >
+                  {isMuted ? "🔇 Unmute" : "🎙️ Mute"}
+                </button>
                 <button onClick={holdCall} style={secondaryButton}>
                   ⏸ Hold
                 </button>
-                <button onClick={handleEndCall} style={dangerButton}>
+                <button onClick={() => handleEndCall("manual")} style={dangerButton}>
                   ⛔ End Call
                 </button>
               </>
@@ -623,7 +690,7 @@ export default function CallPage() {
                 <button onClick={resumeCall} style={primaryButton}>
                   ▶ Resume
                 </button>
-                <button onClick={handleEndCall} style={dangerButton}>
+                <button onClick={() => handleEndCall("manual")} style={dangerButton}>
                   ⛔ End Call
                 </button>
               </>
