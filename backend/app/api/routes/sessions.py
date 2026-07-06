@@ -77,11 +77,9 @@ def _validated_duration_seconds(duration_seconds: int) -> int:
 
     hard_limit = settings.max_call_seconds + settings.max_call_grace_seconds
 
-    if duration_seconds > hard_limit:
-        raise HTTPException(
-            status_code=400,
-            detail=f"duration_seconds exceeds max allowed value of {hard_limit}",
-        )
+def _validated_duration_seconds(duration_seconds: int) -> int:
+    if duration_seconds < 0:
+        raise HTTPException(status_code=400, detail="duration_seconds cannot be negative")
 
     return min(duration_seconds, settings.max_call_seconds)
 
