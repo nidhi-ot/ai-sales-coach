@@ -5,7 +5,11 @@ from typing import Any
 
 from app.config import settings
 from app.db.client import get_supabase
-from app.services.scorecards import SCORECARD_STATUS_PROCESSING, run_scorecard_pipeline
+from app.services.scorecards import (
+    SCORECARD_STATUS_PROCESSING,
+    mark_scorecard_processing,
+    run_scorecard_pipeline,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +70,7 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
             }
         ).eq("id", str(session_id)).execute()
 
+        await mark_scorecard_processing(str(session_id))
         await run_scorecard_pipeline(str(session_id))
         completed_count += 1
 
