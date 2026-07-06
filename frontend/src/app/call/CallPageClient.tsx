@@ -40,7 +40,6 @@ export default function CallPage() {
   const [businessContext, setBusinessContext] = useState(
     "apartment_association"
   );
-  const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
 
   const [status, setStatus] = useState<CallStatus>("ready");
@@ -120,7 +119,6 @@ export default function CallPage() {
     setBusinessContext(
       params.get("business_context") || "apartment_association"
     );
-    setFramework(params.get("framework") || "BANT");
     setFocusArea(params.get("focus_area") || "handling_objections");
   }, []);
 
@@ -278,7 +276,6 @@ export default function CallPage() {
           rep_id: repId,
           business_id: businessId,
           business_context: businessContext,
-          framework,
           focus_area: focusArea,
           vad: {
             threshold: 0.5,

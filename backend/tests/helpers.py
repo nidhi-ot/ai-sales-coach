@@ -116,6 +116,14 @@ class FakeTable:
             return SimpleNamespace(data=self._selected_rows())
 
         if self.name == "business_profiles":
+            if self.update_payload is not None:
+                rows = []
+                for business in self.store["business_profiles"]:
+                    if self._matches(business):
+                        business.update(self.update_payload)
+                        rows.append(dict(business))
+                return SimpleNamespace(data=rows)
+
             return SimpleNamespace(data=self._selected_rows())
 
         raise AssertionError(f"Unexpected table access: {self.name}")

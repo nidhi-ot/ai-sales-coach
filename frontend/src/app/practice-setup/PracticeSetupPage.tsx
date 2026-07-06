@@ -68,7 +68,6 @@ export default function PracticeSetupPage() {
   const router = useRouter();
   const [scenario, setScenario] = useState("cold_call");
   const [businessContext, setBusinessContext] = useState("apartment_association");
-  const [framework, setFramework] = useState("BANT");
   const [focusArea, setFocusArea] = useState("handling_objections");
   const [learningProfile, setLearningProfile] = useState<LearningProfile | null>(null);
 
@@ -100,7 +99,6 @@ export default function PracticeSetupPage() {
     const params = new URLSearchParams({
       scenario,
       business_context: businessContext,
-      framework,
       focus_area: focusArea,
     });
 
@@ -133,7 +131,7 @@ export default function PracticeSetupPage() {
           <h1 style={heroTitleStyle}>Let&apos;s get you ready</h1>
 
           <p style={heroSubtitleStyle}>
-            Choose the customer context, sales framework, and focus area before
+            Choose the customer context and focus area before
             starting your AI practice call.
           </p>
         </section>
@@ -161,22 +159,6 @@ export default function PracticeSetupPage() {
 
             <SetupSection
               step="2"
-              title="Sales Framework"
-              description="Choose the sales framework you want to practice."
-            >
-              <select
-                value={framework}
-                onChange={(e) => setFramework(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="BANT">BANT - Budget, Authority, Need, Timeline</option>
-                <option value="MEDDIC">MEDDIC - Metrics, Economic Buyer, Decision Criteria</option>
-                <option value="SPIN">SPIN - Situation, Problem, Implication, Need Payoff</option>
-              </select>
-            </SetupSection>
-
-            <SetupSection
-              step="3"
               title="Today's Focus"
               description="Choose what the AI customer should challenge you on."
             >
@@ -228,7 +210,6 @@ export default function PracticeSetupPage() {
             </h2>
 
             <SummaryRow label="Business Context" value={selectedBusiness?.title || "-"} />
-            <SummaryRow label="Framework" value={framework} />
             <SummaryRow
               label="Focus Area"
               value={
@@ -495,16 +476,4 @@ const primaryButtonStyle: React.CSSProperties = {
   fontWeight: 900,
   cursor: "pointer",
   boxShadow: "0 12px 24px rgba(0,107,79,0.22)",
-};
-
-const selectStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "16px",
-  borderRadius: "16px",
-  border: "1px solid #d0d5dd",
-  background: "white",
-  color: "#101828",
-  fontWeight: 700,
-  fontSize: "15px",
-  cursor: "pointer",
 };

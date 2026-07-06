@@ -4,8 +4,17 @@ from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import agent, auth, manager, profiles, realtime, scorecards, sessions
 from app.services.sweeper import run_sweeper
+from app.api.routes import (
+    admin,
+    agent,
+    auth,
+    manager,
+    profiles,
+    realtime,
+    scorecards,
+    sessions,
+)
 
 
 @asynccontextmanager
@@ -46,6 +55,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
     app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])
     app.include_router(realtime.router, prefix="/api/v1/realtime", tags=["realtime"])
