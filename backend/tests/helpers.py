@@ -52,6 +52,10 @@ class FakeTable:
         self.filters[key] = value
         return self
 
+    def is_(self, key: str, value: Any) -> "FakeTable":
+        self.filters[key] = value
+        return self
+
     def in_(self, key: str, values: list[Any]) -> "FakeTable":
         self.in_filters[key] = set(values)
         return self
@@ -113,20 +117,35 @@ class FakeTable:
             return self._execute_salesperson_profiles()
 
         if self.name == "salesperson_accounts":
-            return SimpleNamespace(data=self._selected_rows())
+            return self._execute_list_table("salesperson_accounts", "account")
 
         if self.name == "business_profiles":
-            if self.update_payload is not None:
-                rows = []
-                for business in self.store["business_profiles"]:
-                    if self._matches(business):
-                        business.update(self.update_payload)
-                        rows.append(dict(business))
-                return SimpleNamespace(data=rows)
+            return self._execute_list_table("business_profiles", "business")
 
-            return SimpleNamespace(data=self._selected_rows())
+        if self.name == "invites":
+            return self._execute_list_table("invites", "invite")
 
         raise AssertionError(f"Unexpected table access: {self.name}")
+
+    def _execute_list_table(self, table_name: str, id_prefix: str):
+        if self.insert_payload is not None:
+            payload = dict(self.insert_payload)
+            row = {
+                "id": payload.get("id") or f"{id_prefix}-{len(self.store[table_name]) + 1}",
+                **payload,
+            }
+            self.store[table_name].append(row)
+            return SimpleNamespace(data=[dict(row)])
+
+        if self.update_payload is not None:
+            rows = []
+            for row in self.store[table_name]:
+                if self._matches(row):
+                    row.update(self.update_payload)
+                    rows.append(dict(row))
+            return SimpleNamespace(data=rows)
+
+        return SimpleNamespace(data=self._selected_rows())
 
     def _execute_sessions(self):
         if self.insert_payload is not None:
@@ -246,6 +265,7 @@ class FakeSupabase:
             "salesperson_profiles": [],
             "salesperson_accounts": [],
             "business_profiles": [],
+            "invites": [],
         }
         if with_default_session:
             self.store["sessions"][DEFAULT_SESSION["id"]] = deepcopy(DEFAULT_SESSION)

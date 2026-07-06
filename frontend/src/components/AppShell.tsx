@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 export default function AppShell({
@@ -9,6 +10,11 @@ export default function AppShell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [role, setRole] = useState("rep");
+
+  useEffect(() => {
+    setRole(localStorage.getItem("role") || "rep");
+  }, []);
 
   function handleLogout() {
     localStorage.removeItem("access_token");
@@ -18,6 +24,7 @@ export default function AppShell({
     localStorage.removeItem("full_name");
     localStorage.removeItem("email");
     localStorage.removeItem("phone_number");
+    localStorage.removeItem("employee_id");
     localStorage.removeItem("role");
     localStorage.removeItem("remember_me");
     localStorage.removeItem("last_session_id");
@@ -33,6 +40,7 @@ export default function AppShell({
     { label: "Profile", path: "/profile", icon: "👤" },
     { label: "Progress", path: "/progress", icon: "📈" },
     { label: "Settings", path: "/settings", icon: "⚙️" },
+    ...(role === "admin" ? [{ label: "Admin", path: "/admin", icon: "🛡️" }] : []),
   ];
 
   return (

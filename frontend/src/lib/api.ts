@@ -9,6 +9,7 @@ const AUTH_STORAGE_KEYS = [
   "full_name",
   "email",
   "phone_number",
+  "employee_id",
   "role",
   "remember_me",
   "last_session_id",

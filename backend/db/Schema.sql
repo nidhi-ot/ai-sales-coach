@@ -13,7 +13,36 @@ CREATE TABLE business_profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Salesperson Profiles (versioned, insert-only)
+-- 2. Salesperson Accounts (auth users, per-person identity)
+CREATE TABLE salesperson_accounts (
+  id UUID PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT,
+  phone_number TEXT NOT NULL,
+  employee_id TEXT,
+  business_id UUID REFERENCES business_profiles(id),
+  role TEXT NOT NULL CHECK (role IN ('rep', 'manager', 'admin')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_salesperson_accounts_business ON salesperson_accounts(business_id);
+CREATE INDEX idx_salesperson_accounts_employee ON salesperson_accounts(employee_id);
+
+-- 3. Invites (admin-generated invite links)
+CREATE TABLE invites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL,
+  business_id UUID NOT NULL REFERENCES business_profiles(id),
+  role TEXT NOT NULL CHECK (role IN ('rep', 'manager', 'admin')),
+  token TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_invites_token ON invites(token);
+CREATE INDEX idx_invites_email ON invites(email);
+
+-- 4. Salesperson Profiles (versioned, insert-only)
 CREATE TABLE salesperson_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   rep_id UUID NOT NULL, -- References auth.users
@@ -82,7 +111,7 @@ BEGIN
 END;
 $$;
 
--- 3. Sessions (live calls)
+-- 5. Sessions (live calls)
 CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   rep_id UUID NOT NULL,
@@ -96,7 +125,7 @@ CREATE TABLE sessions (
   metadata JSONB -- Ephemeral token ID, client info, etc.
 );
 
--- 4. Transcripts (conversation text)
+-- 6. Transcripts (conversation text)
 CREATE TABLE transcripts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
@@ -109,7 +138,7 @@ CREATE INDEX idx_transcripts_session ON transcripts(session_id, timestamp_offset
 CREATE UNIQUE INDEX idx_transcripts_session_timestamp_speaker
   ON transcripts(session_id, timestamp_offset_ms, speaker);
 
--- 5. Scorecards (per-call analysis)
+-- 7. Scorecards (per-call analysis)
 CREATE TABLE scorecards (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL UNIQUE REFERENCES sessions(id) ON DELETE CASCADE,
