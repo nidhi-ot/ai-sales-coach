@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, List, Literal, cast
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from app.api.deps import ensure_rep_access, get_current_user
@@ -9,9 +9,8 @@ from app.config import settings
 from app.db.client import get_business_profile, get_supabase
 from app.models.agent import ScenarioSlug
 from app.services.scenarios import get_scenario_config, normalize_framework
-from app.services.scorecards import analyze_transcript, create_scorecard_stub
+from app.services.scorecards import mark_scorecard_processing, run_scorecard_pipeline
 from app.services.session_analytics import (
-    create_next_salesperson_profile,
     get_dimension_progress,
     get_recent_sessions,
     get_session_stats,
@@ -76,6 +75,10 @@ def _validated_duration_seconds(duration_seconds: int) -> int:
         raise HTTPException(status_code=400, detail="duration_seconds cannot be negative")
 
     return min(duration_seconds, settings.max_call_seconds)
+
+
+def _transcript_key(speaker: Any, timestamp_offset_ms: Any) -> tuple[str, int | None]:
+    return (str(speaker), timestamp_offset_ms if isinstance(timestamp_offset_ms, int) else None)
 
 
 class SessionStart(BaseModel):
@@ -204,49 +207,46 @@ async def create_session(
 async def end_session(
     session_id: str,
     data: SessionEnd,
+    background_tasks: BackgroundTasks,
     current_user=Depends(get_current_user),
 ):
     supabase = get_supabase()
 
-    session_row = _get_owned_session(supabase, session_id, str(current_user.id))
+    _get_owned_session(supabase, session_id, str(current_user.id))
     transcript_entries_saved = 0
-    profile = None
 
-    existing_transcript_keys: set[tuple[str, str, int | None]] = set()
+    existing_transcript_keys: set[tuple[str, int | None]] = set()
 
     if data.entries:
         existing_transcripts = _row_dicts(
             supabase.table("transcripts")
-            .select("speaker,text,timestamp_offset_ms")
+            .select("speaker,timestamp_offset_ms")
             .eq("session_id", session_id)
             .execute()
             .data
         )
 
         existing_transcript_keys = {
-            (
-                str(row.get("speaker")),
-                str(row.get("text")),
-                row.get("timestamp_offset_ms"),
-            )
+            _transcript_key(row.get("speaker"), row.get("timestamp_offset_ms"))
             for row in existing_transcripts
         }
+        incoming_transcript_keys: set[tuple[str, int | None]] = set()
+        inserts = []
 
-        inserts = [
-            {
-                "session_id": session_id,
-                "speaker": entry.speaker,
-                "text": entry.text,
-                "timestamp_offset_ms": entry.timestamp_offset_ms,
-            }
-            for entry in data.entries
-            if (
-                entry.speaker,
-                entry.text,
-                entry.timestamp_offset_ms,
+        for entry in data.entries:
+            key = _transcript_key(entry.speaker, entry.timestamp_offset_ms)
+            if key in existing_transcript_keys or key in incoming_transcript_keys:
+                continue
+
+            incoming_transcript_keys.add(key)
+            inserts.append(
+                {
+                    "session_id": session_id,
+                    "speaker": entry.speaker,
+                    "text": entry.text,
+                    "timestamp_offset_ms": entry.timestamp_offset_ms,
+                }
             )
-            not in existing_transcript_keys
-        ]
 
         if inserts:
             transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
@@ -270,57 +270,14 @@ async def end_session(
 
     updated_session = updated_rows[0]
 
-    try:
-        score_card = await analyze_transcript(session_id)
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-    except ValueError as exc:
-        score_card = await create_scorecard_stub(
-            session_id=session_id,
-            rep_id=str(session_row["rep_id"]),
-            business_id=str(session_row["business_id"]),
-        )
-        return {
-            "session": updated_session,
-            "transcript_entries_saved": transcript_entries_saved,
-            "score_card_status": "pending_transcript",
-            "score_card": score_card,
-            "profile": profile,
-            "detail": str(exc),
-        }
-    except Exception as exc:
-        score_card = await create_scorecard_stub(
-            session_id=session_id,
-            rep_id=str(session_row["rep_id"]),
-            business_id=str(session_row["business_id"]),
-        )
-        return {
-            "session": updated_session,
-            "transcript_entries_saved": transcript_entries_saved,
-            "score_card_status": "analysis_failed",
-            "score_card": score_card,
-            "profile": profile,
-            "detail": str(exc),
-        }
-
-    profile_status = "generated"
-    profile_detail = None
-
-    try:
-        profile = await create_next_salesperson_profile(session_id, score_card)
-    except Exception as exc:
-        profile_status = "failed"
-        profile_detail = str(exc)
+    score_card = await mark_scorecard_processing(session_id)
+    background_tasks.add_task(run_scorecard_pipeline, session_id)
 
     return {
         "session": updated_session,
         "transcript_entries_saved": transcript_entries_saved,
-        "score_card_status": "generated",
+        "score_card_status": "processing",
         "score_card": score_card,
-        "profile": profile,
-        "profile_status": profile_status,
-        "profile_detail": profile_detail,
     }
 
 
@@ -381,15 +338,37 @@ async def add_transcript_batch(
     if not batch.entries:
         raise HTTPException(status_code=400, detail="Transcript batch is empty")
 
-    inserts = [
-        {
-            "session_id": session_id,
-            "speaker": entry.speaker,
-            "text": entry.text,
-            "timestamp_offset_ms": entry.timestamp_offset_ms,
-        }
-        for entry in batch.entries
-    ]
+    existing_transcripts = _row_dicts(
+        supabase.table("transcripts")
+        .select("speaker,timestamp_offset_ms")
+        .eq("session_id", session_id)
+        .execute()
+        .data
+    )
+    existing_transcript_keys = {
+        _transcript_key(row.get("speaker"), row.get("timestamp_offset_ms"))
+        for row in existing_transcripts
+    }
+    incoming_transcript_keys: set[tuple[str, int | None]] = set()
+    inserts = []
+
+    for entry in batch.entries:
+        key = _transcript_key(entry.speaker, entry.timestamp_offset_ms)
+        if key in existing_transcript_keys or key in incoming_transcript_keys:
+            continue
+
+        incoming_transcript_keys.add(key)
+        inserts.append(
+            {
+                "session_id": session_id,
+                "speaker": entry.speaker,
+                "text": entry.text,
+                "timestamp_offset_ms": entry.timestamp_offset_ms,
+            }
+        )
+
+    if not inserts:
+        return {"inserted": 0}
 
     result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
     inserted_rows = _row_dicts(result.data)

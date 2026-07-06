@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.api.deps import ensure_rep_access, get_current_user
 from app.db.client import get_supabase
 from app.services.scorecards import (
+    SCORECARD_STATUS_FAILED,
     create_scorecard_stub,
+    is_stub_scorecard,
+    mark_scorecard_processing,
+    run_scorecard_pipeline,
 )
 
 router = APIRouter()
@@ -134,4 +138,58 @@ async def update_share_setting(
     return {
         "success": True,
         "shared_with_manager": data.shared_with_manager,
+    }
+
+
+@router.post("/session/{session_id}/reprocess")
+async def reprocess_scorecard(
+    session_id: str,
+    background_tasks: BackgroundTasks,
+    current_user=Depends(get_current_user),
+):
+    supabase = get_supabase()
+    session_result = (
+        supabase.table("sessions")
+        .select("id, rep_id, business_id")
+        .eq("id", session_id)
+        .limit(1)
+        .execute()
+    )
+    session_rows = _row_dicts(session_result.data)
+
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = session_rows[0]
+    rep_id = _require_row_value(session, "rep_id", "Session")
+    ensure_rep_access(str(current_user.id), rep_id)
+
+    scorecard_result = (
+        supabase.table("scorecards").select("*").eq("session_id", session_id).limit(1).execute()
+    )
+    scorecard_rows = _row_dicts(scorecard_result.data)
+
+    if scorecard_rows:
+        scorecard = scorecard_rows[0]
+        status = scorecard.get("status")
+        if status != SCORECARD_STATUS_FAILED and not is_stub_scorecard(scorecard):
+            raise HTTPException(status_code=409, detail="Scorecard is not failed or stubbed")
+
+    transcript_result = (
+        supabase.table("transcripts")
+        .select("id")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
+    )
+    if not _row_dicts(transcript_result.data):
+        raise HTTPException(status_code=400, detail="No stored transcripts to reprocess")
+
+    scorecard = await mark_scorecard_processing(session_id)
+    background_tasks.add_task(run_scorecard_pipeline, session_id)
+
+    return {
+        "success": True,
+        "score_card_status": "processing",
+        "score_card": scorecard,
     }
