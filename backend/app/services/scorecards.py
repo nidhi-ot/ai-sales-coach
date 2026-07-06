@@ -80,9 +80,11 @@ def _scorecard_base_payload(
         "feedback_summary": feedback_summary,
         "status": status,
         "error_message": error_message,
-        "processing_started_at": datetime.now(timezone.utc).isoformat()
-        if status == SCORECARD_STATUS_PROCESSING
-        else None,
+        "processing_started_at": (
+            datetime.now(timezone.utc).isoformat()
+            if status == SCORECARD_STATUS_PROCESSING
+            else None
+        ),
     }
 
 

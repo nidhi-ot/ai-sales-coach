@@ -12,9 +12,7 @@ from tests.helpers import FakeSupabase
 class SweeperTests(unittest.IsolatedAsyncioTestCase):
     async def test_expired_session_is_completed_and_pipeline_is_awaited(self):
         fake_supabase = FakeSupabase()
-        fake_supabase.store["sessions"]["session-123"]["started_at"] = (
-            "2026-06-25T10:00:00+00:00"
-        )
+        fake_supabase.store["sessions"]["session-123"]["started_at"] = "2026-06-25T10:00:00+00:00"
 
         with (
             patch("app.services.sweeper.get_supabase", return_value=fake_supabase),
