@@ -107,7 +107,7 @@ async def get_business_team_overview(
         weakest_dimension = None
 
         if scorecards:
-            dimensions = {
+            dimensions: dict[str, list[float]] = {
                 "Rapport": [],
                 "Discovery": [],
                 "Objection Handling": [],
@@ -151,7 +151,7 @@ async def get_business_team_overview(
             }
 
             if averages:
-                weakest_dimension = min(averages, key=averages.get)
+                weakest_dimension = min(averages, key=lambda key: averages[key])
 
         team_with_stats.append(
             {
