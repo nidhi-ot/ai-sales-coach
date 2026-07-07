@@ -56,19 +56,32 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 
+  function getSettingsStorageKey() {
+  const userId = localStorage.getItem("user_id");
+  const email = localStorage.getItem("email");
+
+  return `user_settings:${userId ?? email ?? "anonymous"}`;
+}
+
   useEffect(() => {
     setRole(localStorage.getItem("role"));
     setFullName(localStorage.getItem("full_name") || "User");
     setEmail(localStorage.getItem("email") || "user@example.com");
 
-    const savedSettings = localStorage.getItem("user_settings");
+    const settingsKey = getSettingsStorageKey();
+const savedSettings = localStorage.getItem(settingsKey);
 
-    if (savedSettings) {
-      setSettings({
-        ...defaultSettings,
-        ...JSON.parse(savedSettings),
-      });
-    }
+if (savedSettings) {
+  try {
+    setSettings({
+      ...defaultSettings,
+      ...JSON.parse(savedSettings),
+    });
+  } catch {
+    localStorage.removeItem(settingsKey);
+    setSettings(defaultSettings);
+  }
+}
   }, []);
 
   function updateSetting<K extends keyof UserSettings>(
@@ -82,7 +95,7 @@ export default function SettingsPage() {
   }
 
   function handleSave() {
-    localStorage.setItem("user_settings", JSON.stringify(settings));
+    localStorage.setItem(getSettingsStorageKey(), JSON.stringify(settings));
     setSaved(true);
 
     setTimeout(() => {

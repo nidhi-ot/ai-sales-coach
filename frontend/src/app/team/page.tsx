@@ -65,12 +65,24 @@ if (!storedBusinessId) {
 setBusinessId(storedBusinessId);
 
       const [teamRes, progressRes] = await Promise.all([
-        authFetch(`${API_BASE_URL}/manager/business/${businessId}/team`),
-        authFetch(`${API_BASE_URL}/manager/business/${businessId}/progress`),
+      authFetch(`${API_BASE_URL}/manager/business/${businessId}/team`),
+      authFetch(`${API_BASE_URL}/manager/business/${businessId}/progress`),
       ]);
 
-      const teamData = await teamRes.json();
-      const progressData = await progressRes.json();
+      if (!teamRes.ok) {
+        throw new Error(
+        `Failed to load team (${teamRes.status})`
+  );
+}
+
+if (!progressRes.ok) {
+  throw new Error(
+    `Failed to load team progress (${progressRes.status})`
+  );
+}
+
+const teamData = await teamRes.json();
+const progressData = await progressRes.json();
 
       const rawReps: RawRep[] = Array.isArray(teamData.reps)
         ? teamData.reps
@@ -88,14 +100,18 @@ setBusinessId(storedBusinessId);
       setTeam(normalizedTeam);
       setProgress(progressData.progress ?? {});
     } catch (err) {
-      console.error("Failed to load manager data:", err);
+  console.error("Failed to load manager data:", err);
 
-      if (err instanceof Error && err.message === "Unauthorized") {
-        return;
-      }
+  if (err instanceof Error && err.message === "Unauthorized") {
+    return;
+  }
 
-      setError("Unable to load team information. Please try again.");
-    } finally {
+  setError(
+    err instanceof Error
+      ? err.message
+      : "Unable to load team information."
+  );
+} finally {
       setLoading(false);
     }
   }
