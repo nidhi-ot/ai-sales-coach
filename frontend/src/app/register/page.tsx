@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../lib/api";
 
 export default function RegisterPage() {
@@ -10,11 +10,18 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [inviteToken, setInviteToken] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setInviteToken(params.get("invite") ?? "");
+  }, []);
 
   async function handleCreateAccount() {
     setError("");
@@ -57,6 +64,8 @@ export default function RegisterPage() {
           email: email.trim(),
           phone_number: phoneNumber.trim(),
           password,
+          invite_token: inviteToken || undefined,
+          employee_id: employeeId.trim() || undefined,
         }),
       });
 
@@ -71,11 +80,17 @@ export default function RegisterPage() {
       localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
       localStorage.setItem("full_name", data.full_name);
+      localStorage.setItem("email", data.email || "");
+      localStorage.setItem("phone_number", data.phone_number || "");
+      if (data.employee_id) {
+        localStorage.setItem("employee_id", data.employee_id);
+      }
+      localStorage.setItem("role", data.role || "rep");
 
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      setError("Could not connect to backend");
+      setError(error instanceof Error ? error.message : "Could not connect to backend");
     } finally {
       setLoading(false);
     }
@@ -126,6 +141,20 @@ export default function RegisterPage() {
           placeholder="Enter your phone number"
           style={inputStyle}
         />
+
+        <label style={labelStyle}>Employee ID</label>
+        <input
+          value={employeeId}
+          onChange={(e) => setEmployeeId(e.target.value)}
+          placeholder="Optional employee ID"
+          style={inputStyle}
+        />
+
+        {!inviteToken && (
+          <p style={{ color: "#b54708", fontSize: "14px", marginTop: "-4px" }}>
+            Invite token missing. This signup will only work if open signup is enabled.
+          </p>
+        )}
 
         <label style={labelStyle}>Password</label>
         <input

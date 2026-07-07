@@ -1,9 +1,12 @@
+import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentAccount, require_role
+from app.config import settings
 from app.db.client import get_supabase
 
 router = APIRouter()
@@ -27,6 +30,23 @@ class UpdateBusinessFrameworkRequest(BaseModel):
 class UpdateBusinessFrameworkResponse(BaseModel):
     business_id: str
     framework: str
+    warning: str
+
+
+class CreateInviteRequest(BaseModel):
+    email: str
+    role: Literal["rep", "manager", "admin"] = "rep"
+    expires_in_days: int = Field(default=7, gt=0, le=30)
+
+
+class CreateInviteResponse(BaseModel):
+    invite_id: str
+    email: str
+    business_id: str
+    role: str
+    token: str
+    registration_link: str
+    expires_at: str
     warning: str
 
 
@@ -64,5 +84,59 @@ async def update_business_framework(
     return UpdateBusinessFrameworkResponse(
         business_id=str(current_account.business_id),
         framework=str(updated_business.get("framework", data.framework)),
+        warning=FRAMEWORK_WARNING,
+    )
+
+
+@router.post(
+    "/invites",
+    response_model=CreateInviteResponse,
+)
+async def create_invite(
+    data: CreateInviteRequest,
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    supabase = get_supabase()
+
+    business_result = (
+        supabase.table("business_profiles")
+        .select("id")
+        .eq("id", current_account.business_id)
+        .limit(1)
+        .execute()
+    )
+    business_rows = _row_dicts(business_result.data)
+
+    if not business_rows:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=data.expires_in_days)
+
+    invite_result = (
+        supabase.table("invites")
+        .insert(
+            {
+                "email": data.email.strip().lower(),
+                "business_id": current_account.business_id,
+                "role": data.role,
+                "token": token,
+                "expires_at": expires_at.isoformat(),
+            }
+        )
+        .execute()
+    )
+    invite_rows = _row_dicts(invite_result.data)
+    invite = invite_rows[0] if invite_rows else {}
+    invite_id = str(invite.get("id", ""))
+
+    return CreateInviteResponse(
+        invite_id=invite_id,
+        email=data.email.strip().lower(),
+        business_id=str(current_account.business_id),
+        role=data.role,
+        token=token,
+        registration_link=f"{settings.frontend_url.rstrip('/')}/register?invite={token}",
+        expires_at=expires_at.isoformat(),
         warning=FRAMEWORK_WARNING,
     )

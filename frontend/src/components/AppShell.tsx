@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function AppShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
+  const [role, setRole] = useState("rep");
 
   useEffect(() => {
-    setRole(localStorage.getItem("role"));
+    setRole(localStorage.getItem("role") || "rep");
   }, []);
 
   function handleLogout() {
@@ -24,6 +20,7 @@ export default function AppShell({
     localStorage.removeItem("full_name");
     localStorage.removeItem("email");
     localStorage.removeItem("phone_number");
+    localStorage.removeItem("employee_id");
     localStorage.removeItem("role");
     localStorage.removeItem("remember_me");
     localStorage.removeItem("last_session_id");
@@ -31,22 +28,25 @@ export default function AppShell({
     router.push("/");
   }
 
-const navItems =
-  role === "manager"
-    ? [
-        { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-        { label: "Team", href: "/team", icon: "👥" },
-        { label: "Settings", href: "/settings", icon: "⚙️" },
-      ]
-    : [
-        { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-        { label: "Practice", href: "/scenarios", icon: "🎯" },
-        { label: "History", href: "/history", icon: "🕘" },
-        { label: "Scorecards", href: "/scorecards", icon: "📋" },
-        { label: "Profile", href: "/profile", icon: "👤" },
-        { label: "Progress", href: "/progress", icon: "📈" },
-        { label: "Settings", href: "/settings", icon: "⚙️" },
-      ];
+  const navItems =
+    role === "manager"
+      ? [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Team", href: "/team", icon: "👥" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+        ]
+      : [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Practice", href: "/scenarios", icon: "🎯" },
+          { label: "History", href: "/history", icon: "🕘" },
+          { label: "Scorecards", href: "/scorecards", icon: "📋" },
+          { label: "Profile", href: "/profile", icon: "👤" },
+          { label: "Progress", href: "/progress", icon: "📈" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+          ...(role === "admin"
+            ? [{ label: "Admin", href: "/admin", icon: "🛡️" }]
+            : []),
+        ];
 
   return (
     <main

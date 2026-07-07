@@ -51,6 +51,7 @@ export default function LoginPage() {
       localStorage.setItem("full_name", data.full_name || "Sales Rep");
       localStorage.setItem("email", data.email || "");
       localStorage.setItem("phone_number", data.phone_number || "");
+      localStorage.setItem("employee_id", data.employee_id || "");
       localStorage.setItem("role", data.role || "rep");
       localStorage.setItem("remember_me", String(rememberMe));
       localStorage.removeItem("last_session_id");

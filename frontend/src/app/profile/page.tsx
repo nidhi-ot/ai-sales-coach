@@ -7,12 +7,14 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("Sales Rep");
   const [email, setEmail] = useState("-");
   const [phone, setPhone] = useState("-");
+  const [employeeId, setEmployeeId] = useState("-");
   const [role, setRole] = useState("rep");
 
   useEffect(() => {
     setFullName(localStorage.getItem("full_name") || "Sales Rep");
     setEmail(localStorage.getItem("email") || "-");
     setPhone(localStorage.getItem("phone_number") || "-");
+    setEmployeeId(localStorage.getItem("employee_id") || "-");
     setRole(localStorage.getItem("role") || "rep");
   }, []);
 
@@ -36,6 +38,7 @@ export default function ProfilePage() {
           <div style={gridStyle}>
             <InfoCard label="Email" value={email} />
             <InfoCard label="Phone Number" value={phone} />
+            <InfoCard label="Employee ID" value={employeeId} />
             <InfoCard label="Role" value={role} />
             <InfoCard label="Business" value="AI Sales Coach" />
           </div>

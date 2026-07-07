@@ -135,6 +135,82 @@ class AdminRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    def test_admin_invite_includes_frontend_origin(self):
+        fake_supabase = FakeSupabase(with_default_session=False)
+        fake_supabase.store["business_profiles"].append(
+            {
+                "id": "business-789",
+                "name": "Optimal Trappstadning",
+                "framework": "BANT",
+                "context_data": {},
+                "products": "AI sales coaching",
+                "icp": "Sales teams",
+                "objections": "",
+                "language": "en",
+            }
+        )
+        fake_supabase.store["salesperson_accounts"].append(
+            {
+                "id": "admin-123",
+                "full_name": "Test Admin",
+                "phone_number": "0700000002",
+                "business_id": "business-789",
+                "role": "admin",
+            }
+        )
+        self._set_current_user("admin-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.admin.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.post(
+                "/api/v1/admin/invites",
+                json={"email": "invitee@example.com", "role": "rep", "expires_in_days": 7},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(
+            payload["registration_link"].startswith("http://127.0.0.1:3000/register?invite=")
+        )
+
+    def test_admin_invite_rejects_out_of_bounds_expiry(self):
+        fake_supabase = FakeSupabase(with_default_session=False)
+        fake_supabase.store["business_profiles"].append(
+            {
+                "id": "business-789",
+                "name": "Optimal Trappstadning",
+                "framework": "BANT",
+                "context_data": {},
+                "products": "AI sales coaching",
+                "icp": "Sales teams",
+                "objections": "",
+                "language": "en",
+            }
+        )
+        fake_supabase.store["salesperson_accounts"].append(
+            {
+                "id": "admin-123",
+                "full_name": "Test Admin",
+                "phone_number": "0700000002",
+                "business_id": "business-789",
+                "role": "admin",
+            }
+        )
+        self._set_current_user("admin-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.admin.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.post(
+                "/api/v1/admin/invites",
+                json={"email": "invitee@example.com", "role": "rep", "expires_in_days": 0},
+            )
+
+        self.assertEqual(response.status_code, 422)
+
 
 if __name__ == "__main__":
     unittest.main()
