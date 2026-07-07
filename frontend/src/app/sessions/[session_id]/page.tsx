@@ -105,9 +105,16 @@ export default function SessionDetailsPage() {
               {sessionId && details?.scorecard_status === "failed" ? (
                 <button
                   onClick={async () => {
-                    await authFetch(`${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`, {
+                    const response = await authFetch(`${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`, {
                       method: "POST",
                     });
+
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                      alert(data.detail ?? "Failed to retry analysis.");
+                      return;
+                    }
                     setDetails((current) =>
                       current ? { ...current, scorecard_status: "processing" } : current
                     );
