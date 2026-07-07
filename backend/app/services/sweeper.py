@@ -64,8 +64,9 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
             continue
 
         hard_deadline = started_at + max_elapsed
+        metadata_value = session.get("metadata")
         metadata: dict[str, Any] = (
-            session.get("metadata") if isinstance(session.get("metadata"), dict) else {}
+            metadata_value if isinstance(metadata_value, dict) else {}
         )
         heartbeat_at = _parse_datetime(metadata.get("heartbeat_at"))
         abandoned_deadline = heartbeat_at + abandoned_after if heartbeat_at else None
