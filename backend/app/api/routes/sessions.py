@@ -388,7 +388,9 @@ async def record_session_heartbeat(
 ):
     supabase = get_supabase()
     session_row = _get_owned_session(supabase, session_id, str(current_user.id))
-    metadata = session_row.get("metadata") if isinstance(session_row.get("metadata"), dict) else {}
+    metadata: dict[str, Any] = (
+        session_row.get("metadata") if isinstance(session_row.get("metadata"), dict) else {}
+    )
     heartbeat_at = data.heartbeat_at or datetime.now(timezone.utc)
     if heartbeat_at.tzinfo is None:
         heartbeat_at = heartbeat_at.replace(tzinfo=timezone.utc)

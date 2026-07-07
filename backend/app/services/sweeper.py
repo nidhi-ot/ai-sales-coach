@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, cast
 
 from app.config import settings
 from app.db.client import get_supabase
@@ -18,7 +18,11 @@ def _row_dicts(data: Any) -> list[dict[str, Any]]:
     if not isinstance(data, list):
         return []
 
-    return [item for item in data if isinstance(item, dict)]
+    rows: list[dict[str, Any]] = []
+    for item in data:
+        if isinstance(item, dict):
+            rows.append(cast(dict[str, Any], item))
+    return rows
 
 
 def _parse_datetime(value: Any) -> datetime | None:
@@ -60,7 +64,9 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
             continue
 
         hard_deadline = started_at + max_elapsed
-        metadata = session.get("metadata") if isinstance(session.get("metadata"), dict) else {}
+        metadata: dict[str, Any] = (
+            session.get("metadata") if isinstance(session.get("metadata"), dict) else {}
+        )
         heartbeat_at = _parse_datetime(metadata.get("heartbeat_at"))
         abandoned_deadline = heartbeat_at + abandoned_after if heartbeat_at else None
         should_complete_for_hard_timeout = now_utc >= hard_deadline
