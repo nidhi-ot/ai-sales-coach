@@ -135,7 +135,74 @@ class ScorecardRouteTests(unittest.TestCase):
         )
         self.assertTrue(fake_supabase.store["scorecards"][0])
 
-    def test_history_returns_scorecard_fields(self):
+    def test_meddic_session_scores_against_snapshotted_framework(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["sessions"]["session-123"]["metadata"] = {
+            "system_instruction": "Test scenario",
+            "framework": "MEDDIC",
+        }
+        feedback = {
+            "rapport_score": 8,
+            "needs_discovery_score": 7,
+            "objection_handling_score": 6,
+            "closing_score": 7,
+            "overall_score": 7,
+            "strengths": ["Quantified business pain"],
+            "improvement_areas": ["Clarify decision process"],
+            "framework_scores": {
+                "MEDDIC": {
+                    "metrics": 7,
+                    "economic_buyer": 6,
+                    "decision_criteria": 7,
+                    "decision_process": 5,
+                    "identify_pain": 8,
+                    "champion": 6,
+                }
+            },
+            "feedback_summary": "Solid MEDDIC discovery.",
+        }
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch("app.services.scorecards.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.services.scorecards.gpt_analyze_transcript",
+                new=AsyncMock(return_value=feedback),
+            ) as gpt_mock,
+            patch(
+                "app.services.scorecards.create_next_salesperson_profile",
+                new=AsyncMock(return_value={"id": "profile-1"}),
+            ),
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:03:00Z",
+                    "duration_seconds": 180,
+                    "end_reason": "manual",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "How do you measure onboarding success?",
+                            "timestamp_offset_ms": 1000,
+                        },
+                        {
+                            "speaker": "ai_customer",
+                            "text": "Ramp time and manager adoption matter most.",
+                            "timestamp_offset_ms": 2000,
+                        },
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            fake_supabase.store["scorecards"][0]["framework_scores"],
+            feedback["framework_scores"],
+        )
+        self.assertEqual(gpt_mock.await_args.kwargs["framework"], "MEDDIC")
+
+    def test_history_returns_scorecard_fields_and_share_update_preserves_record(self):
         fake_supabase = FakeSupabase()
         fake_supabase.store["sessions"]["session-123"].update(
             {"status": "completed", "duration_seconds": 180}

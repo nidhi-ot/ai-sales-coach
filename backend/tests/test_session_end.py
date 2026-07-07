@@ -111,6 +111,49 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(payload["score_card"], fake_scorecard)
         pipeline_mock.assert_awaited_once_with("session-123")
 
+    def test_tab_close_end_saves_pending_transcript_and_queues_scorecard(self):
+        fake_supabase = FakeSupabase()
+        fake_scorecard = {"session_id": "session-123", "status": "processing"}
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.api.routes.sessions.mark_scorecard_processing",
+                new=AsyncMock(return_value=fake_scorecard),
+            ) as processing_mock,
+            patch(
+                "app.api.routes.sessions.run_scorecard_pipeline",
+                new=AsyncMock(return_value=None),
+            ) as pipeline_mock,
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:01:20Z",
+                    "duration_seconds": 80,
+                    "end_reason": "tab_closed",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "I wanted to ask how you handle coaching today.",
+                            "timestamp_offset_ms": 1000,
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["score_card_status"], "processing")
+        self.assertEqual(payload["transcript_entries_saved"], 1)
+        self.assertEqual(fake_supabase.store["sessions"]["session-123"]["status"], "completed")
+        self.assertEqual(
+            fake_supabase.store["transcripts"][0]["text"],
+            "I wanted to ask how you handle coaching today.",
+        )
+        processing_mock.assert_awaited_once_with("session-123")
+        pipeline_mock.assert_awaited_once_with("session-123")
+
     def test_transcript_batch_skips_duplicate_session_timestamp_speaker_keys(self):
         fake_supabase = FakeSupabase()
         fake_supabase.store["transcripts"].append(
@@ -150,6 +193,27 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["inserted"], 1)
         self.assertEqual(len(fake_supabase.store["transcripts"]), 2)
+
+    def test_heartbeat_updates_metadata_without_losing_existing_session_context(self):
+        fake_supabase = FakeSupabase()
+
+        with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/heartbeat",
+                json={"heartbeat_at": "2026-06-25T10:01:00Z"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["session_id"], "session-123")
+        self.assertEqual(payload["heartbeat_at"], "2026-06-25T10:01:00+00:00")
+        self.assertEqual(
+            fake_supabase.store["sessions"]["session-123"]["metadata"],
+            {
+                "system_instruction": "Test scenario",
+                "heartbeat_at": "2026-06-25T10:01:00+00:00",
+            },
+        )
 
 
 class TwoCallLearningLoopRouteTests(unittest.TestCase):

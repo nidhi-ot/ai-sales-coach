@@ -4,13 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
-
-type FrameworkScores = {
-  budget?: number;
-  authority?: number;
-  need?: number;
-  timeline?: number;
-};
+import {
+  frameworkMetrics as buildFrameworkMetrics,
+  type FrameworkScores,
+} from "../../lib/frameworkScores";
 
 type Scorecard = {
   session_id: string;
@@ -75,32 +72,26 @@ const scoreMetrics = (scorecard: Scorecard): ScoreMetric[] => [
   },
 ];
 
-const frameworkMetrics = (scorecard: Scorecard): ScoreMetric[] => [
-  {
-    key: "budget",
-    label: "Budget",
-    value: scorecard.framework_scores?.budget,
-    icon: "💰",
-  },
-  {
-    key: "authority",
-    label: "Authority",
-    value: scorecard.framework_scores?.authority,
-    icon: "👤",
-  },
-  {
-    key: "need",
-    label: "Need",
-    value: scorecard.framework_scores?.need,
-    icon: "🎯",
-  },
-  {
-    key: "timeline",
-    label: "Timeline",
-    value: scorecard.framework_scores?.timeline,
-    icon: "⏱️",
-  },
-];
+function frameworkIcon(key: string): string {
+  const icons: Record<string, string> = {
+    budget: "💰",
+    authority: "👤",
+    need: "🎯",
+    timeline: "📅",
+    metrics: "📊",
+    economic_buyer: "💼",
+    decision_criteria: "📋",
+    decision_process: "🔄",
+    identify_pain: "🔥",
+    champion: "🏆",
+    situation: "📍",
+    problem: "🚧",
+    implication: "💥",
+    need_payoff: "🚀",
+  };
+
+  return icons[key] ?? key.slice(0, 2).toUpperCase();
+}
 
 export default function ScorecardsClients() {
   const router = useRouter();
@@ -178,6 +169,11 @@ export default function ScorecardsClients() {
   }, [querySessionId]);
 
   const overallScore = scorecard?.overall_score ?? null;
+  const frameworkScoreGroup = buildFrameworkMetrics(scorecard?.framework_scores);
+  const frameworkScoreMetrics: ScoreMetric[] = frameworkScoreGroup.metrics.map((metric) => ({
+    ...metric,
+    icon: frameworkIcon(metric.key),
+  }));
 
   return (
     <AppShell>
@@ -309,10 +305,10 @@ export default function ScorecardsClients() {
               </section>
 
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>BANT Framework</h2>
+                <h2 style={sectionTitleStyle}>{frameworkScoreGroup.framework} Framework</h2>
 
                 <div style={frameworkGridStyle}>
-                  {frameworkMetrics(scorecard).map((metric) => (
+                  {frameworkScoreMetrics.map((metric) => (
                     <FrameworkItem
                       key={metric.key}
                       label={metric.label}

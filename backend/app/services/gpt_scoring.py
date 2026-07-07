@@ -13,12 +13,7 @@ class ScorecardFeedback(BaseModel):
     objection_handling_score: int = Field(ge=1, le=10)
     closing_score: int = Field(ge=1, le=10)
     overall_score: int = Field(ge=1, le=10)
-    budget_score: int = Field(ge=1, le=10)
-    authority_score: int = Field(ge=1, le=10)
-    need_score: int = Field(ge=1, le=10)
-    timeline_score: int = Field(ge=1, le=10)
-    bant_overall_score: int = Field(ge=1, le=10)
-    framework_scores: dict[str, int] = Field(default_factory=dict)
+    framework_scores: dict[str, Any]
     strengths: list[str]
     improvement_areas: list[str]
     feedback_summary: str
@@ -32,8 +27,53 @@ class ScorecardFeedback(BaseModel):
         return [str(item) for item in value]
 
 
+FRAMEWORKS: dict[str, dict[str, Any]] = {
+    "BANT": {
+        "name": "BANT",
+        "dimensions": {
+            "budget": "Did they ask about team size and/or training budget/spend?",
+            "authority": "Did they identify or qualify the decision-maker?",
+            "need": "Did they surface the current training pain point or challenge?",
+            "timeline": "Did they qualify urgency or timing of the need?",
+        },
+        "criteria": "Did they specifically ask about budget, authority, needs, and timeline?",
+    },
+    "MEDDIC": {
+        "name": "MEDDIC",
+        "dimensions": {
+            "metrics": "Did they quantify business impact, outcomes, or success metrics?",
+            "economic_buyer": "Did they identify or qualify the economic buyer?",
+            "decision_criteria": "Did they uncover how the buyer will evaluate the solution?",
+            "decision_process": "Did they clarify the steps, stakeholders, and timing to decide?",
+            "identify_pain": "Did they uncover a specific, business-relevant pain?",
+            "champion": "Did they identify or develop an internal advocate?",
+        },
+        "criteria": (
+            "Did they qualify metrics, economic buyer, decision criteria, decision process, "
+            "identified pain, and champion?"
+        ),
+    },
+    "SPIN": {
+        "name": "SPIN",
+        "dimensions": {
+            "situation": "Did they understand the buyer's current situation and context?",
+            "problem": "Did they uncover clear problems or dissatisfaction?",
+            "implication": "Did they explore the consequences or cost of the problem?",
+            "need_payoff": "Did they connect the solution to buyer-stated value or payoff?",
+        },
+        "criteria": (
+            "Did they ask effective situation, problem, implication, and need-payoff questions?"
+        ),
+    },
+}
+
+
 async def gpt_analyze_transcript(
-    rep_text: str, ai_text: str, system_instruction: str, scenario_title: str
+    rep_text: str,
+    ai_text: str,
+    system_instruction: str,
+    scenario_title: str,
+    framework: str = "BANT",
 ) -> dict[str, Any]:
     """
     Analyze a sales call transcript using GPT-5.5 to generate scorecard feedback.
@@ -46,17 +86,20 @@ async def gpt_analyze_transcript(
         ai_text: The AI customer's responses
         system_instruction: The scenario system instruction/context
         scenario_title: The scenario title for context
+        framework: Sales methodology snapshotted on the session
 
     Returns:
-        Dictionary containing scores and BANT framework analysis
+        Dictionary containing universal scores and framework-specific analysis
         Keys: rapport_score, needs_discovery_score, objection_handling_score, closing_score,
-              budget_score, authority_score, need_score, timeline_score,
-              overall_score, framework_score, strengths, improvement_areas
+              overall_score, framework_scores, strengths, improvement_areas
     """
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY not configured in settings")
 
     client = AsyncOpenAI(api_key=settings.openai_api_key)
+    selected_framework = _normalize_framework(framework)
+    framework_prompt = _framework_prompt_section(selected_framework)
+    framework_json = _framework_json_shape(selected_framework)
 
     prompt = f"""You are an expert sales coach evaluating a practice sales call.
 You are part of an AI Sales Coach platform.
@@ -81,13 +124,9 @@ Analyze this sales call on two dimensions:
    - Objection Handling Score: How well did they handle customer objections?
    - Closing Score: Did they secure a clear next step or closing action?
 
-2. BANT FRAMEWORK QUALIFICATION (1-10 each):
-   - Budget Score: Did they ask about team size and/or training budget/spend?
-   - Authority Score: Did they identify or qualify the decision-maker?
-   - Need Score: Did they surface the current training pain point or challenge?
-   - Timeline Score: Did they qualify urgency or timing of the need?
+{framework_prompt}
 
-For BANT, score 1-10 based on:
+For {selected_framework}, score each framework dimension 1-10 based on:
 - 10: Clearly identified and qualified
 - 7-9: Partially addressed or mentioned
 - 4-6: Vaguely touched on
@@ -100,7 +139,7 @@ EVALUATION CRITERIA:
 - Did they secure a clear next step or closing action?
 - Was their speaking pace, tone, and language professional?
 - Did they listen and respond to customer concerns?
-- For BANT: Did they specifically ask about budget, authority, needs, and timeline?
+- For {selected_framework}: {FRAMEWORKS[selected_framework]["criteria"]}
 
 Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
 {{
@@ -109,24 +148,22 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
   "objection_handling_score": <1-10>,
   "closing_score": <1-10>,
   "overall_score": <1-10>,
-  "budget_score": <1-10>,
-  "authority_score": <1-10>,
-  "need_score": <1-10>,
-  "timeline_score": <1-10>,
-  "bant_overall_score": <1-10>,
-  "framework_scores": {{
-    "budget": <1-10>,
-    "authority": <1-10>,
-    "need": <1-10>,
-    "timeline": <1-10>
-  }},
+  "framework_scores": {framework_json},
   "strengths": ["strength 1", "strength 2", "strength 3"],
   "improvement_areas": ["area 1", "area 2", "area 3"],
   "feedback_summary": "A concise summary of the feedback for the rep, highlighting key strengths
-and areas for improvement.",
+and areas for improvement."
 }}"""
 
-    feedback = await _request_valid_feedback(client=client, prompt=prompt)
+    feedback = await _request_valid_feedback(
+        client=client,
+        prompt=prompt,
+        framework=selected_framework,
+    )
+    framework_scores = _validated_framework_scores(
+        framework_scores=feedback.framework_scores,
+        framework=selected_framework,
+    )
 
     return {
         # Sales Execution Skills
@@ -135,25 +172,18 @@ and areas for improvement.",
         "objection_handling_score": feedback.objection_handling_score,
         "closing_score": feedback.closing_score,
         "overall_score": feedback.overall_score,
-        # BANT Framework Scores
-        "budget_score": feedback.budget_score,
-        "authority_score": feedback.authority_score,
-        "need_score": feedback.need_score,
-        "timeline_score": feedback.timeline_score,
-        "bant_overall_score": feedback.bant_overall_score,
-        "framework_scores": {
-            "budget": feedback.budget_score,
-            "authority": feedback.authority_score,
-            "need": feedback.need_score,
-            "timeline": feedback.timeline_score,
-        },
+        "framework_scores": framework_scores,
         "strengths": feedback.strengths,
         "improvement_areas": feedback.improvement_areas,
         "feedback_summary": feedback.feedback_summary,
     }
 
 
-async def _request_valid_feedback(client: AsyncOpenAI, prompt: str) -> ScorecardFeedback:
+async def _request_valid_feedback(
+    client: AsyncOpenAI,
+    prompt: str,
+    framework: str,
+) -> ScorecardFeedback:
     last_error: Exception | None = None
 
     for attempt in range(2):
@@ -188,7 +218,9 @@ async def _request_valid_feedback(client: AsyncOpenAI, prompt: str) -> Scorecard
             continue
 
         try:
-            return _parse_feedback(content)
+            feedback = _parse_feedback(content)
+            _validated_framework_scores(feedback.framework_scores, framework)
+            return feedback
         except (json.JSONDecodeError, ValidationError, ValueError) as exc:
             last_error = exc
 
@@ -209,3 +241,60 @@ def _parse_feedback(response_text: str) -> ScorecardFeedback:
 
     feedback = json.loads(response_text.strip())
     return ScorecardFeedback.model_validate(feedback)
+
+
+def _normalize_framework(framework: str | None) -> str:
+    value = (framework or "BANT").upper()
+    return value if value in FRAMEWORKS else "BANT"
+
+
+def _framework_prompt_section(framework: str) -> str:
+    dimensions = FRAMEWORKS[framework]["dimensions"]
+    dimension_lines = "\n".join(
+        f"   - {label.replace('_', ' ').title()} Score: {description}"
+        for label, description in dimensions.items()
+    )
+
+    return f"2. {framework} FRAMEWORK QUALIFICATION (1-10 each):\n{dimension_lines}"
+
+
+def _framework_json_shape(framework: str) -> str:
+    dimensions = FRAMEWORKS[framework]["dimensions"]
+    score_lines = ",\n    ".join(f'"{label}": <1-10>' for label in dimensions)
+    return f'{{\n    "{framework}": {{\n    {score_lines}\n    }}\n  }}'
+
+
+def _validated_framework_scores(
+    framework_scores: dict[str, Any],
+    framework: str,
+) -> dict[str, dict[str, int]]:
+    dimensions = FRAMEWORKS[framework]["dimensions"]
+    raw_scores = framework_scores.get(framework)
+
+    if raw_scores is None and all(key in framework_scores for key in dimensions):
+        raw_scores = framework_scores
+
+    if not isinstance(raw_scores, dict):
+        raise ValueError(f"GPT response missing {framework} framework_scores")
+
+    normalized_scores: dict[str, int] = {}
+
+    for dimension in dimensions:
+        if dimension not in raw_scores:
+            raise ValueError(f"GPT response missing {framework}.{dimension} score")
+
+        normalized_scores[dimension] = _bounded_score(raw_scores[dimension])
+
+    return {framework: normalized_scores}
+
+
+def _bounded_score(score: Any) -> int:
+    try:
+        score_int = int(score)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid score: {score}") from exc
+
+    if score_int < 1 or score_int > 10:
+        raise ValueError(f"Score out of range: {score}")
+
+    return score_int
