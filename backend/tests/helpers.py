@@ -199,7 +199,6 @@ class FakeTable:
 
             row = {
                 "id": payload.get("id") or f"scorecard-{len(self.store['scorecards']) + 1}",
-                "shared_with_manager": False,
                 **payload,
             }
             self.store["scorecards"].append(row)

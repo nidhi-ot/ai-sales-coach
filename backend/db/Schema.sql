@@ -166,8 +166,6 @@ CREATE TABLE scorecards (
   improvement_areas TEXT[],
   feedback_summary TEXT,
   
-  -- Sharing controls
-  shared_with_manager BOOLEAN DEFAULT FALSE,
 
   -- Durable background scoring lifecycle
   status TEXT DEFAULT 'processing' CHECK (status IN ('processing', 'generated', 'failed')),
