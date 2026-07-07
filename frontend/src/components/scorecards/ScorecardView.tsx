@@ -20,7 +20,6 @@ export type Scorecard = {
   strengths?: string[] | null;
   improvement_areas?: string[] | null;
   feedback_summary?: string | null;
-  shared_with_manager?: boolean | null;
 };
 
 type ScoreMetric = {

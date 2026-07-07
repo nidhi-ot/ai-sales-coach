@@ -401,7 +401,7 @@ async def get_rep_sessions(
     if session_ids:
         scorecard_result = (
             supabase.table("scorecards")
-            .select("session_id, overall_score, shared_with_manager, created_at")
+            .select("session_id, overall_score, created_at")
             .in_("session_id", session_ids)
             .order("created_at", desc=True)
             .execute()
@@ -416,7 +416,6 @@ async def get_rep_sessions(
     for row in session_rows:
         scorecard = scorecards_by_session.get(str(row["id"]), {})
         row["overall_score"] = scorecard.get("overall_score")
-        row["shared_with_manager"] = bool(scorecard.get("shared_with_manager", False))
 
     return session_rows
 

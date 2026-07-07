@@ -12,7 +12,6 @@ type Session = {
   duration_seconds: number | null;
   status: string;
   overall_score?: number | null;
-  shared_with_manager?: boolean;
 };
 
 export default function HistoryPage() {
@@ -35,7 +34,6 @@ export default function HistoryPage() {
           ? data.map((session) => ({
               ...session,
               overall_score: session.overall_score ?? null,
-              shared_with_manager: session.shared_with_manager ?? false,
             }))
           : [];
 
@@ -48,32 +46,6 @@ export default function HistoryPage() {
       });
   }, []);
 
-  async function updateSharing(sessionId: string, shared: boolean) {
-    setSessions((current) =>
-      current.map((session) =>
-        session.id === sessionId
-          ? { ...session, shared_with_manager: shared }
-          : session
-      )
-    );
-
-    try {
-      await authFetch(
-        `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            shared_with_manager: shared,
-          }),
-        }
-      );
-    } catch (error) {
-      console.error("Failed to update sharing:", error);
-    }
-  }
 
   const completedCount = sessions.filter(
     (session) => session.status === "completed"
@@ -203,17 +175,6 @@ export default function HistoryPage() {
                         ? `${session.overall_score}/10`
                         : "Not scored"}
                     </div>
-
-                    <label style={shareLabelStyle}>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(session.shared_with_manager)}
-                        onChange={(e) =>
-                          updateSharing(session.id, e.target.checked)
-                        }
-                      />
-                      Share with manager
-                    </label>
 
                     <div style={buttonGroupStyle}>
                       <button
@@ -408,15 +369,6 @@ const statusBadgeBase: React.CSSProperties = {
   borderRadius: "999px",
   fontSize: "12px",
   fontWeight: 800,
-};
-
-const shareLabelStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  color: "#344054",
-  fontSize: "14px",
-  whiteSpace: "nowrap",
 };
 
 const scorePillStyle: React.CSSProperties = {
