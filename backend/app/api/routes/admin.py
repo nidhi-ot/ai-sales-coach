@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -224,7 +224,7 @@ async def update_member(
         email=updated_member.get("email"),
         phone_number=str(updated_member["phone_number"]),
         employee_id=updated_member.get("employee_id"),
-        role=str(updated_member["role"]),
+        role=cast(Literal["rep", "manager", "admin"], str(updated_member["role"])),
         is_active=bool(updated_member.get("is_active", True)),
         created_at=updated_member.get("created_at"),
     )
