@@ -67,8 +67,7 @@ export default function HistoryPage() {
             <h1 style={heroTitleStyle}>Session History</h1>
 
             <p style={heroSubtitleStyle}>
-              Review previous AI Sales Coach practice sessions, scorecards, and
-              manager sharing status.
+              Review your practice history, session results, and AI coaching feedback.
             </p>
           </div>
 
