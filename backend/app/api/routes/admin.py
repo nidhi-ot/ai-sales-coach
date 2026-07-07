@@ -50,6 +50,22 @@ class CreateInviteResponse(BaseModel):
     warning: str
 
 
+class AdminMemberResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str | None = None
+    phone_number: str
+    employee_id: str | None = None
+    role: Literal["rep", "manager", "admin"]
+    is_active: bool
+    created_at: str | None = None
+
+
+class UpdateAdminMemberRequest(BaseModel):
+    role: Literal["rep", "manager", "admin"] | None = None
+    is_active: bool | None = None
+
+
 @router.patch(
     "/business/framework",
     response_model=UpdateBusinessFrameworkResponse,
@@ -139,4 +155,76 @@ async def create_invite(
         registration_link=f"{settings.frontend_url.rstrip('/')}/register?invite={token}",
         expires_at=expires_at.isoformat(),
         warning=FRAMEWORK_WARNING,
+    )
+
+
+@router.get("/members", response_model=list[AdminMemberResponse])
+async def list_members(
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    supabase = get_supabase()
+
+    result = (
+        supabase.table("salesperson_accounts")
+        .select("id, full_name, email, phone_number, employee_id, role, is_active, created_at")
+        .eq("business_id", current_account.business_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return _row_dicts(result.data)
+
+
+@router.patch("/members/{member_id}", response_model=AdminMemberResponse)
+async def update_member(
+    member_id: str,
+    data: UpdateAdminMemberRequest,
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    if data.role is None and data.is_active is None:
+        raise HTTPException(status_code=400, detail="No member fields provided")
+
+    supabase = get_supabase()
+
+    member_result = (
+        supabase.table("salesperson_accounts")
+        .select(
+            "id, full_name, email, phone_number, employee_id, role, "
+            "is_active, business_id, created_at"
+        )
+        .eq("id", member_id)
+        .limit(1)
+        .execute()
+    )
+    member_rows = _row_dicts(member_result.data)
+
+    if not member_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    member = member_rows[0]
+
+    if str(member.get("business_id")) != str(current_account.business_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    update_payload: dict[str, Any] = {}
+    if data.role is not None:
+        update_payload["role"] = data.role
+    if data.is_active is not None:
+        update_payload["is_active"] = data.is_active
+
+    updated_result = (
+        supabase.table("salesperson_accounts").update(update_payload).eq("id", member_id).execute()
+    )
+    updated_rows = _row_dicts(updated_result.data)
+    updated_member = updated_rows[0] if updated_rows else {**member, **update_payload}
+
+    return AdminMemberResponse(
+        id=str(updated_member["id"]),
+        full_name=str(updated_member["full_name"]),
+        email=updated_member.get("email"),
+        phone_number=str(updated_member["phone_number"]),
+        employee_id=updated_member.get("employee_id"),
+        role=str(updated_member["role"]),
+        is_active=bool(updated_member.get("is_active", True)),
+        created_at=updated_member.get("created_at"),
     )

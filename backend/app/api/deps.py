@@ -85,7 +85,7 @@ async def get_current_account(
 
     result = (
         supabase.table("salesperson_accounts")
-        .select("id, role, business_id")
+        .select("id, role, business_id, is_active")
         .eq("id", current_user.id)
         .limit(1)
         .execute()
@@ -105,6 +105,9 @@ async def get_current_account(
 
     if not role:
         raise HTTPException(status_code=403, detail="Account role not found")
+
+    if account.get("is_active") is False:
+        raise HTTPException(status_code=403, detail="Account is inactive")
 
     return CurrentAccount(
         id=str(account["id"]),

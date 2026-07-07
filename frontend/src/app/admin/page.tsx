@@ -97,6 +97,13 @@ export default function AdminPage() {
           <p style={subtitleStyle}>
             Create invite links for reps, managers, and admins in your business.
           </p>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/members")}
+            style={memberButtonStyle}
+          >
+            Manage Members
+          </button>
         </section>
 
         <div style={gridStyle}>
@@ -204,6 +211,17 @@ const titleStyle: React.CSSProperties = {
 const subtitleStyle: React.CSSProperties = {
   color: "#667085",
   fontSize: "16px",
+};
+
+const memberButtonStyle: React.CSSProperties = {
+  marginTop: "18px",
+  padding: "12px 16px",
+  borderRadius: "12px",
+  border: "1px solid #b7ddd0",
+  background: "white",
+  color: "#006b4f",
+  fontWeight: 800,
+  cursor: "pointer",
 };
 
 const gridStyle: React.CSSProperties = {

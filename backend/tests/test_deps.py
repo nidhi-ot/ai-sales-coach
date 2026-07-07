@@ -60,6 +60,7 @@ class AccountDependencyTests(unittest.IsolatedAsyncioTestCase):
                 {
                     "id": "rep-123",
                     "business_id": "business-123",
+                    "is_active": True,
                 }
             ]
         )
@@ -78,6 +79,7 @@ class AccountDependencyTests(unittest.IsolatedAsyncioTestCase):
                 {
                     "id": "rep-123",
                     "role": "rep",
+                    "is_active": True,
                 }
             ]
         )
@@ -90,6 +92,24 @@ class AccountDependencyTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_current_account_rejects_missing_row(self):
         fake_supabase = _FakeSupabase([])
+
+        with patch("app.api.deps.get_supabase", return_value=fake_supabase):
+            with self.assertRaises(HTTPException) as ctx:
+                await get_current_account(current_user=SimpleNamespace(id="rep-123"))
+
+        self.assertEqual(ctx.exception.status_code, 403)
+
+    async def test_get_current_account_rejects_inactive_account(self):
+        fake_supabase = _FakeSupabase(
+            [
+                {
+                    "id": "rep-123",
+                    "role": "rep",
+                    "business_id": "business-123",
+                    "is_active": False,
+                }
+            ]
+        )
 
         with patch("app.api.deps.get_supabase", return_value=fake_supabase):
             with self.assertRaises(HTTPException) as ctx:
