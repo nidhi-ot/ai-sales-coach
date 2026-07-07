@@ -600,7 +600,7 @@ export default function CallPage() {
             }}
           >
             <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              Time Left
+              {countdownSeconds !== null ? "Time Left" : "Call Time"}
             </p>
             <strong
               style={{
