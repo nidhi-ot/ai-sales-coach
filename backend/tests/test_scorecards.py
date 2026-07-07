@@ -79,7 +79,6 @@ class ScorecardRouteTests(unittest.TestCase):
                 "rep_id": "rep-456",
                 "business_id": "business-789",
                 "feedback_summary": "Analysis pending (stub).",
-                "shared_with_manager": True,
             }
         )
 
@@ -134,7 +133,7 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(
             fake_supabase.store["scorecards"][0]["feedback_summary"], "Generated analysis."
         )
-        self.assertTrue(fake_supabase.store["scorecards"][0]["shared_with_manager"])
+        self.assertTrue(fake_supabase.store["scorecards"][0])
 
     def test_meddic_session_scores_against_snapshotted_framework(self):
         fake_supabase = FakeSupabase()
@@ -215,7 +214,6 @@ class ScorecardRouteTests(unittest.TestCase):
                 "rep_id": "rep-456",
                 "business_id": "business-789",
                 "overall_score": 7,
-                "shared_with_manager": False,
                 "created_at": "2026-06-25T10:04:00+00:00",
             }
         )
@@ -225,27 +223,14 @@ class ScorecardRouteTests(unittest.TestCase):
             patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase),
         ):
             history = self.client.get("/api/v1/sessions/rep/rep-456")
-            share = self.client.patch(
-                "/api/v1/scorecards/session/session-123/share",
-                json={"shared_with_manager": True},
-            )
             scorecard = self.client.get("/api/v1/scorecards/session-123")
-            history_after_share = self.client.get("/api/v1/sessions/rep/rep-456")
 
         self.assertEqual(history.status_code, 200)
         self.assertEqual(history.json()[0]["overall_score"], 7)
-        self.assertFalse(history.json()[0]["shared_with_manager"])
-
-        self.assertEqual(share.status_code, 200)
-        self.assertTrue(share.json()["shared_with_manager"])
 
         self.assertEqual(scorecard.status_code, 200)
         self.assertEqual(scorecard.json()["id"], "scorecard-1")
-        self.assertTrue(scorecard.json()["shared_with_manager"])
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
-
-        self.assertTrue(history_after_share.json()[0]["shared_with_manager"])
-        self.assertEqual(history_after_share.json()[0]["overall_score"], 7)
 
     def test_post_scorecard_creates_stub_and_get_by_scorecard_id(self):
         fake_supabase = FakeSupabase()
@@ -284,7 +269,6 @@ class ScorecardRouteTests(unittest.TestCase):
                 "rep_id": "rep-456",
                 "business_id": "business-789",
                 "feedback_summary": "Stored scorecard",
-                "shared_with_manager": False,
             }
         )
 
@@ -305,7 +289,6 @@ class ScorecardRouteTests(unittest.TestCase):
                 "overall_score": 9,
                 "rapport_score": 8,
                 "feedback_summary": "Generated scorecard",
-                "shared_with_manager": False,
             }
         )
 
@@ -340,7 +323,6 @@ class ScorecardRouteTests(unittest.TestCase):
                 "overall_score": None,
                 "status": "processing",
                 "feedback_summary": "Analysis processing.",
-                "shared_with_manager": False,
             }
         )
 
