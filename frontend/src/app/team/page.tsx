@@ -5,6 +5,7 @@ import Link from "next/link";
 import { authFetch, API_BASE_URL } from "../../lib/api";
 import AppShell from "../../components/AppShell";
 
+
 type TeamMember = {
   rep_id: string;
   name: string;
@@ -40,48 +41,67 @@ export default function TeamPage() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [progress, setProgress] = useState<TeamProgress>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadManagerData() {
-      try {
-        const businessId = window.localStorage.getItem("business_id");
+  async function loadManagerData() {
+    try {
+      const businessId = window.localStorage.getItem("business_id");
 
-        if (!businessId) {
-          throw new Error("Missing business_id in localStorage");
-        }
-
-        const [teamRes, progressRes] = await Promise.all([
-          authFetch(`${API_BASE_URL}/manager/business/${businessId}/team`),
-          authFetch(`${API_BASE_URL}/manager/team/progress`),
-        ]);
-
-        const teamData = await teamRes.json();
-        const progressData = await progressRes.json();
-
-        const rawReps: RawRep[] = Array.isArray(teamData.reps)
-          ? teamData.reps
-          : [];
-
-        const normalizedTeam: TeamMember[] = rawReps.map((rep) => ({
-          rep_id: rep.id,
-          name: rep.full_name ?? rep.phone_number ?? "Unknown Rep",
-          sessions: rep.sessions ?? 0,
-          last_practice: rep.last_practice ?? null,
-          average_score: rep.average_score ?? null,
-          weakest_dimension: rep.weakest_dimension ?? null,
-        }));
-
-        setTeam(normalizedTeam);
-        setProgress(progressData.progress ?? {});
-      } catch (error) {
-        console.error("Failed to load manager data:", error);
-      } finally {
-        setLoading(false);
+      if (!businessId) {
+        console.error("Missing business_id in localStorage");
+        window.location.replace("/login");
+        return;
       }
-    }
 
-    loadManagerData();
-  }, []);
+      const storedBusinessId = window.localStorage.getItem("business_id");
+
+if (!storedBusinessId) {
+  window.location.replace("/login");
+  return;
+}
+
+setBusinessId(storedBusinessId);
+
+      const [teamRes, progressRes] = await Promise.all([
+        authFetch(`${API_BASE_URL}/manager/business/${businessId}/team`),
+        authFetch(`${API_BASE_URL}/manager/business/${businessId}/progress`),
+      ]);
+
+      const teamData = await teamRes.json();
+      const progressData = await progressRes.json();
+
+      const rawReps: RawRep[] = Array.isArray(teamData.reps)
+        ? teamData.reps
+        : [];
+
+      const normalizedTeam: TeamMember[] = rawReps.map((rep) => ({
+        rep_id: rep.id,
+        name: rep.full_name ?? rep.phone_number ?? "Unknown Rep",
+        sessions: rep.sessions ?? 0,
+        last_practice: rep.last_practice ?? null,
+        average_score: rep.average_score ?? null,
+        weakest_dimension: rep.weakest_dimension ?? null,
+      }));
+
+      setTeam(normalizedTeam);
+      setProgress(progressData.progress ?? {});
+    } catch (err) {
+      console.error("Failed to load manager data:", err);
+
+      if (err instanceof Error && err.message === "Unauthorized") {
+        return;
+      }
+
+      setError("Unable to load team information. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadManagerData();
+}, []);
 
   const summary = useMemo(() => {
     const totalReps = team.length;
@@ -132,6 +152,31 @@ export default function TeamPage() {
       </AppShell>
     );
   }
+if (error) {
+  return (
+    <AppShell>
+      <main style={pageStyle}>
+        <div style={containerStyle}>
+          <h1 style={titleStyle}>Team Dashboard</h1>
+
+          <div
+            style={{
+              marginTop: "24px",
+              padding: "20px",
+              borderRadius: "16px",
+              background: "#fef3f2",
+              border: "1px solid #fecdca",
+              color: "#b42318",
+              fontWeight: 600,
+            }}
+          >
+            {error}
+          </div>
+        </div>
+      </main>
+    </AppShell>
+  );
+}
 
   return (
     <AppShell>
@@ -228,7 +273,7 @@ export default function TeamPage() {
                           </Td>
                           <Td>
                             <Link
-                              href={`/team/reps/${rep.rep_id}`}
+                              href={`/team/reps/${rep.rep_id}?business_id=${businessId}`}
                               style={viewButtonStyle}
                             >
                               View Details

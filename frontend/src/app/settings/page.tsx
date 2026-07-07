@@ -3,19 +3,86 @@
 import { useEffect, useState } from "react";
 import AppShell from "../../components/AppShell";
 
+type UserSettings = {
+  language: string;
+  difficulty: string;
+  coachingStyle: string;
+  feedbackTiming: string;
+  theme: string;
+  accentColor: string;
+  fontSize: string;
+  layoutDensity: string;
+  practiceReminders: boolean;
+  scorecardNotifications: boolean;
+  weeklyProgressSummary: boolean;
+  achievementAlerts: boolean;
+  weeklyTeamReport: boolean;
+  coachingAlerts: boolean;
+  inactiveRepReminders: boolean;
+  newScorecardNotifications: boolean;
+  defaultDashboard: string;
+  reportFrequency: string;
+  coachingAlertLevel: string;
+  defaultTeamFilter: string;
+};
+
+const defaultSettings: UserSettings = {
+  language: "English",
+  difficulty: "Intermediate",
+  coachingStyle: "Balanced",
+  feedbackTiming: "After call",
+  theme: "Light",
+  accentColor: "Emerald Green",
+  fontSize: "Medium",
+  layoutDensity: "Comfortable",
+  practiceReminders: true,
+  scorecardNotifications: true,
+  weeklyProgressSummary: false,
+  achievementAlerts: true,
+  weeklyTeamReport: true,
+  coachingAlerts: true,
+  inactiveRepReminders: true,
+  newScorecardNotifications: false,
+  defaultDashboard: "Manager Dashboard",
+  reportFrequency: "Weekly",
+  coachingAlertLevel: "Medium",
+  defaultTeamFilter: "All reps",
+};
+
 export default function SettingsPage() {
   const [role, setRole] = useState<string | null>(null);
   const [fullName, setFullName] = useState("User");
   const [email, setEmail] = useState("user@example.com");
   const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 
   useEffect(() => {
     setRole(localStorage.getItem("role"));
     setFullName(localStorage.getItem("full_name") || "User");
     setEmail(localStorage.getItem("email") || "user@example.com");
+
+    const savedSettings = localStorage.getItem("user_settings");
+
+    if (savedSettings) {
+      setSettings({
+        ...defaultSettings,
+        ...JSON.parse(savedSettings),
+      });
+    }
   }, []);
 
+  function updateSetting<K extends keyof UserSettings>(
+    key: K,
+    value: UserSettings[K]
+  ) {
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
   function handleSave() {
+    localStorage.setItem("user_settings", JSON.stringify(settings));
     setSaved(true);
 
     setTimeout(() => {
@@ -46,9 +113,7 @@ export default function SettingsPage() {
           </button>
         </section>
 
-        {saved && (
-          <div style={successStyle}>Settings saved successfully.</div>
-        )}
+        {saved && <div style={successStyle}>Settings saved successfully.</div>}
 
         <section style={layoutStyle}>
           <div style={mainColumnStyle}>
@@ -64,32 +129,40 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            {role === "manager" ? <ManagerSettings /> : <RepSettings />}
+            {role === "manager" ? (
+              <ManagerSettings settings={settings} updateSetting={updateSetting} />
+            ) : (
+              <RepSettings settings={settings} updateSetting={updateSetting} />
+            )}
 
             <SettingsCard title="Appearance" icon="🎨">
               <div style={formGridStyle}>
                 <SelectField
                   label="Theme"
                   options={["Light", "System", "Dark"]}
-                  defaultValue="Light"
+                  value={settings.theme}
+                  onChange={(value) => updateSetting("theme", value)}
                 />
 
                 <SelectField
                   label="Accent Color"
                   options={["Emerald Green", "Blue", "Purple"]}
-                  defaultValue="Emerald Green"
+                  value={settings.accentColor}
+                  onChange={(value) => updateSetting("accentColor", value)}
                 />
 
                 <SelectField
                   label="Font Size"
                   options={["Small", "Medium", "Large"]}
-                  defaultValue="Medium"
+                  value={settings.fontSize}
+                  onChange={(value) => updateSetting("fontSize", value)}
                 />
 
                 <SelectField
                   label="Layout Density"
                   options={["Comfortable", "Compact"]}
-                  defaultValue="Comfortable"
+                  value={settings.layoutDensity}
+                  onChange={(value) => updateSetting("layoutDensity", value)}
                 />
               </div>
             </SettingsCard>
@@ -107,12 +180,8 @@ export default function SettingsPage() {
 
           <aside style={sidePanelStyle}>
             <div style={profileCardStyle}>
-              <div style={avatarStyle}>
-                {getInitials(fullName)}
-              </div>
-
+              <div style={avatarStyle}>{getInitials(fullName)}</div>
               <h2 style={profileNameStyle}>{fullName}</h2>
-
               <p style={profileRoleStyle}>
                 {role === "manager" ? "Manager" : "Sales Representative"}
               </p>
@@ -120,16 +189,15 @@ export default function SettingsPage() {
 
             <div style={summaryCardStyle}>
               <h3 style={sideTitleStyle}>Current Setup</h3>
-
-              <SummaryRow label="Language" value="English" />
-              <SummaryRow label="Theme" value="Light" />
+              <SummaryRow label="Language" value={settings.language} />
+              <SummaryRow label="Theme" value={settings.theme} />
               <SummaryRow
                 label="Notifications"
                 value={role === "manager" ? "Team alerts" : "Practice alerts"}
               />
               <SummaryRow
                 label="Dashboard"
-                value={role === "manager" ? "Manager view" : "Rep view"}
+                value={role === "manager" ? settings.defaultDashboard : "Rep view"}
               />
             </div>
           </aside>
@@ -139,7 +207,16 @@ export default function SettingsPage() {
   );
 }
 
-function RepSettings() {
+function RepSettings({
+  settings,
+  updateSetting,
+}: {
+  settings: UserSettings;
+  updateSetting: <K extends keyof UserSettings>(
+    key: K,
+    value: UserSettings[K]
+  ) => void;
+}) {
   return (
     <>
       <SettingsCard title="AI Coach Preferences" icon="🤖">
@@ -147,47 +224,92 @@ function RepSettings() {
           <SelectField
             label="Preferred Language"
             options={["English", "Swedish"]}
-            defaultValue="English"
+            value={settings.language}
+            onChange={(value) => updateSetting("language", value)}
           />
 
           <SelectField
             label="Default Difficulty"
             options={["Beginner", "Intermediate", "Advanced"]}
-            defaultValue="Intermediate"
+            value={settings.difficulty}
+            onChange={(value) => updateSetting("difficulty", value)}
           />
 
           <SelectField
             label="Coaching Style"
             options={["Balanced", "Detailed", "Strict"]}
-            defaultValue="Balanced"
+            value={settings.coachingStyle}
+            onChange={(value) => updateSetting("coachingStyle", value)}
           />
 
           <SelectField
             label="Feedback Timing"
             options={["After call", "Real-time", "Both"]}
-            defaultValue="After call"
+            value={settings.feedbackTiming}
+            onChange={(value) => updateSetting("feedbackTiming", value)}
           />
         </div>
       </SettingsCard>
 
       <SettingsCard title="Notifications" icon="🔔">
-        <ToggleRow label="Practice reminders" defaultChecked />
-        <ToggleRow label="Scorecard notifications" defaultChecked />
-        <ToggleRow label="Weekly progress summary" />
-        <ToggleRow label="Achievement alerts" defaultChecked />
+        <ToggleRow
+          label="Practice reminders"
+          checked={settings.practiceReminders}
+          onChange={(value) => updateSetting("practiceReminders", value)}
+        />
+        <ToggleRow
+          label="Scorecard notifications"
+          checked={settings.scorecardNotifications}
+          onChange={(value) => updateSetting("scorecardNotifications", value)}
+        />
+        <ToggleRow
+          label="Weekly progress summary"
+          checked={settings.weeklyProgressSummary}
+          onChange={(value) => updateSetting("weeklyProgressSummary", value)}
+        />
+        <ToggleRow
+          label="Achievement alerts"
+          checked={settings.achievementAlerts}
+          onChange={(value) => updateSetting("achievementAlerts", value)}
+        />
       </SettingsCard>
     </>
   );
 }
 
-function ManagerSettings() {
+function ManagerSettings({
+  settings,
+  updateSetting,
+}: {
+  settings: UserSettings;
+  updateSetting: <K extends keyof UserSettings>(
+    key: K,
+    value: UserSettings[K]
+  ) => void;
+}) {
   return (
     <>
       <SettingsCard title="Manager Notifications" icon="🔔">
-        <ToggleRow label="Weekly team report" defaultChecked />
-        <ToggleRow label="Coaching alerts" defaultChecked />
-        <ToggleRow label="Inactive rep reminders" defaultChecked />
-        <ToggleRow label="New scorecard notifications" />
+        <ToggleRow
+          label="Weekly team report"
+          checked={settings.weeklyTeamReport}
+          onChange={(value) => updateSetting("weeklyTeamReport", value)}
+        />
+        <ToggleRow
+          label="Coaching alerts"
+          checked={settings.coachingAlerts}
+          onChange={(value) => updateSetting("coachingAlerts", value)}
+        />
+        <ToggleRow
+          label="Inactive rep reminders"
+          checked={settings.inactiveRepReminders}
+          onChange={(value) => updateSetting("inactiveRepReminders", value)}
+        />
+        <ToggleRow
+          label="New scorecard notifications"
+          checked={settings.newScorecardNotifications}
+          onChange={(value) => updateSetting("newScorecardNotifications", value)}
+        />
       </SettingsCard>
 
       <SettingsCard title="Dashboard Preferences" icon="📊">
@@ -195,25 +317,29 @@ function ManagerSettings() {
           <SelectField
             label="Default Dashboard"
             options={["Manager Dashboard", "Team Dashboard"]}
-            defaultValue="Manager Dashboard"
+            value={settings.defaultDashboard}
+            onChange={(value) => updateSetting("defaultDashboard", value)}
           />
 
           <SelectField
             label="Report Frequency"
             options={["Daily", "Weekly", "Monthly"]}
-            defaultValue="Weekly"
+            value={settings.reportFrequency}
+            onChange={(value) => updateSetting("reportFrequency", value)}
           />
 
           <SelectField
             label="Coaching Alert Level"
             options={["Low", "Medium", "High"]}
-            defaultValue="Medium"
+            value={settings.coachingAlertLevel}
+            onChange={(value) => updateSetting("coachingAlertLevel", value)}
           />
 
           <SelectField
             label="Default Team Filter"
             options={["All reps", "Needs coaching", "Active this week"]}
-            defaultValue="All reps"
+            value={settings.defaultTeamFilter}
+            onChange={(value) => updateSetting("defaultTeamFilter", value)}
           />
         </div>
       </SettingsCard>
@@ -236,7 +362,6 @@ function SettingsCard({
         <div style={iconStyle}>{icon}</div>
         <h2 style={cardTitleStyle}>{title}</h2>
       </div>
-
       {children}
     </section>
   );
@@ -254,16 +379,22 @@ function Field({ label, value }: { label: string; value: string }) {
 function SelectField({
   label,
   options,
-  defaultValue,
+  value,
+  onChange,
 }: {
   label: string;
   options: string[];
-  defaultValue: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <label style={fieldStyle}>
       <span style={labelStyle}>{label}</span>
-      <select defaultValue={defaultValue} style={inputStyle}>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        style={inputStyle}
+      >
         {options.map((option) => (
           <option key={option}>{option}</option>
         ))}
@@ -274,21 +405,28 @@ function SelectField({
 
 function ToggleRow({
   label,
-  defaultChecked = false,
+  checked,
+  onChange,
 }: {
   label: string;
-  defaultChecked?: boolean;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
 }) {
   return (
     <div style={toggleRowStyle}>
       <span>{label}</span>
 
-      <label style={switchStyle}>
-        <input type="checkbox" defaultChecked={defaultChecked} hidden />
-        <span style={switchTrackStyle}>
-          <span style={switchDotStyle} />
-        </span>
-      </label>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        style={{
+          ...switchTrackStyle,
+          background: checked ? "#00704f" : "#d0d5dd",
+          justifyContent: checked ? "flex-end" : "flex-start",
+        }}
+      >
+        <span style={switchDotStyle} />
+      </button>
     </div>
   );
 }
@@ -310,6 +448,7 @@ function getInitials(name: string) {
     .slice(0, 2)
     .toUpperCase();
 }
+
 
 const pageStyle: React.CSSProperties = {
   maxWidth: "1400px",
@@ -441,18 +580,15 @@ const toggleRowStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
-const switchStyle: React.CSSProperties = {
-  cursor: "pointer",
-};
-
 const switchTrackStyle: React.CSSProperties = {
   width: "48px",
   height: "26px",
   borderRadius: "999px",
-  background: "#00704f",
+  border: "none",
   padding: "3px",
   display: "flex",
-  justifyContent: "flex-end",
+  alignItems: "center",
+  cursor: "pointer",
 };
 
 const switchDotStyle: React.CSSProperties = {

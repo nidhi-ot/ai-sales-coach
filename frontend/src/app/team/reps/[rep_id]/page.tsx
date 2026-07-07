@@ -1,8 +1,8 @@
 "use client";
 
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import AppShell from "../../../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../../../lib/api";
 
@@ -35,21 +35,43 @@ type Transcript = {
 
 export default function TeamRepDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+
   const repId = params.rep_id as string;
+  const businessId = searchParams.get("business_id");
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadRepDetails() {
       try {
+        if (!businessId) {
+          setError("Missing business information. Please go back to the team page.");
+          setLoading(false);
+          return;
+        }
+
         const [sessionsRes, scorecardsRes, transcriptsRes] = await Promise.all([
-          authFetch(`${API_BASE_URL}/manager/reps/${repId}/sessions`),
-          authFetch(`${API_BASE_URL}/manager/reps/${repId}/scorecards`),
-          authFetch(`${API_BASE_URL}/manager/reps/${repId}/transcripts`),
+          authFetch(`${API_BASE_URL}/manager/business/${businessId}/reps/${repId}/sessions`),
+          authFetch(`${API_BASE_URL}/manager/business/${businessId}/reps/${repId}/scorecards`),
+          authFetch(`${API_BASE_URL}/manager/business/${businessId}/reps/${repId}/transcripts`),
         ]);
+
+        if (!sessionsRes.ok) {
+          throw new Error(`Failed to load sessions (${sessionsRes.status})`);
+        }
+
+        if (!scorecardsRes.ok) {
+          throw new Error(`Failed to load scorecards (${scorecardsRes.status})`);
+        }
+
+        if (!transcriptsRes.ok) {
+          throw new Error(`Failed to load transcripts (${transcriptsRes.status})`);
+        }
 
         const sessionsData = await sessionsRes.json();
         const scorecardsData = await scorecardsRes.json();
@@ -58,8 +80,18 @@ export default function TeamRepDetailsPage() {
         setSessions(sessionsData.sessions ?? []);
         setScorecards(scorecardsData.scorecards ?? []);
         setTranscripts(transcriptsData.transcripts ?? []);
-      } catch (error) {
-        console.error("Failed to load rep details:", error);
+      } catch (err) {
+        console.error("Failed to load rep details:", err);
+
+        if (err instanceof Error && err.message === "Unauthorized") {
+          return;
+        }
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load representative details."
+        );
       } finally {
         setLoading(false);
       }
@@ -68,7 +100,7 @@ export default function TeamRepDetailsPage() {
     if (repId) {
       loadRepDetails();
     }
-  }, [repId]);
+  }, [repId, businessId]);
 
   const latestScorecard = scorecards[0];
 
@@ -88,136 +120,156 @@ export default function TeamRepDetailsPage() {
     return result;
   }, [transcripts]);
 
+  if (loading) {
+    return (
+      <AppShell>
+        <div style={containerStyle}>
+          <p style={mutedStyle}>Loading rep details...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <div style={containerStyle}>
+          <Link href="/team" style={backLinkStyle}>
+            ← Back to Team
+          </Link>
+
+          <h1 style={titleStyle}>Rep Details</h1>
+
+          <div style={errorBoxStyle}>{error}</div>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div style={containerStyle}>
         <div style={topBarStyle}>
-          <div>
-            <Link href="/team" style={backLinkStyle}>
-              ← Back to Team
-            </Link>
+          <Link href="/team" style={backLinkStyle}>
+            ← Back to Team
+          </Link>
 
-            <p style={eyebrowStyle}>Manager View</p>
-            <h1 style={titleStyle}>Rep Details</h1>
-            <p style={subtitleStyle}>
-              Review this rep&apos;s practice history, scorecards, and transcripts.
-            </p>
-          </div>
+          <p style={eyebrowStyle}>Manager View</p>
+          <h1 style={titleStyle}>Rep Details</h1>
+          <p style={subtitleStyle}>
+            Review this rep&apos;s practice history, scorecards, and transcripts.
+          </p>
         </div>
 
-        {loading ? (
-          <section style={cardStyle}>
-            <p style={mutedStyle}>Loading rep details...</p>
-          </section>
-        ) : (
-          <>
-            <section style={summaryGridStyle}>
-              <SummaryCard title="Sessions" value={sessions.length.toString()} />
-              <SummaryCard title="Scorecards" value={scorecards.length.toString()} />
-              <SummaryCard
-                title="Latest Score"
-                value={
-                  latestScorecard
-                    ? `${getAverageScore(latestScorecard)}%`
-                    : "N/A"
-                }
-              />
-              <SummaryCard
-                title="Last Practice"
-                value={
-                  sessions[0]?.started_at
-                    ? new Date(sessions[0].started_at).toLocaleDateString()
-                    : "N/A"
-                }
-              />
+        <section style={summaryGridStyle}>
+          <SummaryCard title="Sessions" value={sessions.length.toString()} />
+          <SummaryCard title="Scorecards" value={scorecards.length.toString()} />
+          <SummaryCard
+            title="Latest Score"
+            value={latestScorecard ? `${getAverageScore(latestScorecard)}/10` : "N/A"}
+          />
+          <SummaryCard
+            title="Last Practice"
+            value={
+              sessions[0]?.started_at
+                ? new Date(sessions[0].started_at).toLocaleDateString()
+                : "N/A"
+            }
+          />
+        </section>
+
+        <section style={layoutStyle}>
+          <div style={mainColumnStyle}>
+            <section style={cardStyle}>
+              <h2 style={cardTitleStyle}>Practice Sessions</h2>
+
+              {sessions.length === 0 ? (
+                <p style={mutedStyle}>No sessions found for this rep.</p>
+              ) : (
+                <div style={listStyle}>
+                  {sessions.map((session) => (
+                    <SessionCard
+                      key={session.id}
+                      session={session}
+                      scorecard={scorecards.find(
+                        (scorecard) => scorecard.session_id === session.id
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
-            <section style={layoutStyle}>
-              <div style={mainColumnStyle}>
-                <section style={cardStyle}>
-                  <h2 style={cardTitleStyle}>Practice Sessions</h2>
+            <section style={cardStyle}>
+              <h2 style={cardTitleStyle}>Transcript Preview</h2>
 
-                  {sessions.length === 0 ? (
-                    <p style={mutedStyle}>No sessions found for this rep.</p>
-                  ) : (
-                    <div style={listStyle}>
-                      {sessions.map((session) => (
-                        <SessionCard
-                          key={session.id}
-                          session={session}
-                          scorecard={scorecards.find(
-                            (scorecard) => scorecard.session_id === session.id
-                          )}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
+              {sessions.length === 0 ? (
+                <p style={mutedStyle}>No transcripts available.</p>
+              ) : (
+                <div style={listStyle}>
+                  {sessions.slice(0, 3).map((session) => {
+                    const lines = groupedTranscripts[session.id] ?? [];
 
-                <section style={cardStyle}>
-                  <h2 style={cardTitleStyle}>Transcript Preview</h2>
+                    return (
+                      <div key={session.id} style={transcriptBlockStyle}>
+                        <h3 style={smallTitleStyle}>
+                          {formatScenario(session.scenario ?? "Practice Session")}
+                        </h3>
 
-                  {sessions.length === 0 ? (
-                    <p style={mutedStyle}>No transcripts available.</p>
-                  ) : (
-                    <div style={listStyle}>
-                      {sessions.slice(0, 3).map((session) => {
-                        const lines = groupedTranscripts[session.id] ?? [];
-
-                        return (
-                          <div key={session.id} style={transcriptBlockStyle}>
-                            <h3 style={smallTitleStyle}>
-                              {formatScenario(session.scenario ?? "Practice Session")}
-                            </h3>
-
-                            {lines.length === 0 ? (
-                              <p style={mutedStyle}>No transcript saved for this session.</p>
-                            ) : (
-                              lines.slice(0, 6).map((line, index) => (
-                                <div key={`${line.id ?? index}`} style={transcriptLineStyle}>
-                                  <strong>{line.speaker ?? "Speaker"}:</strong>{" "}
-                                  <span>{line.text ?? ""}</span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-              </div>
-
-              <aside style={sideColumnStyle}>
-                <section style={cardStyle}>
-                  <h2 style={cardTitleStyle}>Latest Scorecard</h2>
-
-                  {latestScorecard ? (
-                    <>
-                      <ScoreRow label="Rapport" value={latestScorecard.rapport_score} />
-                      <ScoreRow label="Discovery" value={latestScorecard.needs_discovery_score} />
-                      <ScoreRow
-                        label="Objection Handling"
-                        value={latestScorecard.objection_handling_score}
-                      />
-                      <ScoreRow label="Closing" value={latestScorecard.closing_score} />
-                    </>
-                  ) : (
-                    <p style={mutedStyle}>No scorecard available yet.</p>
-                  )}
-                </section>
-
-                <section style={cardStyle}>
-                  <h2 style={cardTitleStyle}>Manager Coaching Notes</h2>
-                  <p style={mutedStyle}>
-                    Use this view to identify patterns, review objections, and prepare
-                    targeted feedback for the rep.
-                  </p>
-                </section>
-              </aside>
+                        {lines.length === 0 ? (
+                          <p style={mutedStyle}>
+                            No transcript saved for this session.
+                          </p>
+                        ) : (
+                          lines.slice(0, 6).map((line, index) => (
+                            <div
+                              key={`${line.id ?? index}`}
+                              style={transcriptLineStyle}
+                            >
+                              <strong>{line.speaker ?? "Speaker"}:</strong>{" "}
+                              <span>{line.text ?? ""}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
-          </>
-        )}
+          </div>
+
+          <aside style={sideColumnStyle}>
+            <section style={cardStyle}>
+              <h2 style={cardTitleStyle}>Latest Scorecard</h2>
+
+              {latestScorecard ? (
+                <>
+                  <ScoreRow label="Rapport" value={latestScorecard.rapport_score} />
+                  <ScoreRow
+                    label="Discovery"
+                    value={latestScorecard.needs_discovery_score}
+                  />
+                  <ScoreRow
+                    label="Objection Handling"
+                    value={latestScorecard.objection_handling_score}
+                  />
+                  <ScoreRow label="Closing" value={latestScorecard.closing_score} />
+                </>
+              ) : (
+                <p style={mutedStyle}>No scorecard available yet.</p>
+              )}
+            </section>
+
+            <section style={cardStyle}>
+              <h2 style={cardTitleStyle}>Manager Coaching Notes</h2>
+              <p style={mutedStyle}>
+                Use this view to identify patterns, review objections, and prepare
+                targeted feedback for the rep.
+              </p>
+            </section>
+          </aside>
+        </section>
       </div>
     </AppShell>
   );
@@ -242,9 +294,7 @@ function SessionCard({
         <p style={mutedStyle}>Status: {session.status ?? "Unknown"}</p>
       </div>
 
-      <div style={rightStyle}>
-        <ScoreBadge score={scorecard ? getAverageScore(scorecard) : null} />
-      </div>
+      <ScoreBadge score={scorecard ? getAverageScore(scorecard) : null} />
     </div>
   );
 }
@@ -260,16 +310,17 @@ function SummaryCard({ title, value }: { title: string; value: string }) {
 
 function ScoreRow({ label, value }: { label: string; value?: number | null }) {
   const safeValue = value ?? 0;
+  const percentage = Math.min(safeValue * 10, 100);
 
   return (
     <div style={scoreRowStyle}>
       <div style={scoreTopStyle}>
         <span>{label}</span>
-        <strong>{value == null ? "N/A" : `${safeValue}%`}</strong>
+        <strong>{value == null ? "N/A" : `${safeValue}/10`}</strong>
       </div>
 
       <div style={trackStyle}>
-        <div style={{ ...fillStyle, width: `${safeValue}%` }} />
+        <div style={{ ...fillStyle, width: `${percentage}%` }} />
       </div>
     </div>
   );
@@ -280,7 +331,7 @@ function ScoreBadge({ score }: { score: number | null }) {
     return <span style={neutralBadgeStyle}>N/A</span>;
   }
 
-  return <span style={scoreBadgeStyle}>{score}%</span>;
+  return <span style={scoreBadgeStyle}>{score}/10</span>;
 }
 
 function getAverageScore(scorecard: Scorecard) {
@@ -338,6 +389,16 @@ const subtitleStyle = {
   color: "#667085",
   fontSize: "17px",
   lineHeight: 1.6,
+};
+
+const errorBoxStyle = {
+  marginTop: "24px",
+  padding: "20px",
+  borderRadius: "16px",
+  border: "1px solid #fecdca",
+  background: "#fef3f2",
+  color: "#b42318",
+  fontWeight: 700,
 };
 
 const summaryGridStyle = {
@@ -412,12 +473,6 @@ const sessionCardStyle = {
   borderRadius: "18px",
   padding: "18px",
   background: "#f8fbf9",
-};
-
-const rightStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
 };
 
 const mutedStyle = {

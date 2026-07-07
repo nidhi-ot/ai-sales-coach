@@ -243,15 +243,20 @@ async def get_manager_rep_transcripts(
     return {"transcripts": transcripts}
 
 
-@router.get("/team/progress")
+@router.get("/business/{business_id}/progress")
 async def get_manager_team_progress(
+    business_id: str,
     current_account: CurrentAccount = Depends(require_role("manager")),
 ):
+    if current_account.role != "admin":
+        ensure_business_access(current_account.business_id, business_id)
+
+    supabase = get_supabase()
+
     reps = _row_dicts(
-        get_supabase()
-        .table("salesperson_accounts")
+        supabase.table("salesperson_accounts")
         .select("id")
-        .eq("business_id", current_account.business_id)
+        .eq("business_id", business_id)
         .eq("role", "rep")
         .execute()
         .data
@@ -263,9 +268,10 @@ async def get_manager_team_progress(
         return {"progress": {}}
 
     scorecards = _row_dicts(
-        get_supabase()
-        .table("scorecards")
-        .select("rapport_score, needs_discovery_score, " "objection_handling_score, closing_score")
+        supabase.table("scorecards")
+        .select(
+            "rapport_score," "needs_discovery_score," "objection_handling_score," "closing_score"
+        )
         .in_("rep_id", rep_ids)
         .execute()
         .data
@@ -278,7 +284,7 @@ async def get_manager_team_progress(
         "closing": "closing_score",
     }
 
-    progress = {}
+    progress: dict[str, dict[str, float | int | None]] = {}
 
     for key, field in fields.items():
         values = [float(row[field]) for row in scorecards if row.get(field) is not None]
@@ -289,3 +295,84 @@ async def get_manager_team_progress(
         }
 
     return {"progress": progress}
+
+
+@router.get("/business/{business_id}/reps/{rep_id}/sessions")
+async def get_manager_business_rep_sessions(
+    business_id: str,
+    rep_id: str,
+    current_account: CurrentAccount = Depends(require_role("manager")),
+):
+    if current_account.role != "admin":
+        ensure_business_access(current_account.business_id, business_id)
+
+    _ensure_rep_in_business(rep_id, business_id)
+
+    sessions = _row_dicts(
+        get_supabase()
+        .table("sessions")
+        .select("id, scenario, started_at, ended_at, duration_seconds, status")
+        .eq("rep_id", rep_id)
+        .order("started_at", desc=True)
+        .execute()
+        .data
+    )
+
+    return {"sessions": sessions}
+
+
+@router.get("/business/{business_id}/reps/{rep_id}/scorecards")
+async def get_manager_business_rep_scorecards(
+    business_id: str,
+    rep_id: str,
+    current_account: CurrentAccount = Depends(require_role("manager")),
+):
+    if current_account.role != "admin":
+        ensure_business_access(current_account.business_id, business_id)
+
+    _ensure_rep_in_business(rep_id, business_id)
+
+    scorecards = _row_dicts(
+        get_supabase()
+        .table("scorecards")
+        .select("*")
+        .eq("rep_id", rep_id)
+        .order("created_at", desc=True)
+        .execute()
+        .data
+    )
+
+    return {"scorecards": scorecards}
+
+
+@router.get("/business/{business_id}/reps/{rep_id}/transcripts")
+async def get_manager_business_rep_transcripts(
+    business_id: str,
+    rep_id: str,
+    current_account: CurrentAccount = Depends(require_role("manager")),
+):
+    if current_account.role != "admin":
+        ensure_business_access(current_account.business_id, business_id)
+
+    _ensure_rep_in_business(rep_id, business_id)
+
+    sessions = _row_dicts(
+        get_supabase().table("sessions").select("id").eq("rep_id", rep_id).execute().data
+    )
+
+    session_ids = [row["id"] for row in sessions if row.get("id")]
+
+    if not session_ids:
+        return {"transcripts": []}
+
+    transcripts = _row_dicts(
+        get_supabase()
+        .table("transcripts")
+        .select("*")
+        .in_("session_id", session_ids)
+        .order("timestamp_offset_ms")
+        .execute()
+        .data
+    )
+
+    return {"transcripts": transcripts}
