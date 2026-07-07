@@ -4,6 +4,7 @@ from typing import Any
 
 from app.db.client import get_supabase
 from app.services.gpt_scoring import gpt_analyze_transcript
+from app.services.scenarios import normalize_framework
 from app.services.session_analytics import create_next_salesperson_profile
 
 FILLER_WORDS = {
@@ -47,6 +48,11 @@ def _word_count(text: str) -> int:
 def _count_filler_words(text: str) -> int:
     normalized = text.lower()
     return sum(len(re.findall(rf"\b{re.escape(word)}\b", normalized)) for word in FILLER_WORDS)
+
+
+def _session_metadata(session: dict[str, Any]) -> dict[str, Any]:
+    metadata = session.get("metadata")
+    return metadata if isinstance(metadata, dict) else {}
 
 
 def is_stub_scorecard(scorecard: dict[str, Any]) -> bool:
@@ -274,11 +280,15 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
     if session is None:
         raise LookupError("Session became None unexpectedly")
 
+    metadata = _session_metadata(session)
+    framework = normalize_framework(metadata.get("framework") if metadata else None)
+
     feedback = await gpt_analyze_transcript(
         rep_text=rep_text,
         ai_text=ai_text,
-        system_instruction=session.get("metadata", {}).get("system_instruction") or "",
+        system_instruction=metadata.get("system_instruction") or "",
         scenario_title=session.get("scenario") or "unknown",
+        framework=framework,
     )
 
     framework_score = feedback.get("framework_scores", {})
