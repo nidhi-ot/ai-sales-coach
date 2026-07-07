@@ -157,6 +157,7 @@ class SessionDetailResponse(BaseModel):
     duration: int | None = None
     scenario: str | None = None
     scorecard_id: str | None = None
+    scorecard_status: str | None = None
 
 
 @router.post("/")
@@ -442,7 +443,7 @@ async def get_rep_sessions(
     if session_ids:
         scorecard_result = (
             supabase.table("scorecards")
-            .select("session_id, overall_score, created_at")
+            .select("session_id, overall_score, shared_with_manager, status, created_at")
             .in_("session_id", session_ids)
             .order("created_at", desc=True)
             .execute()
@@ -457,7 +458,8 @@ async def get_rep_sessions(
     for row in session_rows:
         scorecard = scorecards_by_session.get(str(row["id"]), {})
         row["overall_score"] = scorecard.get("overall_score")
-
+        row["shared_with_manager"] = bool(scorecard.get("shared_with_manager", False))
+        row["scorecard_status"] = scorecard.get("status")
     return session_rows
 
 
@@ -502,10 +504,16 @@ async def get_session_details(
     transcript_rows = _row_dicts(transcript_result.data)
 
     scorecard_result = (
-        supabase.table("scorecards").select("id").eq("session_id", session_id).limit(1).execute()
+        supabase.table("scorecards")
+        .select("id, status")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
     )
     scorecard_rows = _row_dicts(scorecard_result.data)
-    scorecard_id = str(scorecard_rows[0]["id"]) if scorecard_rows else None
+    scorecard = scorecard_rows[0] if scorecard_rows else {}
+    scorecard_id = str(scorecard["id"]) if scorecard.get("id") else None
+    scorecard_status = scorecard.get("status")
 
     try:
         title = get_scenario_config(str(session_row.get("scenario"))).title
@@ -531,4 +539,5 @@ async def get_session_details(
         "duration": session_row.get("duration_seconds"),
         "scenario": session_row.get("scenario"),
         "scorecard_id": scorecard_id,
+        "scorecard_status": scorecard_status,
     }
