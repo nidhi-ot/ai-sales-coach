@@ -1,9 +1,8 @@
-type FrameworkScores = {
-  budget?: number;
-  authority?: number;
-  need?: number;
-  timeline?: number;
-};
+import {
+  frameworkMetrics,
+  type FrameworkMetric,
+  type FrameworkScores,
+} from "../../lib/frameworkScores";
 
 export type Scorecard = {
   session_id: string;
@@ -50,34 +49,10 @@ function scoreMetrics(scorecard: Scorecard): ScoreMetric[] {
   ];
 }
 
-function frameworkMetrics(scorecard: Scorecard): ScoreMetric[] {
-  return [
-    {
-      key: "budget",
-      label: "Budget",
-      value: scorecard.framework_scores?.budget,
-    },
-    {
-      key: "authority",
-      label: "Authority",
-      value: scorecard.framework_scores?.authority,
-    },
-    {
-      key: "need",
-      label: "Need",
-      value: scorecard.framework_scores?.need,
-    },
-    {
-      key: "timeline",
-      label: "Timeline",
-      value: scorecard.framework_scores?.timeline,
-    },
-  ];
-}
-
 export default function ScorecardView({ scorecard }: ScorecardViewProps) {
   const hasOverallScore = scorecard.overall_score != null;
-  const frameworkScoreMetrics = frameworkMetrics(scorecard);
+  const frameworkScoreGroup = frameworkMetrics(scorecard.framework_scores);
+  const frameworkScoreMetrics: FrameworkMetric[] = frameworkScoreGroup.metrics;
 
   return (
     <>
@@ -172,7 +147,7 @@ export default function ScorecardView({ scorecard }: ScorecardViewProps) {
             border: "1px solid #e5e7eb",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>BANT Framework</h2>
+          <h2 style={{ marginTop: 0 }}>{frameworkScoreGroup.framework} Framework</h2>
           <p style={{ color: "#344054", lineHeight: "1.8", marginBottom: 0 }}>
             {frameworkScoreMetrics.map((metric, index) => (
               <span key={metric.key}>
