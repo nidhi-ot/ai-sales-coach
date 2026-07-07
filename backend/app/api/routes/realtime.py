@@ -149,6 +149,7 @@ async def create_realtime_session(
                 "framework": resolved_framework,
                 "max_call_seconds": settings.max_call_seconds,
                 "max_call_grace_seconds": settings.max_call_grace_seconds,
+                "heartbeat_at": datetime.now(UTC).isoformat(),
             },
         )
     except Exception as exc:

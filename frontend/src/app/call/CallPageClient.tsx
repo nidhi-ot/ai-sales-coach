@@ -34,6 +34,10 @@ type RealtimeEventPayload = {
   };
 };
 
+function transcriptEntryKey(entry: TranscriptEntry) {
+  return `${entry.speaker}:${entry.timestamp_offset_ms}`;
+}
+
 export default function CallPage() {
   const router = useRouter();
   const [scenario, setScenario] = useState("cold_call");
@@ -62,12 +66,13 @@ export default function CallPage() {
   const callStartedAtRef = useRef<Date | null>(null);
   const transcriptBufferRef = useRef<TranscriptEntry[]>([]);
   const transcriptFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const transcriptFlushInFlightRef = useRef(false);
   const transcriptFlushPromiseRef = useRef<Promise<void> | null>(null);
 
   const flushTranscriptBuffer = useCallback(async () => {
     const sessionToFlush = sessionId;
-    const pendingEntries = transcriptBufferRef.current;
+    const pendingEntries = [...transcriptBufferRef.current];
 
     if (!sessionToFlush || pendingEntries.length === 0) {
       return;
@@ -79,7 +84,6 @@ export default function CallPage() {
     }
 
     transcriptFlushInFlightRef.current = true;
-    transcriptBufferRef.current = [];
 
     const flushPromise = (async () => {
       try {
@@ -93,17 +97,22 @@ export default function CallPage() {
             body: JSON.stringify({
               entries: pendingEntries,
             }),
+            keepalive: true,
           }
         );
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Transcript flush failed:", errorText);
-          transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
+          return;
         }
+
+        const flushedKeys = new Set(pendingEntries.map(transcriptEntryKey));
+        transcriptBufferRef.current = transcriptBufferRef.current.filter(
+          (entry) => !flushedKeys.has(transcriptEntryKey(entry))
+        );
       } catch (error) {
         console.error("Transcript flush failed:", error);
-        transcriptBufferRef.current = [...pendingEntries, ...transcriptBufferRef.current];
       }
     })();
 
@@ -114,6 +123,27 @@ export default function CallPage() {
     } finally {
       transcriptFlushInFlightRef.current = false;
       transcriptFlushPromiseRef.current = null;
+    }
+  }, [sessionId]);
+
+  const sendSessionHeartbeat = useCallback(async () => {
+    if (!sessionId) {
+      return;
+    }
+
+    try {
+      await authFetch(`${API_BASE_URL}/sessions/${sessionId}/heartbeat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          heartbeat_at: new Date().toISOString(),
+        }),
+        keepalive: true,
+      });
+    } catch (error) {
+      console.error("Session heartbeat failed:", error);
     }
   }, [sessionId]);
 
@@ -491,6 +521,28 @@ export default function CallPage() {
       }, [status, sessionId, flushTranscriptBuffer]);
 
     useEffect(() => {
+      if (!sessionId || (status !== "connecting" && status !== "active" && status !== "holding")) {
+        if (heartbeatTimerRef.current) {
+          clearInterval(heartbeatTimerRef.current);
+          heartbeatTimerRef.current = null;
+        }
+        return;
+      }
+
+      void sendSessionHeartbeat();
+      heartbeatTimerRef.current = setInterval(() => {
+        void sendSessionHeartbeat();
+      }, 30000);
+
+      return () => {
+        if (heartbeatTimerRef.current) {
+          clearInterval(heartbeatTimerRef.current);
+          heartbeatTimerRef.current = null;
+        }
+      };
+    }, [status, sessionId, sendSessionHeartbeat]);
+
+    useEffect(() => {
       let timer: ReturnType<typeof setInterval> | null = null;
 
       if (status === "active" || status === "holding") {
@@ -526,27 +578,41 @@ export default function CallPage() {
 
   useEffect(() => {
     const handlePageHide = () => {
-      const pendingEntries = transcriptBufferRef.current;
-
-      if (!sessionId || pendingEntries.length === 0) {
+      if (
+        !sessionId ||
+        !callStartedAtRef.current ||
+        (status !== "connecting" && status !== "active" && status !== "holding")
+      ) {
         return;
       }
 
-      transcriptBufferRef.current = [];
+      const endedAt = new Date();
+      const durationSeconds = Math.round(
+        (endedAt.getTime() - callStartedAtRef.current.getTime()) / 1000
+      );
+      const pendingEntries = [...transcriptBufferRef.current];
 
-      void authFetch(`${API_BASE_URL}/sessions/${sessionId}/transcripts/batch`, {
+      void authFetch(`${API_BASE_URL}/sessions/${sessionId}/end`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          ended_at: endedAt.toISOString(),
+          duration_seconds: durationSeconds,
+          end_reason: "tab_closed",
           entries: pendingEntries,
         }),
         keepalive: true,
-      }).catch((error) => {
-        console.error("Transcript flush failed:", error);
-        transcriptBufferRef.current = pendingEntries;
-      });
+      })
+        .then((response) => {
+          if (response.ok) {
+            localStorage.setItem("last_session_id", sessionId);
+          }
+        })
+        .catch((error) => {
+          console.error("Tab-close session end failed:", error);
+        });
     };
 
     window.addEventListener("pagehide", handlePageHide);
@@ -554,7 +620,7 @@ export default function CallPage() {
     return () => {
       window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [sessionId]);
+  }, [sessionId, status]);
 
   useEffect(() => {
     return () => {

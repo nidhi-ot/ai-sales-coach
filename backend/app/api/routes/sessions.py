@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List, Literal, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
@@ -105,6 +105,10 @@ class TranscriptBatch(BaseModel):
     entries: List[TranscriptEntry]
 
 
+class SessionHeartbeat(BaseModel):
+    heartbeat_at: datetime | None = None
+
+
 class SessionStatsResponse(BaseModel):
     total_calls: int
     avg_score: float
@@ -192,6 +196,7 @@ async def create_session(
                 "metadata": {
                     "system_instruction": data.system_instruction,
                     "framework": resolved_framework,
+                    "heartbeat_at": datetime.now(timezone.utc).isoformat(),
                 },
             }
         )
@@ -373,6 +378,41 @@ async def add_transcript_batch(
     result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
     inserted_rows = _row_dicts(result.data)
     return {"inserted": len(inserted_rows)}
+
+
+@router.post("/{session_id}/heartbeat")
+async def record_session_heartbeat(
+    session_id: str,
+    data: SessionHeartbeat,
+    current_user=Depends(get_current_user),
+):
+    supabase = get_supabase()
+    session_row = _get_owned_session(supabase, session_id, str(current_user.id))
+    metadata = session_row.get("metadata") if isinstance(session_row.get("metadata"), dict) else {}
+    heartbeat_at = data.heartbeat_at or datetime.now(timezone.utc)
+    if heartbeat_at.tzinfo is None:
+        heartbeat_at = heartbeat_at.replace(tzinfo=timezone.utc)
+
+    next_metadata = {
+        **metadata,
+        "heartbeat_at": heartbeat_at.astimezone(timezone.utc).isoformat(),
+    }
+
+    result = (
+        supabase.table("sessions")
+        .update({"metadata": next_metadata})
+        .eq("id", session_id)
+        .execute()
+    )
+    updated_rows = _row_dicts(result.data)
+
+    if not updated_rows:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {
+        "session_id": session_id,
+        "heartbeat_at": next_metadata["heartbeat_at"],
+    }
 
 
 @router.get("/rep/{rep_id}")

@@ -42,11 +42,12 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
     supabase = get_supabase()
     now_utc = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     max_elapsed = timedelta(seconds=settings.max_call_seconds + settings.max_call_grace_seconds)
+    abandoned_after = timedelta(seconds=settings.abandoned_call_seconds)
     completed_count = 0
 
     active_sessions = _row_dicts(
         supabase.table("sessions")
-        .select("id, started_at, status")
+        .select("id, started_at, status, metadata")
         .eq("status", "active")
         .execute()
         .data
@@ -58,15 +59,36 @@ async def sweep_expired_sessions_once(now: datetime | None = None) -> int:
         if not session_id or not started_at:
             continue
 
-        if now_utc - started_at < max_elapsed:
+        hard_deadline = started_at + max_elapsed
+        metadata = session.get("metadata") if isinstance(session.get("metadata"), dict) else {}
+        heartbeat_at = _parse_datetime(metadata.get("heartbeat_at"))
+        abandoned_deadline = heartbeat_at + abandoned_after if heartbeat_at else None
+        should_complete_for_hard_timeout = now_utc >= hard_deadline
+        should_complete_for_abandonment = (
+            abandoned_deadline is not None and now_utc >= abandoned_deadline
+        )
+
+        if not should_complete_for_hard_timeout and not should_complete_for_abandonment:
             continue
 
-        ended_at = started_at + timedelta(seconds=settings.max_call_seconds)
+        if should_complete_for_abandonment and not should_complete_for_hard_timeout:
+            ended_at = min(
+                abandoned_deadline or now_utc,
+                started_at + timedelta(seconds=settings.max_call_seconds),
+            )
+            duration_seconds = min(
+                settings.max_call_seconds,
+                max(0, round((ended_at - started_at).total_seconds())),
+            )
+        else:
+            ended_at = started_at + timedelta(seconds=settings.max_call_seconds)
+            duration_seconds = settings.max_call_seconds
+
         supabase.table("sessions").update(
             {
                 "status": "completed",
                 "ended_at": ended_at.isoformat(),
-                "duration_seconds": settings.max_call_seconds,
+                "duration_seconds": duration_seconds,
             }
         ).eq("id", str(session_id)).execute()
 
