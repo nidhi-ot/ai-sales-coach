@@ -449,11 +449,11 @@ async def get_rep_sessions(
             .execute()
         )
 
-        scorecards_by_session = {
-            str(row["session_id"]): row
-            for row in _row_dicts(scorecard_result.data)
-            if row.get("session_id")
-        }
+        scorecards_by_session = {}
+        for row in _row_dicts(scorecard_result.data):
+            row_session_id = row.get("session_id")
+            if row_session_id and str(row_session_id) not in scorecards_by_session:
+                scorecards_by_session[str(row_session_id)] = row
 
     for row in session_rows:
         scorecard = scorecards_by_session.get(str(row["id"]), {})
@@ -507,6 +507,7 @@ async def get_session_details(
         supabase.table("scorecards")
         .select("id, status")
         .eq("session_id", session_id)
+        .order("created_at", desc=True)
         .limit(1)
         .execute()
     )

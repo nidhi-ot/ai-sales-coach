@@ -52,13 +52,21 @@ export default function HistoryPage() {
 
   async function retryAnalysis(sessionId: string) {
     try {
-      await authFetch(`${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`, {
-        method: "POST",
-      });
+      const response = await authFetch(
+        `${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`,
+        { method: "POST" }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || "Failed to retry analysis.");
+        return;
+      }
 
       await loadSessions();
     } catch (error) {
-      console.error("Failed to retry analysis:", error);
+      alert("Failed to retry analysis.");
     }
   }
 
@@ -66,19 +74,18 @@ export default function HistoryPage() {
     loadSessions();
   }, []);
 
+  const hasProcessingScorecard = sessions.some(
+    (session) => session.scorecard_status === "processing"
+  );
+
   useEffect(() => {
+    if (!hasProcessingScorecard) return;
+
     let pollCount = 0;
     const maxPolls = 24;
 
-    const hasProcessingScorecard = sessions.some(
-      (session) => session.scorecard_status === "processing"
-    );
-
-    if (!hasProcessingScorecard) return;
-
     const intervalId = setInterval(async () => {
       pollCount += 1;
-
       await loadSessions();
 
       if (pollCount >= maxPolls) {
@@ -87,7 +94,7 @@ export default function HistoryPage() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [sessions]);
+  }, [hasProcessingScorecard]);
 
   async function updateSharing(sessionId: string, shared: boolean) {
     setSessions((current) =>

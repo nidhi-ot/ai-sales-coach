@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
@@ -24,6 +24,8 @@ type Scorecard = {
   strengths?: string[] | null;
   improvement_areas?: string[] | null;
   feedback_summary?: string | null;
+  shared_with_manager?: boolean | null;
+  status?: "processing" | "generated" | "failed" | null;
 };
 
 type ScoreMetric = {
@@ -104,12 +106,17 @@ export default function ScorecardsClients() {
   const [hasNoPractice, setHasNoPractice] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadScorecard() {
-      setLoading(true);
-      setError("");
-      setHasNoPractice(false);
-      setScorecard(null);
+  const [pollCount, setPollCount] = useState(0);
+
+  const loadScorecard = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) {
+        setLoading(true);
+        setError("");
+        setHasNoPractice(false);
+        setScorecard(null);
+        setPollCount(0);
+      }
 
       try {
         let resolvedSessionId = querySessionId;
@@ -132,8 +139,9 @@ export default function ScorecardsClients() {
           }
 
           const recentData = await recentResponse.json();
-
-          const latestSession = (recentData.sessions as RecentSession[] | undefined)?.[0];
+          const latestSession = (
+            recentData.sessions as RecentSession[] | undefined
+          )?.[0];
 
           if (!latestSession?.id) {
             setHasNoPractice(true);
@@ -163,10 +171,26 @@ export default function ScorecardsClients() {
       } finally {
         setLoading(false);
       }
+    },
+    [querySessionId, router]
+  );
+
+  useEffect(() => {
+    void loadScorecard();
+  }, [loadScorecard]);
+
+  useEffect(() => {
+    if (!sessionId || scorecard?.status !== "processing" || pollCount >= 24) {
+      return;
     }
 
-    loadScorecard();
-  }, [querySessionId]);
+    const timeoutId = window.setTimeout(() => {
+      setPollCount((current) => current + 1);
+      void loadScorecard({ silent: true });
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [sessionId, scorecard?.status, pollCount, loadScorecard]);
 
   const overallScore = scorecard?.overall_score ?? null;
   const frameworkScoreGroup = buildFrameworkMetrics(scorecard?.framework_scores);
@@ -261,6 +285,44 @@ export default function ScorecardsClients() {
             <p style={{ color: "#667085", margin: 0 }}>
               No scorecard found for this session.
             </p>
+          </section>
+        ) : scorecard.status === "failed" ? (
+          <section style={panelStyle}>
+            <h2 style={sectionTitleStyle}>Scorecard analysis failed</h2>
+
+            <p style={{ color: "#667085" }}>
+              The analysis could not finish. Retry the scorecard generation.
+            </p>
+
+            <button
+              onClick={async () => {
+                if (!sessionId) return;
+
+                try {
+                  const response = await authFetch(
+                    `${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`,
+                    { method: "POST" }
+                  );
+
+                  const data = await response.json();
+
+                  if (!response.ok) {
+                    alert(data.detail || "Failed to retry analysis.");
+                    return;
+                  }
+
+                  setPollCount(0);
+                  setScorecard((current) =>
+                    current ? { ...current, status: "processing" } : current
+                  );
+                } catch (error) {
+                  alert("Failed to retry analysis.");
+                }
+              }}
+              style={primaryButtonStyle}
+            >
+              Retry analysis
+            </button>
           </section>
         ) : (
           <>
