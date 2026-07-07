@@ -2,6 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
 import { API_BASE_URL, authFetch } from "../../lib/api";
@@ -16,11 +30,9 @@ type DashboardStats = {
 
 type RecentSession = {
   id: string;
-  title?: string;
   scenario: string;
   score?: number | null;
   date?: string | null;
-  duration?: number | null;
 };
 
 type DimensionStats = {
@@ -41,59 +53,69 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [fullName, setFullName] = useState("Sales Rep");
+  const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
-  const [dimensions, setDimensions] = useState<DimensionsResponse["dimensions"]>(
-    {}
-  );
+  const [dimensions, setDimensions] = useState<DimensionsResponse["dimensions"]>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const storedRole = localStorage.getItem("role");
     const storedName = localStorage.getItem("full_name");
+
+    setRole(storedRole);
 
     if (storedName && storedName !== "undefined") {
       setFullName(storedName);
     }
 
     async function loadDashboardData() {
-  try {
-    const repId = localStorage.getItem("rep_id");
+      try {
+        if (storedRole === "manager") {
+          setLoading(false);
+          return;
+        }
 
-    if (!repId) {
-      setLoading(false);
-      return;
+        const repId = localStorage.getItem("rep_id");
+
+        if (!repId) {
+          setLoading(false);
+          return;
+        }
+
+        const [statsResponse, recentResponse, dimensionsResponse] =
+          await Promise.all([
+            authFetch(`${API_BASE_URL}/sessions/stats/${repId}`),
+            authFetch(`${API_BASE_URL}/sessions/recent/${repId}?limit=5`),
+            authFetch(`${API_BASE_URL}/sessions/dimensions/${repId}`),
+          ]);
+
+        if (statsResponse.ok) {
+          setStats(await statsResponse.json());
+        }
+
+        if (recentResponse.ok) {
+          const recentData = await recentResponse.json();
+          setRecentSessions(recentData.sessions || []);
+        }
+
+        if (dimensionsResponse.ok) {
+          const dimensionsData = await dimensionsResponse.json();
+          setDimensions(dimensionsData.dimensions || {});
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-
-    const [statsResponse, recentResponse, dimensionsResponse] =
-      await Promise.all([
-        authFetch(`${API_BASE_URL}/sessions/stats/${repId}`),
-        authFetch(`${API_BASE_URL}/sessions/recent/${repId}?limit=5`),
-        authFetch(`${API_BASE_URL}/sessions/dimensions/${repId}`),
-      ]);
-
-    if (statsResponse.ok) {
-      const statsData = await statsResponse.json();
-      setStats(statsData);
-    }
-
-    if (recentResponse.ok) {
-      const recentData = await recentResponse.json();
-      setRecentSessions(recentData.sessions || []);
-    }
-
-    if (dimensionsResponse.ok) {
-      const dimensionsData = await dimensionsResponse.json();
-      setDimensions(dimensionsData.dimensions || {});
-    }
-  } catch (error) {
-    console.error("Failed to load dashboard data:", error);
-  } finally {
-    setLoading(false);
-  }
-}
 
     loadDashboardData();
   }, []);
+
+  if (role === "manager") {
+    return <ManagerDashboard fullName={fullName} onViewTeam={() => router.push("/team")} />;
+  }
 
   return (
     <AppShell>
@@ -102,15 +124,12 @@ export default function DashboardPage() {
           <div style={heroInnerStyle}>
             <div>
               <p style={eyebrowStyle}>AI Sales Coach Dashboard</p>
-
               <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
-
-              <p style={heroSubtitleStyle}>
-                Ready to level up your sales game today?
-              </p>
+              <p style={heroSubtitleStyle}>Ready to level up your sales game today?</p>
             </div>
 
             <button
+              type="button"
               onClick={() => router.push("/scenarios")}
               style={primaryButtonStyle}
             >
@@ -181,6 +200,7 @@ export default function DashboardPage() {
               </div>
 
               <button
+                type="button"
                 onClick={() => router.push("/history")}
                 style={linkButtonStyle}
               >
@@ -189,13 +209,9 @@ export default function DashboardPage() {
             </div>
 
             {loading ? (
-              <p style={{ color: "#667085", marginTop: "20px" }}>
-                Loading recent sessions...
-              </p>
+              <p style={emptyTextStyle}>Loading recent sessions...</p>
             ) : recentSessions.length === 0 ? (
-              <p style={{ color: "#667085", marginTop: "20px" }}>
-                No practice sessions yet.
-              </p>
+              <p style={emptyTextStyle}>No practice sessions yet.</p>
             ) : (
               <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
                 {recentSessions.map((session) => (
@@ -226,30 +242,190 @@ export default function DashboardPage() {
           </section>
 
           <section style={panelStyle}>
-            <div style={headerStyle}>
-              <div>
-                <h2 style={titleStyle}>Your Progress</h2>
-                <p style={subtitleStyle}>Skill growth overview</p>
-              </div>
-            </div>
+            <h2 style={titleStyle}>Your Progress</h2>
+            <p style={subtitleStyle}>Skill growth overview</p>
 
             <div style={{ marginTop: "22px", display: "grid", gap: "18px" }}>
-              <ProgressRow
-                label="Discovery"
-                score={dimensions?.discovery?.latest}
-              />
-
+              <ProgressRow label="Discovery" score={dimensions?.discovery?.latest} />
               <ProgressRow
                 label="Objection Handling"
                 score={dimensions?.objection_handling?.latest}
               />
-
               <ProgressRow label="Closing" score={dimensions?.closing?.latest} />
             </div>
           </section>
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function ManagerDashboard({
+  fullName,
+  onViewTeam,
+}: {
+  fullName: string;
+  onViewTeam: () => void;
+}) {
+  const sessionsTrend = [
+    { day: "Mon", sessions: 8 },
+    { day: "Tue", sessions: 12 },
+    { day: "Wed", sessions: 15 },
+    { day: "Thu", sessions: 10 },
+    { day: "Fri", sessions: 18 },
+    { day: "Sat", sessions: 6 },
+    { day: "Sun", sessions: 8 },
+  ];
+
+  const skillData = [
+    { name: "Rapport", value: 72 },
+    { name: "Discovery", value: 68 },
+    { name: "Objections", value: 61 },
+    { name: "Closing", value: 55 },
+  ];
+
+  const coachingData = [
+    { name: "ABC", skill: "Closing", score: 48 },
+    { name: "Nidhi", skill: "Discovery", score: 58 },
+    { name: "Fortuna", skill: "Objections", score: 64 },
+  ];
+
+  return (
+    <AppShell>
+      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+        <section style={heroStyle}>
+          <div style={heroInnerStyle}>
+            <div>
+              <p style={eyebrowStyle}>AI Manager Dashboard</p>
+              <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
+              <p style={heroSubtitleStyle}>
+                Track team performance, coaching priorities, and sales practice progress.
+              </p>
+            </div>
+
+            <button type="button" onClick={onViewTeam} style={primaryButtonStyle}>
+              View Team →
+            </button>
+          </div>
+        </section>
+
+        <div style={statsGridStyle}>
+          <ManagerKpi title="Team Score" value="72%" trend="+6%" icon="⭐" />
+          <ManagerKpi title="Sessions" value="77" trend="+14 this week" icon="🎙️" />
+          <ManagerKpi title="Active Reps" value="9" trend="90% active" icon="👥" />
+          <ManagerKpi title="Need Coaching" value="3" trend="Priority reps" icon="🚩" />
+        </div>
+
+        <div style={managerChartGridStyle}>
+          <section style={panelStyle}>
+            <h2 style={titleStyle}>Sessions Trend</h2>
+            <p style={subtitleStyle}>Practice activity this week</p>
+
+            <div style={chartBoxStyle}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={sessionsTrend}>
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="sessions"
+                    stroke="#006b4f"
+                    strokeWidth={3}
+                    dot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          <section style={panelStyle}>
+            <h2 style={titleStyle}>Skill Distribution</h2>
+            <p style={subtitleStyle}>Average score by skill area</p>
+
+            <div style={chartBoxStyle}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={skillData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={4}
+                  >
+                    {skillData.map((_, index) => (
+                      <Cell
+                        key={index}
+                        fill={["#006b4f", "#00a36c", "#f59e0b", "#ef4444"][index]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        </div>
+
+        <div style={managerChartGridStyle}>
+          <section style={panelStyle}>
+            <h2 style={titleStyle}>Team Performance</h2>
+            <p style={subtitleStyle}>Skill strengths and weak areas</p>
+
+            <div style={chartBoxStyle}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={skillData} layout="vertical">
+                  <XAxis type="number" domain={[0, 100]} />
+                  <YAxis dataKey="name" type="category" width={90} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#006b4f" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          <section style={panelStyle}>
+            <h2 style={titleStyle}>Coaching Priority</h2>
+            <p style={subtitleStyle}>Reps who need manager attention</p>
+
+            <div style={{ display: "grid", gap: "14px", marginTop: "22px" }}>
+              {coachingData.map((rep) => (
+                <div key={rep.name} style={priorityCardStyle}>
+                  <div>
+                    <strong>{rep.name}</strong>
+                    <p style={subtitleStyle}>Weakest skill: {rep.skill}</p>
+                  </div>
+
+                  <span style={priorityBadgeStyle}>{rep.score}%</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
+function ManagerKpi({
+  title,
+  value,
+  trend,
+  icon,
+}: {
+  title: string;
+  value: string;
+  trend: string;
+  icon: string;
+}) {
+  return (
+    <div style={managerKpiStyle}>
+      <div style={managerKpiIconStyle}>{icon}</div>
+      <p style={summaryLabelStyle}>{title}</p>
+      <strong style={summaryNumberStyle}>{value}</strong>
+      <span style={summaryTrendStyle}>{trend}</span>
+    </div>
   );
 }
 
@@ -283,6 +459,7 @@ function formatScenario(value: string) {
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
+
 const heroStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #ffffff 0%, #f0faf6 55%, #e6f4ef 100%)",
   border: "1px solid #dfeee8",
@@ -370,6 +547,11 @@ const subtitleStyle: React.CSSProperties = {
   fontSize: "14px",
 };
 
+const emptyTextStyle: React.CSSProperties = {
+  color: "#667085",
+  marginTop: "20px",
+};
+
 const sessionStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -433,4 +615,76 @@ const progressFillStyle: React.CSSProperties = {
   height: "100%",
   background: "#006b4f",
   borderRadius: "999px",
+};
+
+const managerChartGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "24px",
+  marginBottom: "28px",
+};
+
+const chartBoxStyle: React.CSSProperties = {
+  width: "100%",
+  height: "280px",
+  marginTop: "24px",
+};
+
+const managerKpiStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "24px",
+  padding: "24px",
+  boxShadow: "0 18px 40px rgba(16, 24, 40, 0.07)",
+};
+
+const managerKpiIconStyle: React.CSSProperties = {
+  width: "48px",
+  height: "48px",
+  borderRadius: "16px",
+  background: "#e7f4ef",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "22px",
+  marginBottom: "14px",
+};
+
+const summaryLabelStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#667085",
+  fontWeight: 700,
+};
+
+const summaryNumberStyle: React.CSSProperties = {
+  display: "block",
+  marginTop: "8px",
+  fontSize: "34px",
+  color: "#006b4f",
+  fontWeight: 900,
+};
+
+const summaryTrendStyle: React.CSSProperties = {
+  display: "inline-block",
+  marginTop: "8px",
+  color: "#027a48",
+  fontWeight: 700,
+};
+
+const priorityCardStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "18px",
+  borderRadius: "18px",
+  background: "#fff7ed",
+  border: "1px solid #fed7aa",
+};
+
+const priorityBadgeStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: "999px",
+  background: "#fee2e2",
+  color: "#b91c1c",
+  fontWeight: 900,
 };

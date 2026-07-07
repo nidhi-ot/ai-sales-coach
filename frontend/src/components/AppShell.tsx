@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function AppShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [role, setRole] = useState("rep");
@@ -32,16 +28,25 @@ export default function AppShell({
     router.push("/");
   }
 
-  const navItems = [
-    { label: "Dashboard", path: "/dashboard", icon: "🏠" },
-    { label: "Practice", path: "/scenarios", icon: "🎯" },
-    { label: "History", path: "/history", icon: "🕘" },
-    { label: "Scorecards", path: "/scorecards", icon: "📋" },
-    { label: "Profile", path: "/profile", icon: "👤" },
-    { label: "Progress", path: "/progress", icon: "📈" },
-    { label: "Settings", path: "/settings", icon: "⚙️" },
-    ...(role === "admin" ? [{ label: "Admin", path: "/admin", icon: "🛡️" }] : []),
-  ];
+  const navItems =
+    role === "manager"
+      ? [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Team", href: "/team", icon: "👥" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+        ]
+      : [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Practice", href: "/scenarios", icon: "🎯" },
+          { label: "History", href: "/history", icon: "🕘" },
+          { label: "Scorecards", href: "/scorecards", icon: "📋" },
+          { label: "Profile", href: "/profile", icon: "👤" },
+          { label: "Progress", href: "/progress", icon: "📈" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+          ...(role === "admin"
+            ? [{ label: "Admin", href: "/admin", icon: "🛡️" }]
+            : []),
+        ];
 
   return (
     <main
@@ -53,7 +58,7 @@ export default function AppShell({
       }}
     >
       <aside
-         style={{
+        style={{
           width: "280px",
           background: "linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%)",
           borderRight: "1px solid #e5e7eb",
@@ -110,12 +115,12 @@ export default function AppShell({
           }}
         >
           {navItems.map((item) => {
-            const active = pathname === item.path;
+            const active = pathname === item.href;
 
             return (
               <button
-                key={item.path}
-                onClick={() => router.push(item.path)}
+                key={item.href}
+                onClick={() => router.push(item.href)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -131,7 +136,9 @@ export default function AppShell({
                     ? "linear-gradient(135deg, #006b4f 0%, #008f6b 100%)"
                     : "transparent",
                   color: active ? "white" : "#344054",
-                  boxShadow: active ? "0 10px 20px rgba(0, 107, 79, 0.18)" : "none",
+                  boxShadow: active
+                    ? "0 10px 20px rgba(0, 107, 79, 0.18)"
+                    : "none",
                 }}
               >
                 <span style={{ fontSize: "18px" }}>{item.icon}</span>
@@ -158,14 +165,7 @@ export default function AppShell({
         </button>
       </aside>
 
-      <section
-        style={{
-          flex: 1,
-          padding: "36px",
-        }}
-      >
-        {children}
-      </section>
+      <section style={{ flex: 1, padding: "36px" }}>{children}</section>
     </main>
   );
 }
