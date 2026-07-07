@@ -206,6 +206,9 @@ async def update_member(
     if str(member.get("business_id")) != str(current_account.business_id):
         raise HTTPException(status_code=403, detail="Forbidden")
 
+    if str(member.get("id")) == str(current_account.id):
+        raise HTTPException(status_code=403, detail="Cannot modify your own admin member record")
+
     update_payload: dict[str, Any] = {}
     if data.role is not None:
         update_payload["role"] = data.role
