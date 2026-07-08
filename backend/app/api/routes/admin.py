@@ -128,8 +128,9 @@ async def update_business_framework(
         .execute()
     )
 
-    if getattr(updated_result, "error", None):
-        raise HTTPException(status_code=500, detail=str(updated_result.error))
+    updated_error = getattr(updated_result, "error", None)
+    if updated_error:
+        raise HTTPException(status_code=500, detail=str(updated_error))
 
     updated_rows = _row_dicts(updated_result.data)
     updated_business = updated_rows[0] if updated_rows else business_rows[0]
