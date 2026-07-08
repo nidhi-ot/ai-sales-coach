@@ -207,10 +207,13 @@ async def update_member(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     if str(member.get("id")) == str(current_account.id):
-        raise HTTPException(status_code=403, detail="Cannot modify your own admin member record")
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot modify your own admin member record",
+        )
 
-    current_is_active_admin = (
-        str(member.get("role")) == "admin" and bool(member.get("is_active", True))
+    current_is_active_admin = str(member.get("role")) == "admin" and bool(
+        member.get("is_active", True)
     )
     would_remove_admin_privileges = (
         data.role is not None and data.role != "admin"
