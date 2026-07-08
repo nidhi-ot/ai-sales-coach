@@ -87,6 +87,46 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION delete_member_data(
+  p_member_id UUID,
+  p_business_id UUID
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
+
+  DELETE FROM transcripts
+  WHERE session_id IN (
+    SELECT id
+    FROM sessions
+    WHERE rep_id = p_member_id
+      AND business_id = p_business_id
+  );
+
+  DELETE FROM scorecards
+  WHERE session_id IN (
+    SELECT id
+    FROM sessions
+    WHERE rep_id = p_member_id
+      AND business_id = p_business_id
+  );
+
+  DELETE FROM sessions
+  WHERE rep_id = p_member_id
+    AND business_id = p_business_id;
+
+  DELETE FROM salesperson_profiles
+  WHERE rep_id = p_member_id
+    AND business_id = p_business_id;
+
+  DELETE FROM salesperson_accounts
+  WHERE id = p_member_id
+    AND business_id = p_business_id;
+END;
+$$;
+
 -- 3. Invites (admin-generated invite links)
 CREATE TABLE invites (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
