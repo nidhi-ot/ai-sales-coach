@@ -353,6 +353,7 @@ def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
 
     return scenario_config
 
+
 def get_business_scenario_config(
     scenario: ScenarioSlug | str,
     business_id: str | None,
@@ -403,13 +404,14 @@ def normalize_framework(framework: str | None) -> str:
     return value if value in FRAMEWORK_DIMENSIONS else DEFAULT_BUSINESS_PROFILE["framework"]
 
 
-def get_latest_profile_focus(rep_id: str) -> dict[str, Any] | None:
+def get_latest_profile_focus(rep_id: str, business_id: str) -> dict[str, Any] | None:
     supabase = get_supabase()
 
     result = (
         supabase.table("salesperson_profiles")
         .select("version, weakest_dimension, metric_scores")
         .eq("rep_id", rep_id)
+        .eq("business_id", business_id)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -421,9 +423,10 @@ def get_latest_profile_focus(rep_id: str) -> dict[str, Any] | None:
 
 def build_learning_profile_instruction(
     rep_id: str,
+    business_id: str,
     fallback_focus_area: str | None = None,
 ) -> str:
-    latest = get_latest_profile_focus(rep_id)
+    latest = get_latest_profile_focus(rep_id, business_id)
 
     if latest:
         return f"""

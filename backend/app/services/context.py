@@ -28,10 +28,10 @@ def assemble_call_context(
     business_id = business.get("id")
 
     scenario_config = get_business_scenario_config(
-    scenario=scenario,
-    business_id=str(business_id) if business_id else None,
-)
-    
+        scenario=scenario,
+        business_id=str(business_id) if business_id else None,
+    )
+
     framework = normalize_framework(cast(str | None, business.get("framework")))
     metric_scores = _coerce_metric_scores(profile.get("metric_scores"))
     weakest_dimension = profile.get("weakest_dimension") or _find_weakest_dimension(metric_scores)

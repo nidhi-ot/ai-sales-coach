@@ -34,6 +34,20 @@ def _first_row(data: Any) -> dict[str, Any] | None:
     return None
 
 
+def _get_account_row(user_id: str) -> dict[str, Any] | None:
+    supabase = get_supabase()
+
+    result = (
+        supabase.table("salesperson_accounts")
+        .select("id, role, business_id, is_active")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+
+    return _first_row(result.data)
+
+
 async def get_current_user(
     authorization: str | None = Header(default=None, alias="Authorization"),
 ):
@@ -75,23 +89,21 @@ async def get_current_user(
             detail="Invalid auth token",
         )
 
+    account = _get_account_row(str(user.id))
+
+    if account is None:
+        raise HTTPException(status_code=403, detail="Account not found")
+
+    if account.get("is_active") is False:
+        raise HTTPException(status_code=403, detail="Account is inactive")
+
     return user
 
 
 async def get_current_account(
     current_user=Depends(get_current_user),
 ) -> CurrentAccount:
-    supabase = get_supabase()
-
-    result = (
-        supabase.table("salesperson_accounts")
-        .select("id, role, business_id")
-        .eq("id", current_user.id)
-        .limit(1)
-        .execute()
-    )
-
-    account = _first_row(result.data)
+    account = _get_account_row(str(current_user.id))
 
     if account is None:
         raise HTTPException(status_code=403, detail="Account not found")
@@ -105,6 +117,9 @@ async def get_current_account(
 
     if not role:
         raise HTTPException(status_code=403, detail="Account role not found")
+
+    if account.get("is_active") is False:
+        raise HTTPException(status_code=403, detail="Account is inactive")
 
     return CurrentAccount(
         id=str(account["id"]),
