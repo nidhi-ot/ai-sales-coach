@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_current_user
+from app.api.deps import CurrentAccount, get_current_account, get_current_user
 from app.main import app
 from tests.helpers import FakeSupabase
 
@@ -220,6 +220,11 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
         app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-456")
+        app.dependency_overrides[get_current_account] = lambda: CurrentAccount(
+            id="rep-456",
+            role="rep",
+            business_id="business-789",
+        )
 
     def tearDown(self):
         app.dependency_overrides.clear()
@@ -302,6 +307,31 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         stored_profile = fake_supabase.store["salesperson_profiles"][0]
         self.assertEqual(stored_profile["call_id"], first_session["id"])
         self.assertEqual(stored_profile["weakest_dimension"], "objection_handling")
+
+    def test_create_session_rejects_request_business_outside_account(self):
+        fake_supabase = FakeSupabase(with_default_session=False)
+
+        with (
+            patch(
+                "app.api.routes.sessions.get_supabase",
+                return_value=fake_supabase,
+            ) as supabase_mock,
+            patch("app.api.routes.sessions.get_business_profile", new=AsyncMock()) as business_mock,
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/",
+                json={
+                    "rep_id": "rep-456",
+                    "business_id": "business-other",
+                    "scenario": "cold_call",
+                    "system_instruction": "Cross-business call",
+                },
+            )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(fake_supabase.store["sessions"], {})
+        supabase_mock.assert_not_called()
+        business_mock.assert_not_awaited()
 
 
 if __name__ == "__main__":

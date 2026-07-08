@@ -73,6 +73,7 @@ async def gpt_analyze_transcript(
     ai_text: str,
     system_instruction: str,
     scenario_title: str,
+    business_profile: dict[str, Any] | None = None,
     framework: str = "BANT",
 ) -> dict[str, Any]:
     """
@@ -86,6 +87,7 @@ async def gpt_analyze_transcript(
         ai_text: The AI customer's responses
         system_instruction: The scenario system instruction/context
         scenario_title: The scenario title for context
+        business_profile: Business profile fields used to condition scoring rubrics
         framework: Sales methodology snapshotted on the session
 
     Returns:
@@ -100,11 +102,14 @@ async def gpt_analyze_transcript(
     selected_framework = _normalize_framework(framework)
     framework_prompt = _framework_prompt_section(selected_framework)
     framework_json = _framework_json_shape(selected_framework)
+    business_context = _business_context_prompt_section(business_profile)
 
     prompt = f"""You are an expert sales coach evaluating a practice sales call.
 You are part of an AI Sales Coach platform.
 
 SCENARIO: {scenario_title}
+
+{business_context}
 
 SCENARIO CONTEXT & INSTRUCTIONS:
 {system_instruction}
@@ -134,8 +139,8 @@ For {selected_framework}, score each framework dimension 1-10 based on:
 
 EVALUATION CRITERIA:
 - Did the rep build rapport and establish connection?
-- Did they ask effective discovery questions?
-- How well did they handle any objections?
+- Did they ask effective discovery questions for this business's ICP and actual products/services?
+- How well did they handle objections, especially this business's common objections?
 - Did they secure a clear next step or closing action?
 - Was their speaking pace, tone, and language professional?
 - Did they listen and respond to customer concerns?
@@ -262,6 +267,29 @@ def _framework_json_shape(framework: str) -> str:
     dimensions = FRAMEWORKS[framework]["dimensions"]
     score_lines = ",\n    ".join(f'"{label}": <1-10>' for label in dimensions)
     return f'{{\n    "{framework}": {{\n    {score_lines}\n    }}\n  }}'
+
+
+def _business_context_prompt_section(business_profile: dict[str, Any] | None) -> str:
+    profile = business_profile or {}
+
+    return f"""BUSINESS CONTEXT FOR SCORING:
+Use this company context when judging specificity, discovery quality, objection handling,
+and whether the rep connected the conversation to the right buyer reality.
+- Products/services: {_format_business_value(profile.get("products"))}
+- Ideal customer profile (ICP): {_format_business_value(profile.get("icp"))}
+- Common objections: {_format_business_value(profile.get("objections"))}"""
+
+
+def _format_business_value(value: Any) -> str:
+    if value is None:
+        return "Not provided"
+
+    if isinstance(value, list | tuple):
+        items = [str(item).strip() for item in value if str(item).strip()]
+        return "; ".join(items) if items else "Not provided"
+
+    text = str(value).strip()
+    return text if text else "Not provided"
 
 
 def _validated_framework_scores(

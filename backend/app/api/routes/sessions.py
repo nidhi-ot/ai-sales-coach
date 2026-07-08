@@ -4,7 +4,13 @@ from typing import Any, List, Literal, cast
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from app.api.deps import ensure_rep_access, get_current_user
+from app.api.deps import (
+    CurrentAccount,
+    ensure_business_access,
+    ensure_rep_access,
+    get_current_account,
+    get_current_user,
+)
 from app.config import settings
 from app.db.client import get_business_profile, get_supabase
 from app.models.agent import ScenarioSlug
@@ -163,15 +169,19 @@ class SessionDetailResponse(BaseModel):
 @router.post("/")
 async def create_session(
     data: SessionStart,
-    current_user=Depends(get_current_user),
+    current_account: CurrentAccount = Depends(get_current_account),
 ):
+    ensure_rep_access(current_account.id, data.rep_id)
+    ensure_business_access(current_account.business_id, data.business_id)
+
     supabase = get_supabase()
-    ensure_rep_access(str(current_user.id), data.rep_id)
+    business_id = current_account.business_id
 
     profile = (
         supabase.table("salesperson_profiles")
         .select("version")
         .eq("rep_id", data.rep_id)
+        .eq("business_id", business_id)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -179,7 +189,6 @@ async def create_session(
 
     profile_rows = _row_dicts(profile.data)
     profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
-    business_id = settings.business_id
     business_profile = await get_business_profile(business_id)
     resolved_framework = normalize_framework(
         business_profile.get("framework") if business_profile else None
@@ -190,7 +199,7 @@ async def create_session(
         .insert(
             {
                 "rep_id": data.rep_id,
-                "business_id": settings.business_id,
+                "business_id": business_id,
                 "scenario": data.scenario.value,
                 "profile_version": profile_version,
                 "status": "active",

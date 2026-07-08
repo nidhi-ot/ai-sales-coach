@@ -194,11 +194,13 @@ async def create_next_salesperson_profile(
 
     session = session_rows[0]
     rep_id = session["rep_id"]
+    business_id = session["business_id"]
 
     existing_profile_for_call = _row_dicts(
         supabase.table("salesperson_profiles")
         .select("*")
         .eq("call_id", session_id)
+        .eq("business_id", business_id)
         .limit(1)
         .execute()
         .data
@@ -228,6 +230,7 @@ async def create_next_salesperson_profile(
         supabase.table("salesperson_profiles")
         .select("version")
         .eq("rep_id", rep_id)
+        .eq("business_id", business_id)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -242,7 +245,7 @@ async def create_next_salesperson_profile(
         .insert(
             {
                 "rep_id": rep_id,
-                "business_id": session["business_id"],
+                "business_id": business_id,
                 "version": next_version,
                 "call_id": session_id,
                 "metric_scores": metrics,

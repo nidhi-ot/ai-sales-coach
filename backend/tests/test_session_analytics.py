@@ -70,6 +70,36 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile["version"], 2)
         self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 2)
 
+    async def test_allocates_version_within_session_business(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["salesperson_profiles"].append(
+            {
+                "id": "profile-other-business",
+                "rep_id": "rep-456",
+                "business_id": "business-other",
+                "version": 9,
+                "call_id": "old-session",
+                "metric_scores": {},
+                "weakest_dimension": "rapport",
+            }
+        )
+        scorecard = {
+            "rapport_score": 8,
+            "needs_discovery_score": 6,
+            "objection_handling_score": 4,
+            "closing_score": 7,
+        }
+
+        with patch(
+            "app.services.session_analytics.get_supabase",
+            return_value=fake_supabase,
+        ):
+            profile = await create_next_salesperson_profile("session-123", scorecard)
+
+        self.assertEqual(profile["business_id"], "business-789")
+        self.assertEqual(profile["version"], 1)
+        self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
