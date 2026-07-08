@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.deps import ensure_rep_access, get_current_user
+from app.api.deps import (
+    CurrentAccount,
+    ensure_business_access,
+    ensure_rep_access,
+    get_current_account,
+)
 from app.db.client import get_business_profile, get_latest_profile
 from app.models.agent import (
     BeforeCallContextRequest,
@@ -18,12 +23,14 @@ router = APIRouter()
 @router.post("/before-call", response_model=BeforeCallContextResponse)
 async def assemble_before_call_context(
     request: BeforeCallContextRequest,
-    current_user=Depends(get_current_user),
+    current_account: CurrentAccount = Depends(get_current_account),
 ) -> BeforeCallContextResponse:
-    ensure_rep_access(str(current_user.id), str(request.rep_id))
+    ensure_rep_access(current_account.id, str(request.rep_id))
+    ensure_business_access(current_account.business_id, str(request.business_id))
 
-    rep_profile = await get_latest_profile(str(request.rep_id), str(request.business_id))
-    business_profile = await get_business_profile(str(request.business_id))
+    business_id = current_account.business_id
+    rep_profile = await get_latest_profile(str(request.rep_id), business_id)
+    business_profile = await get_business_profile(business_id)
 
     if business_profile is None:
         raise HTTPException(status_code=404, detail="Business profile not found")
