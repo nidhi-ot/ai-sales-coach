@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [inviteToken, setInviteToken] = useState("");
 
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function RegisterPage() {
 
   async function handleCreateAccount() {
     setError("");
+    setSuccessMessage("");
 
     if (!fullName.trim()) {
       setError("Please enter your full name");
@@ -87,7 +89,10 @@ export default function RegisterPage() {
       }
       localStorage.setItem("role", data.role || "rep");
 
-      router.push("/dashboard");
+      setSuccessMessage("Account created successfully. Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (error) {
       console.error(error);
       setError(error instanceof Error ? error.message : "Could not connect to backend");
@@ -175,6 +180,10 @@ export default function RegisterPage() {
         />
 
         {error && <p style={{ color: "#b42318", fontSize: "14px" }}>{error}</p>}
+
+        {successMessage && (
+          <p style={{ color: "#027a48", fontSize: "14px" }}>{successMessage}</p>
+        )}
 
         <button onClick={handleCreateAccount} disabled={loading} style={buttonStyle}>
           {loading ? "Creating..." : "Create Account"}
