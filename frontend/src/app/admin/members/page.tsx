@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../../components/AppShell";
+import { removeMemberById } from "../../../lib/memberActions";
 import { API_BASE_URL, authFetch } from "../../../lib/api";
 
 type AdminMember = {
@@ -47,10 +48,14 @@ export default function AdminMembersPage() {
   const [drafts, setDrafts] = useState<Record<string, MemberDraft>>({});
   const [loading, setLoading] = useState(true);
   const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
+  const [exportingMemberId, setExportingMemberId] = useState<string | null>(null);
+  const [deletingMemberId, setDeletingMemberId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role") || "rep";
+    setCurrentUserId(localStorage.getItem("user_id") || "");
 
     if (storedRole !== "admin") {
       router.replace("/dashboard");
@@ -100,6 +105,98 @@ export default function AdminMembersPage() {
 
     loadMembers();
   }, [router]);
+
+  async function handleExport(member: AdminMember) {
+    setExportingMemberId(member.id);
+    setError("");
+
+    try {
+      const response = await authFetch(
+        `${API_BASE_URL}/admin/members/${member.id}/export`
+      );
+      const raw = await response.text();
+      const data = raw ? (JSON.parse(raw) as unknown) : {};
+
+      if (!response.ok) {
+        setError(getErrorDetail(data, "Failed to export member"));
+        return;
+      }
+
+      const payload = JSON.stringify(data, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const safeName = member.full_name.trim().replace(/\s+/g, "-").toLowerCase();
+
+      link.href = downloadUrl;
+      link.download = `member-export-${safeName || member.id}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (memberError) {
+      console.error("Failed to export member:", memberError);
+
+      if (memberError instanceof Error && memberError.message === "Unauthorized") {
+        return;
+      }
+
+      setError(
+        memberError instanceof Error
+          ? memberError.message
+          : "Could not connect to backend"
+      );
+    } finally {
+      setExportingMemberId(null);
+    }
+  }
+
+  async function handleDelete(member: AdminMember) {
+    if (!window.confirm(`Delete ${member.full_name}? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingMemberId(member.id);
+    setError("");
+
+    try {
+      const response = await authFetch(`${API_BASE_URL}/admin/members/${member.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const raw = await response.text();
+      const data = raw ? (JSON.parse(raw) as unknown) : {};
+
+      if (!response.ok) {
+        setError(getErrorDetail(data, "Failed to delete member"));
+        return;
+      }
+
+      setMembers((current) => removeMemberById(current, member.id));
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[member.id];
+        return next;
+      });
+    } catch (memberError) {
+      console.error("Failed to delete member:", memberError);
+
+      if (memberError instanceof Error && memberError.message === "Unauthorized") {
+        return;
+      }
+
+      setError(
+        memberError instanceof Error
+          ? memberError.message
+          : "Could not connect to backend"
+      );
+    } finally {
+      setDeletingMemberId(null);
+    }
+  }
 
   async function handleSave(member: AdminMember) {
     const draft = drafts[member.id];
@@ -293,6 +390,38 @@ export default function AdminMembersPage() {
                             >
                               {savingMemberId === member.id ? "Saving..." : "Save"}
                             </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleExport(member)}
+                              disabled={exportingMemberId === member.id}
+                              style={exportButtonStyle}
+                            >
+                              {exportingMemberId === member.id
+                                ? "Exporting..."
+                                : "Export"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(member)}
+                              disabled={
+                                deletingMemberId === member.id ||
+                                member.id === currentUserId
+                              }
+                              title={
+                                member.id === currentUserId
+                                  ? "You cannot delete your own account"
+                                  : undefined
+                              }
+                              style={
+                                member.id === currentUserId
+                                  ? disabledDangerButtonStyle
+                                  : dangerButtonStyle
+                              }
+                            >
+                              {deletingMemberId === member.id ? "Deleting..." : "Delete"}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -477,4 +606,30 @@ const saveButtonStyle: React.CSSProperties = {
   color: "white",
   fontWeight: 800,
   cursor: "pointer",
+};
+
+const exportButtonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid #b7ddd0",
+  background: "#ecfdf3",
+  color: "#027a48",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const dangerButtonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid #fecdca",
+  background: "#fef3f2",
+  color: "#b42318",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const disabledDangerButtonStyle: React.CSSProperties = {
+  ...dangerButtonStyle,
+  cursor: "not-allowed",
+  opacity: 0.65,
 };
