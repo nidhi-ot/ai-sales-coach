@@ -29,6 +29,64 @@ CREATE TABLE salesperson_accounts (
 CREATE INDEX idx_salesperson_accounts_business ON salesperson_accounts(business_id);
 CREATE INDEX idx_salesperson_accounts_employee ON salesperson_accounts(employee_id);
 
+CREATE OR REPLACE FUNCTION update_admin_member(
+  p_member_id UUID,
+  p_business_id UUID,
+  p_role TEXT DEFAULT NULL,
+  p_is_active BOOLEAN DEFAULT NULL
+)
+RETURNS salesperson_accounts
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_account salesperson_accounts%ROWTYPE;
+  active_admin_count INTEGER;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
+
+  SELECT *
+  INTO target_account
+  FROM salesperson_accounts
+  WHERE id = p_member_id
+    AND business_id = p_business_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Member not found';
+  END IF;
+
+  IF target_account.role = 'admin'
+     AND COALESCE(target_account.is_active, TRUE)
+     AND (
+       (p_role IS NOT NULL AND p_role <> 'admin')
+       OR p_is_active IS FALSE
+     ) THEN
+    SELECT COUNT(*)
+    INTO active_admin_count
+    FROM salesperson_accounts
+    WHERE business_id = p_business_id
+      AND role = 'admin'
+      AND is_active = TRUE
+      AND id <> p_member_id;
+
+    IF active_admin_count = 0 THEN
+      RAISE EXCEPTION 'Cannot remove the last active admin from the business';
+    END IF;
+  END IF;
+
+  UPDATE salesperson_accounts
+  SET
+    role = COALESCE(p_role, role),
+    is_active = COALESCE(p_is_active, is_active),
+    updated_at = NOW()
+  WHERE id = p_member_id
+    AND business_id = p_business_id
+  RETURNING * INTO target_account;
+
+  RETURN target_account;
+END;
+$$;
+
 -- 3. Invites (admin-generated invite links)
 CREATE TABLE invites (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

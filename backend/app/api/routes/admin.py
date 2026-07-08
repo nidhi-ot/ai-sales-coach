@@ -212,41 +212,31 @@ async def update_member(
             detail="Cannot modify your own admin member record",
         )
 
-    current_is_active_admin = str(member.get("role")) == "admin" and bool(
-        member.get("is_active", True)
-    )
-    would_remove_admin_privileges = (
-        data.role is not None and data.role != "admin"
-    ) or data.is_active is False
-
-    if current_is_active_admin and would_remove_admin_privileges:
-        active_admin_result = (
-            supabase.table("salesperson_accounts")
-            .select("id")
-            .eq("business_id", current_account.business_id)
-            .eq("role", "admin")
-            .eq("is_active", True)
-            .neq("id", member_id)
-            .execute()
-        )
-        active_admin_rows = _row_dicts(active_admin_result.data)
-        if not active_admin_rows:
+    try:
+        rpc_result = supabase.rpc(
+            "update_admin_member",
+            {
+                "p_member_id": member_id,
+                "p_business_id": current_account.business_id,
+                "p_role": data.role,
+                "p_is_active": data.is_active,
+            },
+        ).execute()
+    except Exception as exc:  # noqa: BLE001
+        message = str(exc)
+        if "Cannot remove the last active admin" in message:
             raise HTTPException(
                 status_code=403,
                 detail="Cannot remove the last active admin from the business",
-            )
+            ) from exc
+        if "Member not found" in message:
+            raise HTTPException(status_code=404, detail="Member not found") from exc
+        raise
 
-    update_payload: dict[str, Any] = {}
-    if data.role is not None:
-        update_payload["role"] = data.role
-    if data.is_active is not None:
-        update_payload["is_active"] = data.is_active
-
-    updated_result = (
-        supabase.table("salesperson_accounts").update(update_payload).eq("id", member_id).execute()
-    )
-    updated_rows = _row_dicts(updated_result.data)
-    updated_member = updated_rows[0] if updated_rows else {**member, **update_payload}
+    updated_rows = _row_dicts(rpc_result.data)
+    if not updated_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+    updated_member = updated_rows[0]
 
     return AdminMemberResponse(
         id=str(updated_member["id"]),

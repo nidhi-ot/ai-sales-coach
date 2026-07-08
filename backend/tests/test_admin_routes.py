@@ -322,6 +322,23 @@ class AdminRouteTests(unittest.TestCase):
             False,
         )
 
+    def test_admin_update_uses_atomic_rpc(self):
+        fake_supabase = self._make_member_supabase()
+        self._set_current_user("admin-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.admin.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.patch(
+                "/api/v1/admin/members/rep-123",
+                json={"role": "manager"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(fake_supabase.rpc_calls[0][0], "update_admin_member")
+        self.assertEqual(fake_supabase.store["salesperson_accounts"][2]["role"], "manager")
+
     def test_admin_cannot_update_cross_business_member(self):
         fake_supabase = self._make_member_supabase()
         fake_supabase.store["business_profiles"].append(

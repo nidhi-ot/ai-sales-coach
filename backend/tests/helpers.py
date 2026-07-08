@@ -235,6 +235,9 @@ class FakeRpc:
 
     def execute(self):
         self.supabase.rpc_calls.append((self.name, self.params))
+        if self.name == "update_admin_member":
+            return self._execute_update_admin_member()
+
         rep_profiles = [
             profile
             for profile in self.supabase.store["salesperson_profiles"]
@@ -252,6 +255,47 @@ class FakeRpc:
         }
         self.supabase.store["salesperson_profiles"].append(profile)
         return SimpleNamespace(data=profile)
+
+    def _execute_update_admin_member(self):
+        member = next(
+            (
+                account
+                for account in self.supabase.store["salesperson_accounts"]
+                if account["id"] == self.params["p_member_id"]
+                and account.get("business_id") == self.params["p_business_id"]
+            ),
+            None,
+        )
+
+        if member is None:
+            raise RuntimeError("Member not found")
+
+        would_remove_admin_privileges = (
+            self.params.get("p_role") is not None and self.params["p_role"] != "admin"
+        ) or self.params.get("p_is_active") is False
+
+        if (
+            member.get("role") == "admin"
+            and member.get("is_active", True)
+            and would_remove_admin_privileges
+        ):
+            other_active_admins = [
+                account
+                for account in self.supabase.store["salesperson_accounts"]
+                if account.get("business_id") == self.params["p_business_id"]
+                and account.get("role") == "admin"
+                and account.get("is_active", True)
+                and account["id"] != self.params["p_member_id"]
+            ]
+            if not other_active_admins:
+                raise RuntimeError("Cannot remove the last active admin from the business")
+
+        if self.params.get("p_role") is not None:
+            member["role"] = self.params["p_role"]
+        if self.params.get("p_is_active") is not None:
+            member["is_active"] = self.params["p_is_active"]
+        member["updated_at"] = "2026-07-08T00:00:00+00:00"
+        return SimpleNamespace(data=[dict(member)])
 
 
 class FakeSupabase:
