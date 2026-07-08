@@ -93,7 +93,7 @@ async def create_realtime_session(
     ensure_rep_access(str(current_user.id), str(config.rep_id))
 
     business_id = await _get_account_business_id(str(current_user.id))
-    rep_profile_latest = await get_latest_profile(str(config.rep_id))
+    rep_profile_latest = await get_latest_profile(str(config.rep_id), business_id)
     business_profile = await get_business_profile(business_id)
 
     try:
@@ -125,6 +125,7 @@ async def create_realtime_session(
 
     instructions += build_learning_profile_instruction(
         rep_id=str(config.rep_id),
+        business_id=business_id,
         fallback_focus_area=config.focus_area,
     )
 

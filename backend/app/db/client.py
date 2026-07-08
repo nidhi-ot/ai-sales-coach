@@ -47,13 +47,14 @@ def _first(data: list[Any] | None) -> dict[str, Any] | None:
     return first_item if isinstance(first_item, dict) else None
 
 
-async def get_latest_profile(rep_id: str):
-    """Get rep's latest salesperson profile version."""
+async def get_latest_profile(rep_id: str, business_id: str):
+    """Get rep's latest salesperson profile version for a business."""
     result = (
         get_supabase()
         .table("salesperson_profiles")
         .select("*")
         .eq("rep_id", rep_id)
+        .eq("business_id", business_id)
         .order("version", desc=True)
         .limit(1)
         .execute()

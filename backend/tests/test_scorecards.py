@@ -201,6 +201,18 @@ class ScorecardRouteTests(unittest.TestCase):
             feedback["framework_scores"],
         )
         self.assertEqual(gpt_mock.await_args.kwargs["framework"], "MEDDIC")
+        self.assertEqual(
+            gpt_mock.await_args.kwargs["business_profile"]["products"],
+            "AI sales coaching",
+        )
+        self.assertEqual(
+            gpt_mock.await_args.kwargs["business_profile"]["icp"],
+            "Sales teams",
+        )
+        self.assertEqual(
+            gpt_mock.await_args.kwargs["business_profile"]["objections"],
+            "Too expensive",
+        )
 
     def test_history_returns_scorecard_fields_and_share_update_preserves_record(self):
         fake_supabase = FakeSupabase()
