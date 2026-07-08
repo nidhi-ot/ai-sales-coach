@@ -68,6 +68,26 @@ FRAMEWORKS: dict[str, dict[str, Any]] = {
 }
 
 
+def _transcript_language_prompt(language: str) -> str:
+    normalized_language = (language or "en").strip().lower().replace("_", "-")
+
+    if normalized_language.startswith("sv"):
+        return (
+            "TRANSCRIPT LANGUAGE:\n"
+            "- The transcript is Swedish.\n"
+            "- Apply the exact same scoring rubric used for English calls.\n"
+            "- Do not penalize Swedish wording, phrasing, or spoken-language style.\n"
+            "- Evaluate sales skill, objection handling, discovery, and closing quality "
+            "based on meaning, not English fluency."
+        )
+
+    return (
+        "TRANSCRIPT LANGUAGE:\n"
+        "- The transcript is English.\n"
+        "- Apply the standard scoring rubric."
+    )
+
+
 async def gpt_analyze_transcript(
     rep_text: str,
     ai_text: str,
@@ -75,6 +95,7 @@ async def gpt_analyze_transcript(
     scenario_title: str,
     business_profile: dict[str, Any] | None = None,
     framework: str = "BANT",
+    transcript_language: str = "en",
 ) -> dict[str, Any]:
     """
     Analyze a sales call transcript using GPT-5.5 to generate scorecard feedback.
@@ -89,6 +110,7 @@ async def gpt_analyze_transcript(
         scenario_title: The scenario title for context
         business_profile: Business profile fields used to condition scoring rubrics
         framework: Sales methodology snapshotted on the session
+        transcript_language: The language of the transcript, for example "en" or "sv"
 
     Returns:
         Dictionary containing universal scores and framework-specific analysis
@@ -103,6 +125,7 @@ async def gpt_analyze_transcript(
     framework_prompt = _framework_prompt_section(selected_framework)
     framework_json = _framework_json_shape(selected_framework)
     business_context = _business_context_prompt_section(business_profile)
+    language_prompt = _transcript_language_prompt(transcript_language)
 
     prompt = f"""You are an expert sales coach evaluating a practice sales call.
 You are part of an AI Sales Coach platform.
@@ -119,6 +142,8 @@ SALES REPRESENTATIVE'S TRANSCRIPT:
 
 CUSTOMER'S RESPONSES:
 {ai_text}
+
+{language_prompt}
 
 TASK:
 Analyze this sales call on two dimensions:
