@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
@@ -43,6 +43,14 @@ const scenarios = [
 ];
 
 export default function AdminPage() {
+  return (
+    <Suspense fallback={<div>Loading admin page...</div>}>
+      <AdminPageContent />
+    </Suspense>
+  );
+}
+
+function AdminPageContent()  {
   const router = useRouter();
   const searchParams = useSearchParams();
 

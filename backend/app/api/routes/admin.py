@@ -202,7 +202,6 @@ async def update_business_profile(
         raise HTTPException(status_code=404, detail="Business profile not found")
 
     update_data = {key: value for key, value in data.model_dump().items() if value is not None}
-
     updated_result = (
         supabase.table("business_profiles")
         .update(update_data)
@@ -211,16 +210,22 @@ async def update_business_profile(
     )
 
     updated_rows = _row_dicts(updated_result.data)
-    business = updated_rows[0] if updated_rows else rows[0]
 
+    if not updated_rows:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update business profile",
+        )
+
+    updated_business = updated_rows[0]
     return BusinessProfileResponse(
-        business_id=str(business.get("id")),
-        name=business.get("name"),
-        products=business.get("products"),
-        icp=business.get("icp"),
-        objections=business.get("objections"),
-        language=business.get("language"),
-        framework=business.get("framework"),
+        business_id=str(updated_business.get("id")),
+        name=updated_business.get("name"),
+        products=updated_business.get("products"),
+        icp=updated_business.get("icp"),
+        objections=updated_business.get("objections"),
+        language=updated_business.get("language"),
+        framework=updated_business.get("framework"),
         framework_warning=FRAMEWORK_WARNING,
     )
 

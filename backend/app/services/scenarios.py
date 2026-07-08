@@ -383,8 +383,14 @@ def get_business_scenario_config(
 
     return ScenarioConfig(
         slug=default_config.slug,
-        title=str(override.get("title") or default_config.title),
-        objective=str(override.get("objective") or default_config.objective),
+        title=(
+            default_config.title if override.get("title") is None else str(override.get("title"))
+        ),
+        objective=(
+            default_config.objective
+            if override.get("objective") is None
+            else str(override.get("objective"))
+        ),
         customer_context=(
             f"{default_config.customer_context}\n\n"
             f"Business-specific persona notes:\n{override.get('persona_notes')}"

@@ -146,7 +146,7 @@ export default function DashboardPage() {
               ["Admins", "1"],
             ]}
             buttonLabel="Manage"
-            onClick={() => router.push("/admin?tab=team")}
+            onClick={() => router.push("/admin?tab=invites")}
           />
         </section>
 
