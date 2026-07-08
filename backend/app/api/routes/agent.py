@@ -22,7 +22,7 @@ async def assemble_before_call_context(
 ) -> BeforeCallContextResponse:
     ensure_rep_access(str(current_user.id), str(request.rep_id))
 
-    rep_profile = await get_latest_profile(str(request.rep_id))
+    rep_profile = await get_latest_profile(str(request.rep_id), str(request.business_id))
     business_profile = await get_business_profile(str(request.business_id))
 
     if business_profile is None:

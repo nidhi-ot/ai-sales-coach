@@ -171,6 +171,7 @@ async def create_session(
         supabase.table("salesperson_profiles")
         .select("version")
         .eq("rep_id", data.rep_id)
+        .eq("business_id", data.business_id)
         .order("version", desc=True)
         .limit(1)
         .execute()
@@ -178,7 +179,7 @@ async def create_session(
 
     profile_rows = _row_dicts(profile.data)
     profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
-    business_id = settings.business_id
+    business_id = data.business_id
     business_profile = await get_business_profile(business_id)
     resolved_framework = normalize_framework(
         business_profile.get("framework") if business_profile else None
@@ -189,7 +190,7 @@ async def create_session(
         .insert(
             {
                 "rep_id": data.rep_id,
-                "business_id": settings.business_id,
+                "business_id": business_id,
                 "scenario": data.scenario.value,
                 "profile_version": profile_version,
                 "status": "active",

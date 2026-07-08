@@ -282,12 +282,21 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
 
     metadata = _session_metadata(session)
     framework = normalize_framework(metadata.get("framework") if metadata else None)
+    business_profile = _first_row(
+        supabase.table("business_profiles")
+        .select("products, icp, objections")
+        .eq("id", session["business_id"])
+        .limit(1)
+        .execute()
+        .data
+    )
 
     feedback = await gpt_analyze_transcript(
         rep_text=rep_text,
         ai_text=ai_text,
         system_instruction=metadata.get("system_instruction") or "",
         scenario_title=session.get("scenario") or "unknown",
+        business_profile=business_profile,
         framework=framework,
     )
 
