@@ -2,19 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
@@ -289,6 +276,8 @@ function ManagerDashboard({
     { name: "Nidhi", skill: "Discovery", score: 58 },
     { name: "Fortuna", skill: "Objections", score: 64 },
   ];
+  const chartPalette = ["#006b4f", "#00a36c", "#f59e0b", "#ef4444"];
+  const maxSessions = Math.max(...sessionsTrend.map((item) => item.sessions));
 
   return (
     <AppShell>
@@ -322,20 +311,21 @@ function ManagerDashboard({
             <p style={subtitleStyle}>Practice activity this week</p>
 
             <div style={chartBoxStyle}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sessionsTrend}>
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="sessions"
-                    stroke="#006b4f"
-                    strokeWidth={3}
-                    dot={{ r: 5 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={barChartStyle}>
+                {sessionsTrend.map((item) => {
+                  const height = `${Math.max((item.sessions / maxSessions) * 100, 8)}%`;
+
+                  return (
+                    <div key={item.day} style={barColumnStyle}>
+                      <div style={barTrackStyle}>
+                        <div style={{ ...barFillStyle, height }} />
+                      </div>
+                      <strong style={barValueStyle}>{item.sessions}</strong>
+                      <span style={barLabelStyle}>{item.day}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
@@ -344,26 +334,25 @@ function ManagerDashboard({
             <p style={subtitleStyle}>Average score by skill area</p>
 
             <div style={chartBoxStyle}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={skillData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={60}
-                    outerRadius={95}
-                    paddingAngle={4}
-                  >
-                    {skillData.map((_, index) => (
-                      <Cell
-                        key={index}
-                        fill={["#006b4f", "#00a36c", "#f59e0b", "#ef4444"][index]}
+              <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
+                {skillData.map((skill, index) => (
+                  <div key={skill.name}>
+                    <div style={progressHeaderStyle}>
+                      <span>{skill.name}</span>
+                      <span>{skill.value}%</span>
+                    </div>
+                    <div style={progressBgStyle}>
+                      <div
+                        style={{
+                          ...progressFillStyle,
+                          width: `${skill.value}%`,
+                          background: chartPalette[index],
+                        }}
                       />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         </div>
@@ -374,14 +363,24 @@ function ManagerDashboard({
             <p style={subtitleStyle}>Skill strengths and weak areas</p>
 
             <div style={chartBoxStyle}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={skillData} layout="vertical">
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis dataKey="name" type="category" width={90} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#006b4f" radius={[0, 8, 8, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
+                {skillData.map((skill) => (
+                  <div key={skill.name}>
+                    <div style={progressHeaderStyle}>
+                      <span>{skill.name}</span>
+                      <span>{skill.value}%</span>
+                    </div>
+                    <div style={progressBgStyle}>
+                      <div
+                        style={{
+                          ...progressFillStyle,
+                          width: `${skill.value}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -628,6 +627,52 @@ const chartBoxStyle: React.CSSProperties = {
   width: "100%",
   height: "280px",
   marginTop: "24px",
+};
+
+const barChartStyle: React.CSSProperties = {
+  height: "100%",
+  display: "grid",
+  gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+  gap: "12px",
+  alignItems: "end",
+  paddingTop: "8px",
+};
+
+const barColumnStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "8px",
+  justifyItems: "center",
+  alignSelf: "end",
+};
+
+const barTrackStyle: React.CSSProperties = {
+  width: "100%",
+  height: "190px",
+  borderRadius: "16px",
+  background: "#ecfdf3",
+  border: "1px solid #d1fae5",
+  display: "flex",
+  alignItems: "end",
+  overflow: "hidden",
+  padding: "8px",
+};
+
+const barFillStyle: React.CSSProperties = {
+  width: "100%",
+  borderRadius: "10px",
+  background: "#006b4f",
+};
+
+const barValueStyle: React.CSSProperties = {
+  fontSize: "16px",
+  fontWeight: 900,
+  color: "#101828",
+};
+
+const barLabelStyle: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#667085",
+  fontWeight: 700,
 };
 
 const managerKpiStyle: React.CSSProperties = {

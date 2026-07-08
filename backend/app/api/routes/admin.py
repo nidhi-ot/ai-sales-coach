@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -48,6 +48,22 @@ class CreateInviteResponse(BaseModel):
     registration_link: str
     expires_at: str
     warning: str
+
+
+class AdminMemberResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str | None = None
+    phone_number: str
+    employee_id: str | None = None
+    role: Literal["rep", "manager", "admin"]
+    is_active: bool
+    created_at: str | None = None
+
+
+class UpdateAdminMemberRequest(BaseModel):
+    role: Literal["rep", "manager", "admin"] | None = None
+    is_active: bool | None = None
 
 
 @router.patch(
@@ -139,4 +155,96 @@ async def create_invite(
         registration_link=f"{settings.frontend_url.rstrip('/')}/register?invite={token}",
         expires_at=expires_at.isoformat(),
         warning=FRAMEWORK_WARNING,
+    )
+
+
+@router.get("/members", response_model=list[AdminMemberResponse])
+async def list_members(
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    supabase = get_supabase()
+
+    result = (
+        supabase.table("salesperson_accounts")
+        .select("id, full_name, email, phone_number, employee_id, role, is_active, created_at")
+        .eq("business_id", current_account.business_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return _row_dicts(result.data)
+
+
+@router.patch("/members/{member_id}", response_model=AdminMemberResponse)
+async def update_member(
+    member_id: str,
+    data: UpdateAdminMemberRequest,
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    if data.role is None and data.is_active is None:
+        raise HTTPException(status_code=400, detail="No member fields provided")
+
+    supabase = get_supabase()
+
+    member_result = (
+        supabase.table("salesperson_accounts")
+        .select(
+            "id, full_name, email, phone_number, employee_id, role, "
+            "is_active, business_id, created_at"
+        )
+        .eq("id", member_id)
+        .limit(1)
+        .execute()
+    )
+    member_rows = _row_dicts(member_result.data)
+
+    if not member_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    member = member_rows[0]
+
+    if str(member.get("business_id")) != str(current_account.business_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    if str(member.get("id")) == str(current_account.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot modify your own admin member record",
+        )
+
+    try:
+        rpc_result = supabase.rpc(
+            "update_admin_member",
+            {
+                "p_member_id": member_id,
+                "p_business_id": current_account.business_id,
+                "p_role": data.role,
+                "p_is_active": data.is_active,
+            },
+        ).execute()
+    except Exception as exc:  # noqa: BLE001
+        message = str(exc)
+        if "Cannot remove the last active admin" in message:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot remove the last active admin from the business",
+            ) from exc
+        if "Member not found" in message:
+            raise HTTPException(status_code=404, detail="Member not found") from exc
+        raise
+
+    updated_rows = _row_dicts(rpc_result.data)
+    if not updated_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+    updated_member = updated_rows[0]
+
+    return AdminMemberResponse(
+        id=str(updated_member["id"]),
+        full_name=str(updated_member["full_name"]),
+        email=updated_member.get("email"),
+        phone_number=str(updated_member["phone_number"]),
+        employee_id=updated_member.get("employee_id"),
+        role=cast(Literal["rep", "manager", "admin"], str(updated_member["role"])),
+        is_active=bool(updated_member.get("is_active", True)),
+        created_at=updated_member.get("created_at"),
     )
