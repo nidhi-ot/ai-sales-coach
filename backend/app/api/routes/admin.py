@@ -209,6 +209,30 @@ async def update_member(
     if str(member.get("id")) == str(current_account.id):
         raise HTTPException(status_code=403, detail="Cannot modify your own admin member record")
 
+    current_is_active_admin = (
+        str(member.get("role")) == "admin" and bool(member.get("is_active", True))
+    )
+    would_remove_admin_privileges = (
+        data.role is not None and data.role != "admin"
+    ) or data.is_active is False
+
+    if current_is_active_admin and would_remove_admin_privileges:
+        active_admin_result = (
+            supabase.table("salesperson_accounts")
+            .select("id")
+            .eq("business_id", current_account.business_id)
+            .eq("role", "admin")
+            .eq("is_active", True)
+            .neq("id", member_id)
+            .execute()
+        )
+        active_admin_rows = _row_dicts(active_admin_result.data)
+        if not active_admin_rows:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot remove the last active admin from the business",
+            )
+
     update_payload: dict[str, Any] = {}
     if data.role is not None:
         update_payload["role"] = data.role

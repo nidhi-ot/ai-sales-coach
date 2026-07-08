@@ -225,7 +225,7 @@ class AdminRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(
-            payload["registration_link"].startswith("http://127.0.0.1:3000/register?invite=")
+            payload["registration_link"].startswith("http://localhost:3001/register?invite=")
         )
 
     def test_admin_invite_rejects_out_of_bounds_expiry(self):
