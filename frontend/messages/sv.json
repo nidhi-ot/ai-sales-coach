@@ -1,0 +1,40 @@
+{
+  "PracticeSetup": {
+  "eyebrow": "Övningsinställning",
+  "title": "Låt oss förbereda samtalet",
+  "subtitle": "Välj kundkontext och fokusområde innan AI-samtalet startar.",
+  "businessContext": "Kundkontext",
+  "businessContextDescription": "Välj vilken typ av kund AI:n ska spela.",
+  "todaysFocus": "Dagens fokus",
+  "todaysFocusDescription": "Välj vad AI-kunden ska utmana dig på.",
+  "recommendedFocus": "AI-rekommenderat fokus",
+  "recommendationDescription": "Rekommendationen baseras på din senaste övningsprofil. Du kan fortfarande välja ett annat fokus manuellt.",
+  "practiceSummary": "Övningssammanfattning",
+  "businessContextLabel": "Kundkontext",
+  "focusAreaLabel": "Fokusområde",
+  "difficulty": "Svårighetsgrad",
+  "estimatedTime": "Uppskattad tid",
+  "medium": "Medel",
+  "threeMinutes": "3 min",
+  "whatHappensNext": "Vad händer sedan?",
+  "microphonePermission": "Mikrofonbehörighet kommer att efterfrågas.",
+  "aiCustomerJoins": "AI-kunden ansluter till samtalet.",
+  "endAnytime": "Du kan avsluta samtalet när som helst.",
+  "startCall": "Starta övningssamtal →"
+},
+  "Call": {
+    "title": "Live övningssamtal",
+    "connecting": "Ansluter...",
+    "inCall": "I samtal...",
+    "endingCall": "Avslutar samtal...",
+    "endCall": "Avsluta samtal",
+    "mute": "Stäng av mikrofon",
+    "unmute": "Slå på mikrofon"
+  },
+  "Scorecard": {
+    "title": "Övningsscorecard",
+    "processing": "Scorecard bearbetas...",
+    "retry": "Försök analysera igen",
+    "overallScore": "Totalpoäng"
+  }
+}

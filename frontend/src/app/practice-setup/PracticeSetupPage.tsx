@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
+import { useTranslations } from "next-intl";
 
 type LearningProfile = {
   version: number;
@@ -66,6 +67,7 @@ function getFocusTitle(focusId: string) {
 
 export default function PracticeSetupPage() {
   const router = useRouter();
+  const t = useTranslations("PracticeSetup");
   const [scenario, setScenario] = useState("cold_call");
   const [businessContext, setBusinessContext] = useState("apartment_association");
   const [focusArea, setFocusArea] = useState("handling_objections");
@@ -126,22 +128,17 @@ export default function PracticeSetupPage() {
     <AppShell>
       <div style={{ maxWidth: "1180px", margin: "0 auto" }}>
         <section style={heroStyle}>
-          <p style={eyebrowStyle}>Practice Setup</p>
-
-          <h1 style={heroTitleStyle}>Let&apos;s get you ready</h1>
-
-          <p style={heroSubtitleStyle}>
-            Choose the customer context and focus area before
-            starting your AI practice call.
-          </p>
+          <p style={eyebrowStyle}>{t("eyebrow")}</p>
+          <h1 style={heroTitleStyle}>{t("title")}</h1>
+          <p style={heroSubtitleStyle}>{t("subtitle")}</p>
         </section>
 
         <div style={layoutStyle}>
           <section style={mainPanelStyle}>
             <SetupSection
               step="1"
-              title="Business Context"
-              description="Choose what type of customer the AI should act as."
+              title={t("businessContext")}
+              description={t("businessContextDescription")}
             >
               <div style={cardGridStyle}>
                 {businessContexts.map((item) => (
@@ -159,13 +156,13 @@ export default function PracticeSetupPage() {
 
             <SetupSection
               step="2"
-              title="Today's Focus"
-              description="Choose what the AI customer should challenge you on."
+              title={t("todaysFocus")}
+              description={t("todaysFocusDescription")}
             >
               {learningProfile && recommendedFocusTitle && (
                 <div style={recommendationBoxStyle}>
                   <p style={{ margin: 0, fontWeight: 900, color: "#006b4f" }}>
-                    AI Recommended Focus
+                    {t("recommendedFocus")}
                   </p>
 
                   <p style={{ margin: "10px 0 0", color: "#344054" }}>
@@ -174,8 +171,7 @@ export default function PracticeSetupPage() {
                   </p>
 
                   <p style={{ margin: "8px 0 0", color: "#667085" }}>
-                    This recommendation is based on your latest practice profile.
-                    You can still choose a different focus manually.
+                    {t("recommendationDescription")}
                   </p>
                 </div>
               )}
@@ -203,35 +199,35 @@ export default function PracticeSetupPage() {
           </section>
 
           <aside style={summaryPanelStyle}>
-            <p style={eyebrowStyle}>Practice Summary</p>
+            <p style={eyebrowStyle}>{t("practiceSummary")}</p>
 
             <h2 style={{ marginTop: "8px", color: "#101828" }}>
               {formatScenario(scenario)}
             </h2>
 
-            <SummaryRow label="Business Context" value={selectedBusiness?.title || "-"} />
+            <SummaryRow label={t("businessContextLabel")} value={selectedBusiness?.title || "-"} />
             <SummaryRow
-              label="Focus Area"
+              label={t("focusAreaLabel")}
               value={
                 isUsingRecommendedFocus && learningProfile
                   ? `${selectedFocus?.title || "-"} · AI recommended · Profile v${learningProfile.version}`
                   : selectedFocus?.title || "-"
               }
             />
-            <SummaryRow label="Difficulty" value="Medium" />
-            <SummaryRow label="Estimated Time" value="3 min" />
+            <SummaryRow label={t("difficulty")} value={t("medium")} />
+            <SummaryRow label={t("estimatedTime")} value={t("threeMinutes")} />
 
             <div style={previewBoxStyle}>
-              <strong>What happens next?</strong>
+              <strong>{t("whatHappensNext")}</strong>
               <ul style={{ color: "#667085", lineHeight: "1.8", paddingLeft: "20px" }}>
-                <li>Microphone permission will be requested.</li>
-                <li>The AI customer will join the call.</li>
-                <li>You can end the call anytime.</li>
+                <li>{t("microphonePermission")}</li>
+                <li>{t("aiCustomerJoins")}</li>
+                <li>{t("endAnytime")}</li>
               </ul>
             </div>
 
             <button onClick={startPracticeCall} style={primaryButtonStyle}>
-              Start Practice Call →
+              {t("startCall")}
             </button>
           </aside>
         </div>

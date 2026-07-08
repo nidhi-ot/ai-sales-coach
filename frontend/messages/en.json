@@ -1,0 +1,40 @@
+{
+  "PracticeSetup": {
+  "eyebrow": "Practice Setup",
+  "title": "Let's get you ready",
+  "subtitle": "Choose the customer context and focus area before starting your AI practice call.",
+  "businessContext": "Business Context",
+  "businessContextDescription": "Choose what type of customer the AI should act as.",
+  "todaysFocus": "Today's Focus",
+  "todaysFocusDescription": "Choose what the AI customer should challenge you on.",
+  "recommendedFocus": "AI Recommended Focus",
+  "recommendationDescription": "This recommendation is based on your latest practice profile. You can still choose a different focus manually.",
+  "practiceSummary": "Practice Summary",
+  "businessContextLabel": "Business Context",
+  "focusAreaLabel": "Focus Area",
+  "difficulty": "Difficulty",
+  "estimatedTime": "Estimated Time",
+  "medium": "Medium",
+  "threeMinutes": "3 min",
+  "whatHappensNext": "What happens next?",
+  "microphonePermission": "Microphone permission will be requested.",
+  "aiCustomerJoins": "The AI customer will join the call.",
+  "endAnytime": "You can end the call anytime.",
+  "startCall": "Start Practice Call →"
+},
+  "Call": {
+    "title": "Live Practice Call",
+    "connecting": "Connecting...",
+    "inCall": "In Call...",
+    "endingCall": "Ending Call...",
+    "endCall": "End Call",
+    "mute": "Mute",
+    "unmute": "Unmute"
+  },
+  "Scorecard": {
+    "title": "Practice Scorecard",
+    "processing": "Scorecard is processing...",
+    "retry": "Retry analysis",
+    "overallScore": "Overall score"
+  }
+}
