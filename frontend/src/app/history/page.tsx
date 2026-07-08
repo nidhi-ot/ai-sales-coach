@@ -20,6 +20,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pollRunId, setPollRunId] = useState(0);
 
   async function loadSessions() {
     const repId = localStorage.getItem("rep_id");
@@ -64,6 +65,7 @@ export default function HistoryPage() {
         return;
       }
 
+      setPollRunId((current) => current + 1);
       await loadSessions();
     } catch (error) {
       alert("Failed to retry analysis.");
@@ -94,7 +96,7 @@ export default function HistoryPage() {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [hasProcessingScorecard]);
+  }, [hasProcessingScorecard, pollRunId]);
 
   async function updateSharing(sessionId: string, shared: boolean) {
     setSessions((current) =>
