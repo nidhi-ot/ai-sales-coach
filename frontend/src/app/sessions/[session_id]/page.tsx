@@ -22,6 +22,7 @@ type SessionDetails = {
   duration?: number | null;
   scenario?: string | null;
   scorecard_id?: string | null;
+  scorecard_status?: "processing" | "generated" | "failed" | null;
 };
 
 export default function SessionDetailsPage() {
@@ -36,34 +37,53 @@ export default function SessionDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  async function loadDetails() {
+    if (!sessionId) return;
+
+    try {
+      const response = await authFetch(`${API_BASE_URL}/sessions/${sessionId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.detail || "Session not found.");
+        return;
+      }
+
+      setDetails(data);
+    } catch (requestError) {
+      console.error("Failed to load session details:", requestError);
+      setError("Could not connect to backend.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!sessionId) {
       setError("No session ID found.");
       setLoading(false);
       return;
     }
-
-    async function loadDetails() {
-      try {
-        const response = await authFetch(`${API_BASE_URL}/sessions/${sessionId}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          setError(data.detail || "Session not found.");
-          return;
-        }
-
-        setDetails(data);
-      } catch (requestError) {
-        console.error("Failed to load session details:", requestError);
-        setError("Could not connect to backend.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadDetails();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (details?.scorecard_status !== "processing") return;
+
+    let pollCount = 0;
+    const maxPolls = 24;
+
+    const intervalId = setInterval(async () => {
+      pollCount += 1;
+      await loadDetails();
+
+      if (pollCount >= maxPolls) {
+        clearInterval(intervalId);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [details?.scorecard_status]);
 
   return (
     <AppShell>
@@ -82,7 +102,40 @@ export default function SessionDetailsPage() {
             </p>
 
             <div style={heroActionsStyle}>
-              {sessionId ? (
+              {sessionId && details?.scorecard_status === "failed" ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await authFetch(
+                        `${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`,
+                        { method: "POST" }
+                      );
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        alert(data.detail || "Failed to retry analysis.");
+                        return;
+                      }
+
+                      setDetails((current) =>
+                        current ? { ...current, scorecard_status: "processing" } : current
+                      );
+
+                      await loadDetails();
+                    } catch (error) {
+                      alert("Failed to retry analysis.");
+                    }
+                  }}
+                  style={secondaryButtonStyle}
+                >
+                  Retry analysis
+                </button>
+              ) : sessionId && details?.scorecard_status === "processing" ? (
+                <button disabled style={{ ...secondaryButtonStyle, opacity: 0.6 }}>
+                  Processing scorecard...
+                </button>
+              ) : sessionId ? (
                 <button
                   onClick={() => router.push(`/scorecards?session_id=${sessionId}`)}
                   style={secondaryButtonStyle}

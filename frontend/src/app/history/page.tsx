@@ -12,14 +12,17 @@ type Session = {
   duration_seconds: number | null;
   status: string;
   overall_score?: number | null;
+  shared_with_manager?: boolean;
+  scorecard_status?: "processing" | "generated" | "failed" | null;
 };
 
 export default function HistoryPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pollRunId, setPollRunId] = useState(0);
 
-  useEffect(() => {
+  async function loadSessions() {
     const repId = localStorage.getItem("rep_id");
 
     if (!repId) {
@@ -27,25 +30,100 @@ export default function HistoryPage() {
       return;
     }
 
-    authFetch(`${API_BASE_URL}/sessions/rep/${repId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const safeSessions = Array.isArray(data)
-          ? data.map((session) => ({
-              ...session,
-              overall_score: session.overall_score ?? null,
-            }))
-          : [];
+    try {
+      const response = await authFetch(`${API_BASE_URL}/sessions/rep/${repId}`);
+      const data = await response.json();
 
-        setSessions(safeSessions);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Failed to load sessions:", error);
-        setLoading(false);
-      });
+      const safeSessions = Array.isArray(data)
+        ? data.map((session) => ({
+            ...session,
+            overall_score: session.overall_score ?? null,
+            shared_with_manager: session.shared_with_manager ?? false,
+            scorecard_status: session.scorecard_status ?? null,
+          }))
+        : [];
+
+      setSessions(safeSessions);
+    } catch (error) {
+      console.error("Failed to load sessions:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function retryAnalysis(sessionId: string) {
+    try {
+      const response = await authFetch(
+        `${API_BASE_URL}/scorecards/session/${sessionId}/reprocess`,
+        { method: "POST" }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || "Failed to retry analysis.");
+        return;
+      }
+
+      setPollRunId((current) => current + 1);
+      await loadSessions();
+    } catch (error) {
+      alert("Failed to retry analysis.");
+    }
+  }
+
+  useEffect(() => {
+    loadSessions();
   }, []);
 
+  const hasProcessingScorecard = sessions.some(
+    (session) => session.scorecard_status === "processing"
+  );
+
+  useEffect(() => {
+    if (!hasProcessingScorecard) return;
+
+    let pollCount = 0;
+    const maxPolls = 24;
+
+    const intervalId = setInterval(async () => {
+      pollCount += 1;
+      await loadSessions();
+
+      if (pollCount >= maxPolls) {
+        clearInterval(intervalId);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [hasProcessingScorecard, pollRunId]);
+
+  async function updateSharing(sessionId: string, shared: boolean) {
+    setSessions((current) =>
+      current.map((session) =>
+        session.id === sessionId
+          ? { ...session, shared_with_manager: shared }
+          : session
+      )
+    );
+
+    try {
+      await authFetch(
+        `${API_BASE_URL}/scorecards/session/${sessionId}/share`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            shared_with_manager: shared,
+          }),
+        }
+      );
+    } catch (error) {
+      console.error("Failed to update sharing:", error);
+    }
+  }
 
   const completedCount = sessions.filter(
     (session) => session.status === "completed"
@@ -125,7 +203,7 @@ export default function HistoryPage() {
             <div style={{ display: "grid", gap: "14px", marginTop: "22px" }}>
               {sessions.map((session) => {
                 const completed = session.status === "completed";
-
+                
                 return (
                   <div key={session.id} style={sessionCardStyle}>
                     <div style={scenarioIconStyle}>🎙️</div>
@@ -170,9 +248,25 @@ export default function HistoryPage() {
                     </div>
 
                     <div style={scorePillStyle}>
-                      {session.overall_score != null
-                        ? `${session.overall_score}/10`
-                        : "Not scored"}
+                      {session.scorecard_status === "processing" ? (
+                        "Processing..."
+                      ) : session.scorecard_status === "failed" ? (
+                        <button
+                          onClick={() => retryAnalysis(session.id)}
+                          style={{
+                            ...secondaryButtonStyle,
+                            padding: "6px 12px",
+                            fontSize: "13px",
+                            borderRadius: "999px",
+                          }}
+                        >
+                          Retry analysis
+                        </button>
+                      ) : session.overall_score != null ? (
+                        `${session.overall_score}/10`
+                      ) : (
+                        "Not scored"
+                      )}
                     </div>
 
                     <div style={buttonGroupStyle}>

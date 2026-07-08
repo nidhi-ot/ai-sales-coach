@@ -88,6 +88,7 @@ async def get_scorecard(
             supabase.table("scorecards")
             .select("*")
             .eq("session_id", scorecard_id)
+            .order("created_at", desc=True)
             .limit(1)
             .execute()
         )
