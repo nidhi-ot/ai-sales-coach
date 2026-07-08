@@ -354,6 +354,57 @@ def get_scenario_config(scenario: ScenarioSlug | str) -> ScenarioConfig:
     return scenario_config
 
 
+def get_business_scenario_config(
+    scenario: ScenarioSlug | str,
+    business_id: str | None,
+) -> ScenarioConfig:
+    default_config = get_scenario_config(scenario)
+
+    if not business_id:
+        return default_config
+
+    supabase = get_supabase()
+
+    result = (
+        supabase.table("scenario_configs")
+        .select("title, objective, persona_notes")
+        .eq("business_id", business_id)
+        .eq("scenario_slug", default_config.slug.value)
+        .limit(1)
+        .execute()
+    )
+
+    rows = _row_dicts(result.data)
+
+    if not rows:
+        return default_config
+
+    override = rows[0]
+
+    return ScenarioConfig(
+        slug=default_config.slug,
+        title=(
+            default_config.title if override.get("title") is None else str(override.get("title"))
+        ),
+        objective=(
+            default_config.objective
+            if override.get("objective") is None
+            else str(override.get("objective"))
+        ),
+        customer_context=(
+            f"{default_config.customer_context}\n\n"
+            f"Business-specific persona notes:\n{override.get('persona_notes')}"
+            if override.get("persona_notes")
+            else default_config.customer_context
+        ),
+        opening_posture=default_config.opening_posture,
+        resistance_profile=default_config.resistance_profile,
+        success_conditions=default_config.success_conditions,
+        likely_objections=default_config.likely_objections,
+        difficulty_notes=default_config.difficulty_notes,
+    )
+
+
 def normalize_framework(framework: str | None) -> str:
     value = (framework or DEFAULT_BUSINESS_PROFILE["framework"]).upper()
     return value if value in FRAMEWORK_DIMENSIONS else DEFAULT_BUSINESS_PROFILE["framework"]

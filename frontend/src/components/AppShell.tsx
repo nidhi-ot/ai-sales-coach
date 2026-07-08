@@ -29,6 +29,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   const navItems =
+    
+  role === "admin"
+    ? [
+        { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+        { label: "Admin", href: "/admin", icon: "🛠️" },
+        { label: "Settings", href: "/settings", icon: "⚙️" },
+      ]
+    : role === "manager"
+      ? [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Team", href: "/team", icon: "👥" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+        ]
+      : [
+          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
+          { label: "Practice", href: "/scenarios", icon: "🎯" },
+          { label: "History", href: "/history", icon: "🕘" },
+          { label: "Scorecards", href: "/scorecards", icon: "📋" },
+          { label: "Profile", href: "/profile", icon: "👤" },
+          { label: "Progress", href: "/progress", icon: "📈" },
+          { label: "Settings", href: "/settings", icon: "⚙️" },
+        ];
     role === "manager"
       ? [
           { label: "Dashboard", href: "/dashboard", icon: "🏠" },
