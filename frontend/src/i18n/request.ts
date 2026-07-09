@@ -14,8 +14,11 @@ function normalizeLocale(value: string | undefined): SupportedLocale {
   return defaultLocale;
 }
 
-export default getRequestConfig(async ({requestLocale}) => {
-    const locale = normalizeLocale(await requestLocale);
+export default getRequestConfig(async ({ requestLocale }) => {
+  const cookieLocale = cookies().get("NEXT_LOCALE")?.value;
+  const requestedLocale = await requestLocale;
+
+  const locale = normalizeLocale(cookieLocale || requestedLocale);
 
   return {
     locale,
