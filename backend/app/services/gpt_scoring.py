@@ -17,7 +17,7 @@ class ScorecardFeedback(BaseModel):
     strengths: list[str]
     improvement_areas: list[str]
     feedback_summary: str
-    moments: list[dict[str, Any]]
+    moments: list[dict[str, Any]] = Field(default_factory=list)
 
     @field_validator("strengths", "improvement_areas", mode="before")
     @classmethod
