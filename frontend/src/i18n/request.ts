@@ -18,8 +18,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const cookieLocale = cookies().get("NEXT_LOCALE")?.value;
   const requestedLocale = await requestLocale;
 
-  const locale = normalizeLocale(cookieLocale || requestedLocale);
-
+  const locale = normalizeLocale(requestedLocale || cookieLocale);
+  
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
