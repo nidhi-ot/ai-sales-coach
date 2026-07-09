@@ -148,6 +148,7 @@ async def create_realtime_session(
             metadata={
                 "system_instruction": instructions,
                 "framework": resolved_framework,
+                "language": context["language"],
                 "max_call_seconds": settings.max_call_seconds,
                 "max_call_grace_seconds": settings.max_call_grace_seconds,
                 "heartbeat_at": datetime.now(UTC).isoformat(),

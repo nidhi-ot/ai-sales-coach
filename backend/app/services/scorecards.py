@@ -298,6 +298,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         scenario_title=session.get("scenario") or "unknown",
         business_profile=business_profile,
         framework=framework,
+        transcript_language=str(metadata.get("language") or "en"),
     )
 
     framework_score = feedback.get("framework_scores", {})
