@@ -100,6 +100,83 @@ export default function DashboardPage() {
     loadDashboardData();
   }, []);
 
+  if (role === "admin") {
+  return (
+    <AppShell>
+      <div style={adminPageStyle}>
+        <section style={adminHeaderStyle}>
+          <div>
+            <h1 style={adminTitleStyle}>Admin Workspace</h1>
+            <p style={adminSubtitleStyle}>
+              Configure how the AI Sales Coach behaves for your organization.
+            </p>
+          </div>
+        </section>
+
+        <section style={adminCardsGridStyle}>
+          <AdminOverviewCard
+            icon="🏢"
+            title="Business Profile"
+            rows={[
+              ["Status", "Configured"],
+              ["Framework", "BANT"],
+              ["Language", "Swedish"],
+            ]}
+            buttonLabel="Edit"
+            onClick={() => router.push("/admin?tab=business")}
+          />
+
+          <AdminOverviewCard
+            icon="🎛️"
+            title="Scenario Overrides"
+            rows={[
+              ["Default Scenarios", "4"],
+              ["Customized Scenarios", "1"],
+            ]}
+            buttonLabel="Configure"
+            onClick={() => router.push("/admin?tab=scenarios")}
+          />
+
+          <AdminOverviewCard
+            icon="👥"
+            title="Team Management"
+            rows={[
+              ["Users", "12"],
+              ["Managers", "2"],
+              ["Admins", "1"],
+            ]}
+            buttonLabel="Manage"
+            onClick={() => router.push("/admin?tab=invites")}
+          />
+        </section>
+
+
+        <section style={adminPanelStyle}>
+          <h2 style={adminSectionTitleStyle}>Recent Changes</h2>
+
+          <div style={timelineStyle}>
+            <RecentChange
+              title="Business profile updated"
+              time="Today"
+              description="Updated company description, target ICP, and sales objectives."
+            />
+            <RecentChange
+              title="Cold Call objective modified"
+              time="Recently"
+              description="Adjusted conversation goals and success criteria."
+            />
+            <RecentChange
+              title="New manager invited"
+              time="Recently"
+              description="A manager invite link was created."
+            />
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
   if (role === "manager") {
     return <ManagerDashboard fullName={fullName} onViewTeam={() => router.push("/team")} />;
   }
@@ -247,6 +324,91 @@ export default function DashboardPage() {
   );
 }
 
+function AdminOverviewCard({
+  icon,
+  title,
+  rows,
+  buttonLabel,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  rows: [string, string][];
+  buttonLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <div style={adminCardStyle}>
+      <div style={adminIconStyle}>{icon}</div>
+      <h2 style={adminCardTitleStyle}>{title}</h2>
+
+      <div style={adminRowsStyle}>
+        {rows.map(([label, value]) => (
+          <div key={label} style={adminRowStyle}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+
+      <button type="button" onClick={onClick} style={adminCardButtonStyle}>
+        {buttonLabel}
+      </button>
+    </div>
+  );
+}
+
+function RecentChange({
+  title,
+  time,
+  description,
+}: {
+  title: string;
+  time: string;
+  description: string;
+}) {
+  return (
+    <div style={changeRowStyle}>
+      <span style={checkStyle}>✓</span>
+      <div>
+        <strong>{title}</strong>
+        <p style={changeTimeStyle}>{time}</p>
+      </div>
+      <p style={changeDescriptionStyle}>{description}</p>
+    </div>
+  );
+}
+
+function AdminStatusRow({
+  title,
+  description,
+  status,
+  action,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  status: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <div style={adminStatusRowStyle}>
+      <div>
+        <strong style={adminStatusTitleStyle}>{title}</strong>
+        <p style={subtitleStyle}>{description}</p>
+      </div>
+
+      <div style={adminStatusRightStyle}>
+        <span style={adminStatusBadgeStyle}>{status}</span>
+
+        <button type="button" onClick={onClick} style={adminMiniButtonStyle}>
+          {action}
+        </button>
+      </div>
+    </div>
+  );
+}
 function ManagerDashboard({
   fullName,
   onViewTeam,
@@ -406,7 +568,23 @@ function ManagerDashboard({
     </AppShell>
   );
 }
-
+function AdminCard({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: string;
+  icon: string;
+}) {
+  return (
+    <div style={managerKpiStyle}>
+      <div style={managerKpiIconStyle}>{icon}</div>
+      <p style={summaryLabelStyle}>{title}</p>
+      <strong style={summaryNumberStyle}>{value}</strong>
+    </div>
+  );
+}
 function ManagerKpi({
   title,
   value,
@@ -716,20 +894,195 @@ const summaryTrendStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
-const priorityCardStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "18px",
-  borderRadius: "18px",
-  background: "#fff7ed",
-  border: "1px solid #fed7aa",
-};
-
 const priorityBadgeStyle: React.CSSProperties = {
   padding: "8px 12px",
   borderRadius: "999px",
   background: "#fee2e2",
   color: "#b91c1c",
   fontWeight: 900,
+};
+
+const adminStatusRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "20px",
+  alignItems: "center",
+  padding: "20px",
+  borderRadius: "18px",
+  border: "1px solid #e5e7eb",
+  background: "#f8fbf9",
+};
+
+const adminStatusTitleStyle: React.CSSProperties = {
+  fontSize: "17px",
+  color: "#101828",
+};
+
+const adminStatusRightStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+};
+
+const adminStatusBadgeStyle: React.CSSProperties = {
+  padding: "7px 12px",
+  borderRadius: "999px",
+  background: "#ecfdf3",
+  color: "#027a48",
+  fontWeight: 800,
+  fontSize: "13px",
+};
+
+const adminMiniButtonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "12px",
+  border: "none",
+  background: "#00704f",
+  color: "white",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const adminPageStyle: React.CSSProperties = {
+  maxWidth: "1280px",
+  margin: "0 auto",
+};
+
+const adminHeaderStyle: React.CSSProperties = {
+  marginBottom: "28px",
+};
+
+const adminTitleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: "42px",
+  fontWeight: 900,
+  color: "#101828",
+};
+
+const adminSubtitleStyle: React.CSSProperties = {
+  marginTop: "10px",
+  color: "#667085",
+  fontSize: "17px",
+};
+
+const adminCardsGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "22px",
+  marginBottom: "24px",
+};
+
+const adminCardStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "24px",
+  padding: "28px",
+  boxShadow: "0 18px 45px rgba(16, 24, 40, 0.07)",
+};
+
+const adminIconStyle: React.CSSProperties = {
+  width: "58px",
+  height: "58px",
+  borderRadius: "20px",
+  background: "#e7f4ef",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "28px",
+  marginBottom: "20px",
+};
+
+const adminCardTitleStyle: React.CSSProperties = {
+  margin: "0 0 18px",
+  fontSize: "22px",
+  fontWeight: 900,
+  color: "#101828",
+};
+
+const adminRowsStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "14px",
+  paddingBottom: "22px",
+  borderBottom: "1px solid #e5e7eb",
+};
+
+const adminRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  color: "#344054",
+};
+
+const adminCardButtonStyle: React.CSSProperties = {
+  marginTop: "18px",
+  float: "right",
+  padding: "12px 22px",
+  borderRadius: "12px",
+  border: "none",
+  background: "#00704f",
+  color: "#ffffff",
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+const adminPanelStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "24px",
+  padding: "28px",
+  marginBottom: "24px",
+  boxShadow: "0 18px 45px rgba(16, 24, 40, 0.06)",
+};
+
+const adminSectionTitleStyle: React.CSSProperties = {
+  margin: "0 0 24px",
+  fontSize: "24px",
+  fontWeight: 900,
+  color: "#101828",
+};
+
+
+const timelineStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "18px",
+};
+
+const changeRowStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "32px 260px 1fr",
+  gap: "16px",
+  alignItems: "center",
+};
+
+const checkStyle: React.CSSProperties = {
+  width: "26px",
+  height: "26px",
+  borderRadius: "999px",
+  background: "#00704f",
+  color: "white",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 900,
+};
+
+const changeTimeStyle: React.CSSProperties = {
+  margin: "4px 0 0",
+  color: "#667085",
+};
+
+const changeDescriptionStyle: React.CSSProperties = {
+  margin: 0,
+  color: "#475467",
+};
+
+const priorityCardStyle: React.CSSProperties = {
+  border: "1px solid #e5e7eb",
+  background: "#f8fbf9",
+  borderRadius: "20px",
+  padding: "22px",
+  textAlign: "left",
+  cursor: "pointer",
+  display: "grid",
+  gap: "10px",
+  color: "#101828",
 };

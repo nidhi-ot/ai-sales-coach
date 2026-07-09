@@ -322,3 +322,20 @@ CREATE POLICY rep_own_transcripts ON transcripts FOR SELECT
 
 CREATE POLICY rep_own_scorecards ON scorecards FOR SELECT
   USING (auth.uid() = rep_id);
+
+
+CREATE TABLE IF NOT EXISTS scenario_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  business_id UUID NOT NULL REFERENCES business_profiles(id) ON DELETE CASCADE,
+
+  scenario_slug TEXT NOT NULL,
+  title TEXT,
+  objective TEXT,
+  persona_notes TEXT,
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (business_id, scenario_slug)
+);

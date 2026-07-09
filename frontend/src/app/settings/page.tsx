@@ -136,16 +136,24 @@ if (savedSettings) {
                 <Field label="Email" value={email} />
                 <Field
                   label="Role"
-                  value={role === "manager" ? "Manager" : "Sales Representative"}
+                  value={
+                    role === "admin"
+                    ? "Admin"
+                    : role === "manager"
+                    ? "Manager"
+                    : "Sales Representative"
+}
                 />
                 <Field label="Organization" value="Optimal Trappstädning" />
               </div>
             </SettingsCard>
 
-            {role === "manager" ? (
+            {role === "admin" ? (
+              <AdminSettings />
+            ) : role === "manager" ? (
               <ManagerSettings settings={settings} updateSetting={updateSetting} />
             ) : (
-              <RepSettings settings={settings} updateSetting={updateSetting} />
+               <RepSettings settings={settings} updateSetting={updateSetting} />
             )}
 
             <SettingsCard title="Appearance" icon="🎨">
@@ -196,7 +204,11 @@ if (savedSettings) {
               <div style={avatarStyle}>{getInitials(fullName)}</div>
               <h2 style={profileNameStyle}>{fullName}</h2>
               <p style={profileRoleStyle}>
-                {role === "manager" ? "Manager" : "Sales Representative"}
+                {role === "admin"
+                  ? "Admin"
+                  : role === "manager"
+                  ? "Manager"
+                   : "Sales Representative"}
               </p>
             </div>
 
@@ -217,6 +229,16 @@ if (savedSettings) {
         </section>
       </main>
     </AppShell>
+  );
+}
+function AdminSettings() {
+  return (
+    <SettingsCard title="Admin Workspace" icon="🛠️">
+      <p style={mutedTextStyle}>
+        Admin settings are managed from the Admin Console, including business profile,
+        scenario overrides, and team invitations.
+      </p>
+    </SettingsCard>
   );
 }
 

@@ -40,3 +40,23 @@ async def get_latest_salesperson_profile(
         )
 
     return rows[0]
+
+
+@router.get("/me/history")
+async def get_profile_history(
+    current_account: CurrentAccount = Depends(get_current_account),
+):
+    supabase = get_supabase()
+
+    result = (
+        supabase.table("salesperson_profiles")
+        .select("version, metric_scores, weakest_dimension, created_at")
+        .eq("rep_id", current_account.id)
+        .eq("business_id", current_account.business_id)
+        .order("version")
+        .execute()
+    )
+
+    rows = _row_dicts(result.data)
+
+    return {"profiles": rows}
