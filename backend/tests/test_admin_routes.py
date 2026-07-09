@@ -232,9 +232,7 @@ class AdminRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(
-            payload["registration_link"].startswith(
-                "http://localhost:3001/register?invite="
-            )
+            payload["registration_link"].startswith("http://localhost:3001/register?invite=")
         )
 
     def test_admin_invite_rejects_out_of_bounds_expiry(self):
@@ -546,9 +544,7 @@ class AdminRouteTests(unittest.TestCase):
             response = self.client.delete("/api/v1/admin/members/admin-123")
 
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(
-            response.json()["detail"], "Cannot delete your own admin member record"
-        )
+        self.assertEqual(response.json()["detail"], "Cannot delete your own admin member record")
         self.assertEqual(fake_supabase.rpc_calls, [])
         self.assertEqual(fake_supabase.deleted_users, [])
 
@@ -599,9 +595,7 @@ class AdminRouteTests(unittest.TestCase):
             "Cannot delete the last active admin from the business",
         )
         self.assertEqual(fake_supabase.deleted_users, [])
-        self.assertEqual(
-            fake_supabase.store["salesperson_accounts"][0]["id"], "admin-target"
-        )
+        self.assertEqual(fake_supabase.store["salesperson_accounts"][0]["id"], "admin-target")
 
     def test_admin_cannot_update_cross_business_member(self):
         fake_supabase = self._make_member_supabase()
