@@ -193,7 +193,7 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
 and areas for improvement.",
   "moments": [
     {{
-      "offset_ms": "time in milliseconds",
+      "offset_ms": 0,
       "dimension": "the scoring dimension",
       "note": "one concise coaching observation (1 to 2 sentences)."
     }}
