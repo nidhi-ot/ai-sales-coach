@@ -7,7 +7,7 @@ const supportedLocales = ["en", "sv"] as const;
 type SupportedLocale = (typeof supportedLocales)[number];
 
 function normalizeLocale(value: string | undefined): SupportedLocale {
-  if (value === "sv") {
+  if (value?.startsWith("sv")) {
     return "sv";
   }
 
