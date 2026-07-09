@@ -9,7 +9,7 @@ from typing import Any
 DEFAULT_SESSION = {
     "id": "session-123",
     "rep_id": "rep-456",
-    "business_id": "business-789",
+    "business_id": "22222222-2222-2222-2222-222222222222",
     "scenario": "cold_call",
     "profile_version": 3,
     "status": "active",
@@ -20,7 +20,7 @@ DEFAULT_SESSION = {
 }
 
 DEFAULT_BUSINESS_PROFILE = {
-    "id": "business-789",
+    "id": "22222222-2222-2222-2222-222222222222",
     "name": "Optimal Trappstadning",
     "framework": "BANT",
     "context_data": {"industry": "SaaS"},
@@ -93,12 +93,19 @@ class FakeTable:
     def _selected_rows(self) -> list[dict[str, Any]]:
         rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
         if self.order_column is not None:
-            rows.sort(
-                key=lambda row: (
-                    "" if row.get(self.order_column) is None else row.get(self.order_column)
-                ),
-                reverse=self.order_desc,
-            )
+            def sort_key(row: dict[str, Any]) -> tuple[int, Any]:
+                value = row.get(self.order_column)
+                # None values sort last (lower priority), non-None values sort first
+                # When reverse=True, (1, value) comes before (0, ""), so non-None values come first
+                if value is None:
+                    return (0, "")
+                # For numeric values, return (1, value) to ensure proper numeric sorting
+                if isinstance(value, (int, float)):
+                    return (1, value)
+                # For string values, return (1, value) to sort before None values
+                return (1, str(value))
+            
+            rows.sort(key=sort_key, reverse=self.order_desc)
         if self.limit_value is not None:
             rows = rows[: self.limit_value]
         return rows
