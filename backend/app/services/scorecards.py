@@ -87,6 +87,7 @@ def _scorecard_base_payload(
         "strengths": [],
         "improvement_areas": [],
         "framework_scores": {},
+        "moments": [],
         "feedback_summary": feedback_summary,
         "status": status,
         "error_message": error_message,
@@ -218,6 +219,7 @@ async def create_scorecard_stub(session_id: str, rep_id: str, business_id: str):
                 "framework_scores": {},
                 "feedback_summary": STUB_FEEDBACK_SUMMARY,
                 "status": SCORECARD_STATUS_FAILED,
+                "moments": [],
                 "error_message": "Scorecard is a stub and has not been analyzed.",
             },
             on_conflict="session_id",
@@ -298,6 +300,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         scenario_title=session.get("scenario") or "unknown",
         business_profile=business_profile,
         framework=framework,
+        transcript_language=str(metadata.get("language") or "en"),
     )
 
     framework_score = feedback.get("framework_scores", {})
@@ -319,6 +322,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "improvement_areas": feedback["improvement_areas"],
         "framework_scores": framework_score,
         "feedback_summary": feedback["feedback_summary"],
+        "moments": feedback.get("moments", []),
         "status": SCORECARD_STATUS_GENERATED,
         "error_message": None,
         "processing_started_at": None,
