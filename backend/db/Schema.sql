@@ -42,6 +42,7 @@ DECLARE
   target_account salesperson_accounts%ROWTYPE;
   active_admin_count INTEGER;
 BEGIN
+  -- Keep the same lock order as update_admin_member to avoid deadlocks.
   PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
 
   SELECT *
@@ -84,6 +85,75 @@ BEGIN
   RETURNING * INTO target_account;
 
   RETURN target_account;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION delete_member_data(
+  p_member_id UUID,
+  p_business_id UUID
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_account salesperson_accounts%ROWTYPE;
+  other_active_admin_count INTEGER;
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
+
+  SELECT *
+  INTO target_account
+  FROM salesperson_accounts
+  WHERE id = p_member_id
+    AND business_id = p_business_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Member not found';
+  END IF;
+
+  IF target_account.role = 'admin'
+     AND COALESCE(target_account.is_active, TRUE) THEN
+    SELECT COUNT(*)
+    INTO other_active_admin_count
+    FROM salesperson_accounts
+    WHERE business_id = p_business_id
+      AND role = 'admin'
+      AND is_active = TRUE
+      AND id <> p_member_id;
+
+    IF other_active_admin_count = 0 THEN
+      RAISE EXCEPTION 'Cannot delete the last active admin from the business';
+    END IF;
+  END IF;
+
+  DELETE FROM transcripts
+  WHERE session_id IN (
+    SELECT id
+    FROM sessions
+    WHERE rep_id = p_member_id
+      AND business_id = p_business_id
+  );
+
+  DELETE FROM scorecards
+  WHERE session_id IN (
+    SELECT id
+    FROM sessions
+    WHERE rep_id = p_member_id
+      AND business_id = p_business_id
+  );
+
+  DELETE FROM sessions
+  WHERE rep_id = p_member_id
+    AND business_id = p_business_id;
+
+  DELETE FROM salesperson_profiles
+  WHERE rep_id = p_member_id
+    AND business_id = p_business_id;
+
+  DELETE FROM salesperson_accounts
+  WHERE id = p_member_id
+    AND business_id = p_business_id;
 END;
 $$;
 

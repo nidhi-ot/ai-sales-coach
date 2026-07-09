@@ -237,6 +237,8 @@ class FakeRpc:
         self.supabase.rpc_calls.append((self.name, self.params))
         if self.name == "update_admin_member":
             return self._execute_update_admin_member()
+        if self.name == "delete_member_data":
+            return self._execute_delete_member_data()
 
         rep_profiles = [
             profile
@@ -297,10 +299,76 @@ class FakeRpc:
         member["updated_at"] = "2026-07-08T00:00:00+00:00"
         return SimpleNamespace(data=[dict(member)])
 
+    def _execute_delete_member_data(self):
+        member_id = self.params["p_member_id"]
+        business_id = self.params["p_business_id"]
+
+        member = next(
+            (
+                account
+                for account in self.supabase.store["salesperson_accounts"]
+                if account["id"] == member_id and account.get("business_id") == business_id
+            ),
+            None,
+        )
+        if member is None:
+            raise RuntimeError("Member not found")
+
+        if (
+            member.get("role") == "admin"
+            and member.get("is_active", True)
+            and not any(
+                account.get("business_id") == business_id
+                and account.get("role") == "admin"
+                and account.get("is_active", True)
+                and account.get("id") != member_id
+                for account in self.supabase.store["salesperson_accounts"]
+            )
+        ):
+            raise RuntimeError("Cannot delete the last active admin from the business")
+
+        session_ids = {
+            session["id"]
+            for session in self.supabase.store["sessions"].values()
+            if session.get("rep_id") == member_id and session.get("business_id") == business_id
+        }
+
+        self.supabase.store["transcripts"] = [
+            transcript
+            for transcript in self.supabase.store["transcripts"]
+            if transcript.get("session_id") not in session_ids
+        ]
+        self.supabase.store["scorecards"] = [
+            scorecard
+            for scorecard in self.supabase.store["scorecards"]
+            if scorecard.get("session_id") not in session_ids
+        ]
+        self.supabase.store["sessions"] = {
+            session_id: session
+            for session_id, session in self.supabase.store["sessions"].items()
+            if not (
+                session.get("rep_id") == member_id and session.get("business_id") == business_id
+            )
+        }
+        self.supabase.store["salesperson_profiles"] = [
+            profile
+            for profile in self.supabase.store["salesperson_profiles"]
+            if not (
+                profile.get("rep_id") == member_id and profile.get("business_id") == business_id
+            )
+        ]
+        self.supabase.store["salesperson_accounts"] = [
+            account
+            for account in self.supabase.store["salesperson_accounts"]
+            if not (account.get("id") == member_id and account.get("business_id") == business_id)
+        ]
+        return SimpleNamespace(data=None)
+
 
 class FakeSupabase:
     def __init__(self, *, with_default_session: bool = True):
         self.rpc_calls: list[tuple[str, dict[str, Any]]] = []
+        self.deleted_users: list[str] = []
         self.store = {
             "sessions": {},
             "transcripts": [],
@@ -310,6 +378,11 @@ class FakeSupabase:
             "business_profiles": [],
             "invites": [],
         }
+        self.auth = SimpleNamespace(
+            admin=SimpleNamespace(
+                delete_user=self._delete_user,
+            )
+        )
         if with_default_session:
             self.store["sessions"][DEFAULT_SESSION["id"]] = deepcopy(DEFAULT_SESSION)
             self.store["business_profiles"].append(deepcopy(DEFAULT_BUSINESS_PROFILE))
@@ -319,3 +392,7 @@ class FakeSupabase:
 
     def rpc(self, name: str, params: dict[str, Any]) -> FakeRpc:
         return FakeRpc(self, name, params)
+
+    def _delete_user(self, user_id: str):
+        self.deleted_users.append(user_id)
+        return SimpleNamespace()

@@ -94,6 +94,14 @@ class AdminMemberResponse(BaseModel):
     created_at: str | None = None
 
 
+class AdminMemberExportResponse(BaseModel):
+    account: dict[str, Any]
+    sessions: list[dict[str, Any]]
+    transcripts: list[dict[str, Any]]
+    scorecards: list[dict[str, Any]]
+    profile_versions: list[dict[str, Any]]
+
+
 class UpdateAdminMemberRequest(BaseModel):
     role: Literal["rep", "manager", "admin"] | None = None
     is_active: bool | None = None
@@ -445,3 +453,134 @@ async def update_member(
         is_active=bool(updated_member.get("is_active", True)),
         created_at=updated_member.get("created_at"),
     )
+
+
+@router.get("/members/{member_id}/export", response_model=AdminMemberExportResponse)
+async def export_member(
+    member_id: str,
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    supabase = get_supabase()
+
+    member_result = (
+        supabase.table("salesperson_accounts")
+        .select(
+            "id, full_name, email, phone_number, employee_id, role, "
+            "is_active, business_id, created_at, updated_at"
+        )
+        .eq("id", member_id)
+        .limit(1)
+        .execute()
+    )
+    member_rows = _row_dicts(member_result.data)
+    if not member_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    account = member_rows[0]
+    if str(account.get("business_id")) != str(current_account.business_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    sessions_result = (
+        supabase.table("sessions")
+        .select("*")
+        .eq("rep_id", member_id)
+        .eq("business_id", current_account.business_id)
+        .order("started_at", desc=True)
+        .execute()
+    )
+    sessions = _row_dicts(sessions_result.data)
+    session_ids = [str(session["id"]) for session in sessions if session.get("id") is not None]
+
+    transcripts: list[dict[str, Any]] = []
+    scorecards: list[dict[str, Any]] = []
+    if session_ids:
+        transcripts_result = (
+            supabase.table("transcripts")
+            .select("*")
+            .in_("session_id", session_ids)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        transcripts = _row_dicts(transcripts_result.data)
+
+        scorecards_result = (
+            supabase.table("scorecards")
+            .select("*")
+            .in_("session_id", session_ids)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        scorecards = _row_dicts(scorecards_result.data)
+
+    profile_versions_result = (
+        supabase.table("salesperson_profiles")
+        .select("*")
+        .eq("rep_id", member_id)
+        .eq("business_id", current_account.business_id)
+        .order("version", desc=True)
+        .execute()
+    )
+    profile_versions = _row_dicts(profile_versions_result.data)
+
+    return AdminMemberExportResponse(
+        account=account,
+        sessions=sessions,
+        transcripts=transcripts,
+        scorecards=scorecards,
+        profile_versions=profile_versions,
+    )
+
+
+@router.delete("/members/{member_id}")
+async def delete_member(
+    member_id: str,
+    current_account: CurrentAccount = Depends(require_role("admin")),
+):
+    supabase = get_supabase()
+
+    member_result = (
+        supabase.table("salesperson_accounts")
+        .select("id, business_id")
+        .eq("id", member_id)
+        .limit(1)
+        .execute()
+    )
+    member_rows = _row_dicts(member_result.data)
+    if not member_rows:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    member = member_rows[0]
+    if str(member.get("business_id")) != str(current_account.business_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    if str(member.get("id")) == str(current_account.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot delete your own admin member record",
+        )
+
+    try:
+        supabase.rpc(
+            "delete_member_data",
+            {
+                "p_member_id": member_id,
+                "p_business_id": current_account.business_id,
+            },
+        ).execute()
+    except Exception as exc:  # noqa: BLE001
+        message = str(exc)
+        if "Cannot delete the last active admin" in message:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot delete the last active admin from the business",
+            ) from exc
+        if "Member not found" in message:
+            raise HTTPException(status_code=404, detail="Member not found") from exc
+        raise HTTPException(status_code=500, detail="Unable to delete member data") from exc
+
+    try:
+        supabase.auth.admin.delete_user(member_id)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail="Unable to delete auth user") from exc
+
+    return {"message": "Member deleted"}
