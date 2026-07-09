@@ -42,6 +42,7 @@ DECLARE
   target_account salesperson_accounts%ROWTYPE;
   active_admin_count INTEGER;
 BEGIN
+  -- Keep the same lock order as update_admin_member to avoid deadlocks.
   PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
 
   SELECT *
@@ -98,6 +99,8 @@ DECLARE
   target_account salesperson_accounts%ROWTYPE;
   other_active_admin_count INTEGER;
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
+
   SELECT *
   INTO target_account
   FROM salesperson_accounts
@@ -111,8 +114,6 @@ BEGIN
 
   IF target_account.role = 'admin'
      AND COALESCE(target_account.is_active, TRUE) THEN
-    PERFORM pg_advisory_xact_lock(hashtextextended(p_business_id::TEXT, 0));
-
     SELECT COUNT(*)
     INTO other_active_admin_count
     FROM salesperson_accounts
