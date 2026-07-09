@@ -95,9 +95,7 @@ class FakeTable:
         if self.order_column is not None:
             rows.sort(
                 key=lambda row: (
-                    ""
-                    if row.get(self.order_column) is None
-                    else row.get(self.order_column)
+                    "" if row.get(self.order_column) is None else row.get(self.order_column)
                 ),
                 reverse=self.order_desc,
             )
@@ -133,8 +131,7 @@ class FakeTable:
         if self.insert_payload is not None:
             payload = dict(self.insert_payload)
             row = {
-                "id": payload.get("id")
-                or f"{id_prefix}-{len(self.store[table_name]) + 1}",
+                "id": payload.get("id") or f"{id_prefix}-{len(self.store[table_name]) + 1}",
                 **payload,
             }
             self.store[table_name].append(row)
@@ -153,8 +150,7 @@ class FakeTable:
     def _execute_sessions(self):
         if self.insert_payload is not None:
             row = {
-                "id": self.insert_payload.get("id")
-                or f"session-{len(self.store['sessions']) + 1}",
+                "id": self.insert_payload.get("id") or f"session-{len(self.store['sessions']) + 1}",
                 **self.insert_payload,
             }
             self.store["sessions"][row["id"]] = row
@@ -202,8 +198,7 @@ class FakeTable:
                 return SimpleNamespace(data=[dict(existing)])
 
             row = {
-                "id": payload.get("id")
-                or f"scorecard-{len(self.store['scorecards']) + 1}",
+                "id": payload.get("id") or f"scorecard-{len(self.store['scorecards']) + 1}",
                 **payload,
             }
             self.store["scorecards"].append(row)
@@ -223,8 +218,7 @@ class FakeTable:
         if self.insert_payload is not None:
             payload = dict(self.insert_payload)
             row = {
-                "id": payload.get("id")
-                or f"profile-{len(self.store['salesperson_profiles']) + 1}",
+                "id": payload.get("id") or f"profile-{len(self.store['salesperson_profiles']) + 1}",
                 **payload,
             }
             self.store["salesperson_profiles"].append(row)
@@ -296,9 +290,7 @@ class FakeRpc:
                 and account["id"] != self.params["p_member_id"]
             ]
             if not other_active_admins:
-                raise RuntimeError(
-                    "Cannot remove the last active admin from the business"
-                )
+                raise RuntimeError("Cannot remove the last active admin from the business")
 
         if self.params.get("p_role") is not None:
             member["role"] = self.params["p_role"]
@@ -315,8 +307,7 @@ class FakeRpc:
             (
                 account
                 for account in self.supabase.store["salesperson_accounts"]
-                if account["id"] == member_id
-                and account.get("business_id") == business_id
+                if account["id"] == member_id and account.get("business_id") == business_id
             ),
             None,
         )
@@ -339,8 +330,7 @@ class FakeRpc:
         session_ids = {
             session["id"]
             for session in self.supabase.store["sessions"].values()
-            if session.get("rep_id") == member_id
-            and session.get("business_id") == business_id
+            if session.get("rep_id") == member_id and session.get("business_id") == business_id
         }
 
         self.supabase.store["transcripts"] = [
@@ -357,25 +347,20 @@ class FakeRpc:
             session_id: session
             for session_id, session in self.supabase.store["sessions"].items()
             if not (
-                session.get("rep_id") == member_id
-                and session.get("business_id") == business_id
+                session.get("rep_id") == member_id and session.get("business_id") == business_id
             )
         }
         self.supabase.store["salesperson_profiles"] = [
             profile
             for profile in self.supabase.store["salesperson_profiles"]
             if not (
-                profile.get("rep_id") == member_id
-                and profile.get("business_id") == business_id
+                profile.get("rep_id") == member_id and profile.get("business_id") == business_id
             )
         ]
         self.supabase.store["salesperson_accounts"] = [
             account
             for account in self.supabase.store["salesperson_accounts"]
-            if not (
-                account.get("id") == member_id
-                and account.get("business_id") == business_id
-            )
+            if not (account.get("id") == member_id and account.get("business_id") == business_id)
         ]
         return SimpleNamespace(data=None)
 
