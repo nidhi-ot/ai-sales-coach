@@ -32,9 +32,23 @@
     "unmute": "Unmute"
   },
   "Scorecard": {
-    "title": "Practice Scorecard",
-    "processing": "Scorecard is processing...",
+    "eyebrow": "Practice Scorecard",
+    "title": "AI Sales Coach Evaluation 🎉",
+    "subtitle": "Review your performance, strengths, and improvement areas from this practice session.",
+    "viewDetails": "View Details",
+    "overallScore": "Overall Score",
+    "noScoreTitle": "No score generated",
+    "noScoreDescription": "This session did not include enough conversation to evaluate.",
+    "loading": "Loading scorecard...",
+    "noPracticeTitle": "No practice session yet",
+    "noPracticeDescription": "Start your first practice session to generate a scorecard.",
+    "startPractice": "Start Practice",
+    "scorecardNotFound": "Scorecard not found.",
+    "notFoundForSession": "No scorecard found for this session.",
+    "connectionError": "Could not connect to backend.",
+    "analysisFailedTitle": "Scorecard analysis failed",
+    "analysisFailedDescription": "The analysis could not finish. Retry the scorecard generation.",
     "retry": "Retry analysis",
-    "overallScore": "Overall score"
+    "retryFailed": "Failed to retry analysis."
   }
 }

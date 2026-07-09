@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
 import {
@@ -97,6 +98,7 @@ function frameworkIcon(key: string): string {
 
 export default function ScorecardsClients() {
   const router = useRouter();
+  const t = useTranslations("Scorecard");
   const searchParams = useSearchParams();
   const querySessionId = searchParams.get("session_id");
 
@@ -134,7 +136,7 @@ export default function ScorecardsClients() {
           );
 
           if (!recentResponse.ok) {
-            setError("Could not load recent sessions.");
+            setError(t("connectionError"));
             return;
           }
 
@@ -160,19 +162,19 @@ export default function ScorecardsClients() {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.detail || "Scorecard not found.");
+          setError(data.detail || t("scorecardNotFound"));
           return;
         }
 
         setScorecard(data);
       } catch (error) {
         console.error("Failed to load scorecard:", error);
-        setError("Could not connect to backend.");
+        setError(t("connectionError"));
       } finally {
         setLoading(false);
       }
     },
-    [querySessionId, router]
+    [querySessionId, router, t]
   );
 
   useEffect(() => {
@@ -204,14 +206,11 @@ export default function ScorecardsClients() {
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <section style={heroStyle}>
           <div>
-            <p style={eyebrowStyle}>Practice Scorecard</p>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
 
-            <h1 style={heroTitleStyle}>AI Sales Coach Evaluation 🎉</h1>
+            <h1 style={heroTitleStyle}>{t("title")}</h1>
 
-            <p style={heroSubtitleStyle}>
-              Review your performance, strengths, and improvement areas from
-              this practice session.
-            </p>
+            <p style={heroSubtitleStyle}>{t("subtitle")}</p>
 
             {sessionId ? (
               <div style={heroActionsStyle}>
@@ -219,7 +218,7 @@ export default function ScorecardsClients() {
                   onClick={() => router.push(`/sessions/${sessionId}`)}
                   style={secondaryButtonStyle}
                 >
-                  View Details
+                  {t("viewDetails")}
                 </button>
               </div>
             ) : null}
@@ -229,7 +228,7 @@ export default function ScorecardsClients() {
             <div style={scoreCircleStyle}>
               <strong style={{ fontSize: "40px" }}>{overallScore}/10</strong>
               <span style={{ color: "#667085", fontWeight: 700 }}>
-                Overall Score
+                {t("overallScore")}
               </span>
             </div>
           ) : (
@@ -238,11 +237,11 @@ export default function ScorecardsClients() {
 
               <div>
                 <strong style={{ color: "#101828", fontSize: "18px" }}>
-                  No score generated
+                  {t("noScoreTitle")}
                 </strong>
 
                 <p style={{ color: "#667085", margin: "8px 0 0", lineHeight: "1.5" }}>
-                  This session did not include enough conversation to evaluate.
+                  {t("noScoreDescription")}
                 </p>
               </div>
             </div>
@@ -252,7 +251,7 @@ export default function ScorecardsClients() {
         {loading ? (
           <section style={panelStyle}>
             <p style={{ color: "#667085", margin: 0 }}>
-              Loading scorecard...
+              {t("loading")}
             </p>
           </section>
         ) : hasNoPractice ? (
@@ -260,11 +259,11 @@ export default function ScorecardsClients() {
             <div style={{ display: "grid", gap: "14px" }}>
               <div>
                 <h2 style={{ margin: 0, color: "#101828" }}>
-                  No practice session yet
+                  {t("noPracticeTitle")}
                 </h2>
 
                 <p style={{ color: "#667085", margin: "8px 0 0" }}>
-                  Start your first practice session to generate a scorecard.
+                  {t("noPracticeDescription")}
                 </p>
               </div>
 
@@ -272,7 +271,7 @@ export default function ScorecardsClients() {
                 onClick={() => router.push("/scenarios")}
                 style={primaryButtonStyle}
               >
-                Start Practice
+                {t("startPractice")}
               </button>
             </div>
           </section>
@@ -283,15 +282,15 @@ export default function ScorecardsClients() {
         ) : !scorecard ? (
           <section style={panelStyle}>
             <p style={{ color: "#667085", margin: 0 }}>
-              No scorecard found for this session.
+              {t("notFoundForSession")}
             </p>
           </section>
         ) : scorecard.status === "failed" ? (
           <section style={panelStyle}>
-            <h2 style={sectionTitleStyle}>Scorecard analysis failed</h2>
+            <h2 style={sectionTitleStyle}>{t("analysisFailedTitle")}</h2>
 
             <p style={{ color: "#667085" }}>
-              The analysis could not finish. Retry the scorecard generation.
+              {t("analysisFailedDescription")}
             </p>
 
             <button
@@ -307,7 +306,7 @@ export default function ScorecardsClients() {
                   const data = await response.json();
 
                   if (!response.ok) {
-                    alert(data.detail || "Failed to retry analysis.");
+                    alert(data.detail || t("retryFailed"));
                     return;
                   }
 
@@ -316,12 +315,12 @@ export default function ScorecardsClients() {
                     current ? { ...current, status: "processing" } : current
                   );
                 } catch (error) {
-                  alert("Failed to retry analysis.");
+                  alert(t("retryFailed"));
                 }
               }}
               style={primaryButtonStyle}
             >
-              Retry analysis
+              {t("retry")}
             </button>
           </section>
         ) : (

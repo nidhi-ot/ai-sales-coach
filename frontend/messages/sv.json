@@ -32,9 +32,23 @@
     "unmute": "Slå på mikrofon"
   },
   "Scorecard": {
-    "title": "Övningsscorecard",
-    "processing": "Scorecard bearbetas...",
+    "eyebrow": "Övningsscorecard",
+    "title": "AI Sales Coach-utvärdering 🎉",
+    "subtitle": "Granska din prestation, dina styrkor och dina förbättringsområden från övningssamtalet.",
+    "viewDetails": "Visa detaljer",
+    "overallScore": "Totalpoäng",
+    "noScoreTitle": "Ingen poäng genererad",
+    "noScoreDescription": "Samtalet innehöll inte tillräckligt med konversation för att kunna utvärderas.",
+    "loading": "Laddar scorecard...",
+    "noPracticeTitle": "Ingen övning ännu",
+    "noPracticeDescription": "Starta ditt första övningssamtal för att skapa ett scorecard.",
+    "startPractice": "Starta övning",
+    "scorecardNotFound": "Scorecard hittades inte.",
+    "notFoundForSession": "Inget scorecard hittades för detta samtal.",
+    "connectionError": "Kunde inte ansluta till backend.",
+    "analysisFailedTitle": "Scorecard-analysen misslyckades",
+    "analysisFailedDescription": "Analysen kunde inte slutföras. Försök generera scorecard igen.",
     "retry": "Försök analysera igen",
-    "overallScore": "Totalpoäng"
+    "retryFailed": "Det gick inte att försöka analysera igen."
   }
 }
