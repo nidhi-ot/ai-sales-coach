@@ -288,6 +288,7 @@ def _parse_feedback(response_text: str) -> ScorecardFeedback:
     feedback = json.loads(response_text.strip())
     return ScorecardFeedback.model_validate(feedback)
 
+
 def _normalize_moments(moments: Any) -> list[dict[str, Any]]:
     """Normalize GPT coaching moments into a safe JSON-serializable list."""
     if not isinstance(moments, list):
@@ -312,6 +313,7 @@ def _normalize_moments(moments: Any) -> list[dict[str, Any]]:
         )
 
     return normalized_moments
+
 
 def _normalize_framework(framework: str | None) -> str:
     value = (framework or "BANT").upper()
