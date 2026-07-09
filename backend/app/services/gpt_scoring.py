@@ -190,7 +190,7 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
   "strengths": ["strength 1", "strength 2", "strength 3"],
   "improvement_areas": ["area 1", "area 2", "area 3"],
   "feedback_summary": "A concise summary of the feedback for the rep, highlighting key strengths
-and areas for improvement."
+and areas for improvement.",
   "moments": [
     {{
       "offset_ms": "time in milliseconds",

@@ -322,7 +322,7 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
         "improvement_areas": feedback["improvement_areas"],
         "framework_scores": framework_score,
         "feedback_summary": feedback["feedback_summary"],
-        "moments" : getattr(feedback, "moments", []),
+        "moments" : feedback.get("moments", []),
         "status": SCORECARD_STATUS_GENERATED,
         "error_message": None,
         "processing_started_at": None,
