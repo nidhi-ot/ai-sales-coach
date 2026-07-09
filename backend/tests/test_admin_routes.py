@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_current_user
+from app.api.deps import CurrentAccount, get_current_account, get_current_user
 from app.main import app
 from tests.helpers import FakeSupabase
 
@@ -18,6 +18,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def _set_current_user(self, user_id: str) -> None:
         app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=user_id)
+
+    def _set_current_account(self, account: CurrentAccount) -> None:
+        app.dependency_overrides[get_current_account] = lambda: account
 
     def _make_member_supabase(self):
         fake_supabase = FakeSupabase(with_default_session=False)
@@ -498,6 +501,7 @@ class AdminRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["message"], "Member deleted")
+        self.assertEqual(fake_supabase.rpc_calls[0][0], "delete_member_data")
         self.assertEqual(fake_supabase.deleted_users, ["rep-123"])
         self.assertEqual(
             fake_supabase.store["salesperson_accounts"],
@@ -530,6 +534,74 @@ class AdminRouteTests(unittest.TestCase):
         self.assertEqual(fake_supabase.store["transcripts"], [])
         self.assertEqual(fake_supabase.store["scorecards"], [])
         self.assertEqual(fake_supabase.store["salesperson_profiles"], [])
+
+    def test_admin_cannot_delete_self(self):
+        fake_supabase = self._make_member_supabase()
+        self._set_current_user("admin-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.admin.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.delete("/api/v1/admin/members/admin-123")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["detail"], "Cannot delete your own admin member record"
+        )
+        self.assertEqual(fake_supabase.rpc_calls, [])
+        self.assertEqual(fake_supabase.deleted_users, [])
+
+    def test_admin_cannot_delete_last_active_admin(self):
+        fake_supabase = FakeSupabase(with_default_session=False)
+        fake_supabase.store["business_profiles"].append(
+            {
+                "id": "business-789",
+                "name": "Optimal Trappstadning",
+                "framework": "BANT",
+                "context_data": {},
+                "products": "AI sales coaching",
+                "icp": "Sales teams",
+                "objections": "",
+                "language": "en",
+            }
+        )
+        fake_supabase.store["salesperson_accounts"].append(
+            {
+                "id": "admin-target",
+                "full_name": "Target Admin",
+                "email": "admin-target@example.com",
+                "phone_number": "0700000003",
+                "employee_id": "EMP-TARGET",
+                "business_id": "business-789",
+                "role": "admin",
+                "is_active": True,
+                "created_at": "2026-07-03T10:00:00+00:00",
+            }
+        )
+        self._set_current_account(
+            CurrentAccount(
+                id="admin-requester",
+                role="admin",
+                business_id="business-789",
+            )
+        )
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.admin.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.delete("/api/v1/admin/members/admin-target")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["detail"],
+            "Cannot delete the last active admin from the business",
+        )
+        self.assertEqual(fake_supabase.deleted_users, [])
+        self.assertEqual(
+            fake_supabase.store["salesperson_accounts"][0]["id"], "admin-target"
+        )
 
     def test_admin_cannot_update_cross_business_member(self):
         fake_supabase = self._make_member_supabase()

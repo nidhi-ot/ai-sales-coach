@@ -371,7 +371,9 @@ async def list_members(
 
     result = (
         supabase.table("salesperson_accounts")
-        .select("id, full_name, email, phone_number, employee_id, role, is_active, created_at")
+        .select(
+            "id, full_name, email, phone_number, employee_id, role, is_active, created_at"
+        )
         .eq("business_id", current_account.business_id)
         .order("created_at", desc=True)
         .execute()
@@ -489,7 +491,9 @@ async def export_member(
         .execute()
     )
     sessions = _row_dicts(sessions_result.data)
-    session_ids = [str(session["id"]) for session in sessions if session.get("id") is not None]
+    session_ids = [
+        str(session["id"]) for session in sessions if session.get("id") is not None
+    ]
 
     transcripts: list[dict[str, Any]] = []
     scorecards: list[dict[str, Any]] = []
@@ -553,10 +557,11 @@ async def delete_member(
     if str(member.get("business_id")) != str(current_account.business_id):
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    try:
-        supabase.auth.admin.delete_user(member_id)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail="Unable to delete auth user") from exc
+    if str(member.get("id")) == str(current_account.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Cannot delete your own admin member record",
+        )
 
     try:
         supabase.rpc(
@@ -567,6 +572,23 @@ async def delete_member(
             },
         ).execute()
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail="Unable to delete member data") from exc
+        message = str(exc)
+        if "Cannot delete the last active admin" in message:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot delete the last active admin from the business",
+            ) from exc
+        if "Member not found" in message:
+            raise HTTPException(status_code=404, detail="Member not found") from exc
+        raise HTTPException(
+            status_code=500, detail="Unable to delete member data"
+        ) from exc
+
+    try:
+        supabase.auth.admin.delete_user(member_id)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=500, detail="Unable to delete auth user"
+        ) from exc
 
     return {"message": "Member deleted"}

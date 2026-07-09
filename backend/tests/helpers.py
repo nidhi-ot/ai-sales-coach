@@ -323,6 +323,19 @@ class FakeRpc:
         if member is None:
             raise RuntimeError("Member not found")
 
+        if (
+            member.get("role") == "admin"
+            and member.get("is_active", True)
+            and not any(
+                account.get("business_id") == business_id
+                and account.get("role") == "admin"
+                and account.get("is_active", True)
+                and account.get("id") != member_id
+                for account in self.supabase.store["salesperson_accounts"]
+            )
+        ):
+            raise RuntimeError("Cannot delete the last active admin from the business")
+
         session_ids = {
             session["id"]
             for session in self.supabase.store["sessions"].values()
