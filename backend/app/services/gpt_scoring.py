@@ -175,7 +175,7 @@ EVALUATION CRITERIA:
 COACHING MOMENTS:
 Return 3-5 key coaching moments from the transcript. Each moment must include:
 - offset_ms: approximate timestamp in milliseconds from the start of the call
-- dimension: the scoring dimension or sales framework category that the moment relates to 
+- dimension: the scoring dimension or sales framework category that the moment relates to
 (must match the dimensions used elsewhere in this scorecard).
 - note: a short useful coaching note for the rep
 
