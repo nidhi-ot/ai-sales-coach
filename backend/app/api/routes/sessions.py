@@ -172,6 +172,7 @@ class SessionDetailResponse(BaseModel):
     scorecard_status: str | None = None
     scorecard_moments: list[CoachMomentResponse] = Field(default_factory=list)
 
+
 @router.post("/")
 async def create_session(
     data: SessionStart,
