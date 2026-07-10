@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, List, Literal, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
 
 from app.api.deps import (
     CurrentAccount,
@@ -146,6 +146,12 @@ class DimensionProgressResponse(BaseModel):
     dimensions: dict[str, DimensionProgressItem]
 
 
+class CoachMomentResponse(BaseModel):
+    offset_ms: int
+    dimension: str
+    note: str
+
+
 class SessionDetailTranscriptEntry(BaseModel):
     speaker: Literal["rep", "ai_customer"]
     text: str
@@ -164,6 +170,7 @@ class SessionDetailResponse(BaseModel):
     scenario: str | None = None
     scorecard_id: str | None = None
     scorecard_status: str | None = None
+    scorecard_moments: list[CoachMomentResponse] = Field(default_factory=list)
 
 
 @router.post("/")
@@ -514,7 +521,7 @@ async def get_session_details(
 
     scorecard_result = (
         supabase.table("scorecards")
-        .select("id, status")
+        .select("id, status, moments")
         .eq("session_id", session_id)
         .order("created_at", desc=True)
         .limit(1)
@@ -524,6 +531,15 @@ async def get_session_details(
     scorecard = scorecard_rows[0] if scorecard_rows else {}
     scorecard_id = str(scorecard["id"]) if scorecard.get("id") else None
     scorecard_status = scorecard.get("status")
+    raw_moments = scorecard.get("moments")
+    scorecard_moments = []
+
+    if isinstance(raw_moments, list):
+        for moment in raw_moments:
+            try:
+                scorecard_moments.append(CoachMomentResponse.model_validate(moment))
+            except ValidationError:
+                continue
 
     try:
         title = get_scenario_config(str(session_row.get("scenario"))).title
@@ -550,4 +566,5 @@ async def get_session_details(
         "scenario": session_row.get("scenario"),
         "scorecard_id": scorecard_id,
         "scorecard_status": scorecard_status,
+        "scorecard_moments": scorecard_moments,
     }

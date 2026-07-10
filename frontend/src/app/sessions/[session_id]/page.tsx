@@ -12,6 +12,12 @@ type SessionTranscriptEntry = {
   created_at?: string | null;
 };
 
+type CoachMoment = {
+  offset_ms: number;
+  dimension: string;
+  note: string;
+};
+
 type SessionDetails = {
   id: string;
   title: string;
@@ -23,6 +29,7 @@ type SessionDetails = {
   scenario?: string | null;
   scorecard_id?: string | null;
   scorecard_status?: "processing" | "generated" | "failed" | null;
+  scorecard_moments?: CoachMoment[];
 };
 
 export default function SessionDetailsPage() {
@@ -84,6 +91,11 @@ export default function SessionDetailsPage() {
 
     return () => clearInterval(intervalId);
   }, [details?.scorecard_status]);
+
+  const coachMomentsByEntry = groupMomentsByTranscriptEntry(
+    details?.transcript ?? [],
+    details?.scorecard_moments
+  );
 
   return (
     <AppShell>
@@ -213,30 +225,50 @@ export default function SessionDetailsPage() {
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
-                  {details.transcript.map((entry, index) => (
-                    <div key={`${entry.speaker}-${index}`} style={transcriptItemStyle}>
-                      <div style={transcriptMetaStyle}>
-                        <span
-                          style={{
-                            ...speakerBadgeStyle,
-                            background:
-                              entry.speaker === "rep" ? "#ecfdf3" : "#eff8ff",
-                            color: entry.speaker === "rep" ? "#027a48" : "#175cd3",
-                          }}
-                        >
-                          {entry.speaker === "rep" ? "Rep" : "AI Customer"}
-                        </span>
+                  {details.transcript.map((entry, index) => {
+                    const coachMoments = coachMomentsByEntry.get(index) || [];
 
-                        <span style={{ color: "#667085", fontSize: "13px" }}>
-                          {formatOffset(entry.timestamp_offset_ms)}
-                        </span>
+                    return (
+                      <div key={`${entry.speaker}-${index}`} style={transcriptItemStyle}>
+                        <div style={transcriptMetaStyle}>
+                          <span
+                            style={{
+                              ...speakerBadgeStyle,
+                              background: entry.speaker === "rep" ? "#ecfdf3" : "#eff8ff",
+                              color: entry.speaker === "rep" ? "#027a48" : "#175cd3",
+                            }}
+                          >
+                            {entry.speaker === "rep" ? "Rep" : "AI Customer"}
+                          </span>
+
+                          <span style={{ color: "#667085", fontSize: "13px" }}>
+                            {formatOffset(entry.timestamp_offset_ms)}
+                          </span>
+                        </div>
+
+                        <p style={{ margin: "10px 0 0", color: "#101828", lineHeight: 1.6 }}>
+                          {entry.text}
+                        </p>
+
+                        {coachMoments.length > 0 && (
+                          <div style={coachMomentsWrapStyle}>
+                            {coachMoments.map((moment, momentIndex) => (
+                              <div
+                                key={`${moment.dimension}-${moment.offset_ms}-${momentIndex}`}
+                                style={getCoachMomentStyle(moment.dimension)}
+                              >
+                                <span style={getCoachMomentBadgeStyle(moment.dimension)}>
+                                  Coach note · {formatDimensionLabel(moment.dimension)}
+                                </span>
+
+                                <p style={coachMomentTextStyle}>{moment.note}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-
-                      <p style={{ margin: "10px 0 0", color: "#101828", lineHeight: 1.6 }}>
-                        {entry.text}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -281,6 +313,145 @@ function formatOffset(offset?: number | null) {
   if (offset == null) return "0:00";
   return formatDuration(Math.floor(offset / 1000));
 }
+
+function groupMomentsByTranscriptEntry(
+  transcript: SessionTranscriptEntry[],
+  moments?: CoachMoment[] | null
+) {
+  const grouped = new Map<number, CoachMoment[]>();
+
+  if (!transcript.length || !moments?.length) {
+    return grouped;
+  }
+
+  moments.forEach((moment) => {
+    if (typeof moment.offset_ms !== "number") {
+      return;
+    }
+
+    let closestIndex: number | null = null;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    transcript.forEach((entry, index) => {
+      if (entry.speaker !== "rep") {
+        return;
+      }
+
+      const entryOffset = entry.timestamp_offset_ms ?? 0;
+      const distance = Math.abs(entryOffset - moment.offset_ms);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (closestIndex === null) {
+      return;
+    }
+
+    grouped.set(closestIndex, [...(grouped.get(closestIndex) || []), moment]);
+  });
+
+  return grouped;
+}
+
+function formatDimensionLabel(value: string) {
+  return value
+    .replaceAll("_", " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getCoachMomentStyle(dimension: string): React.CSSProperties {
+  const normalized = dimension.toLowerCase();
+
+  if (normalized.includes("objection")) {
+    return {
+      ...coachMomentStyle,
+      background: "#fff7ed",
+      borderColor: "#fed7aa",
+    };
+  }
+
+  if (normalized.includes("closing")) {
+    return {
+      ...coachMomentStyle,
+      background: "#ecfdf3",
+      borderColor: "#bbf7d0",
+    };
+  }
+
+  if (normalized.includes("discovery") || normalized.includes("need")) {
+    return {
+      ...coachMomentStyle,
+      background: "#eff8ff",
+      borderColor: "#b2ddff",
+    };
+  }
+
+  if (normalized.includes("rapport")) {
+    return {
+      ...coachMomentStyle,
+      background: "#f4f3ff",
+      borderColor: "#d9d6fe",
+    };
+  }
+
+  return coachMomentStyle;
+}
+
+function getCoachMomentBadgeStyle(dimension: string): React.CSSProperties {
+  const normalized = dimension.toLowerCase();
+
+  if (normalized.includes("objection")) {
+    return { ...coachMomentBadgeStyle, color: "#c2410c" };
+  }
+
+  if (normalized.includes("closing")) {
+    return { ...coachMomentBadgeStyle, color: "#027a48" };
+  }
+
+  if (normalized.includes("discovery") || normalized.includes("need")) {
+    return { ...coachMomentBadgeStyle, color: "#175cd3" };
+  }
+
+  if (normalized.includes("rapport")) {
+    return { ...coachMomentBadgeStyle, color: "#5925dc" };
+  }
+
+  return coachMomentBadgeStyle;
+}
+
+const coachMomentsWrapStyle: React.CSSProperties = {
+  display: "grid",
+  gap: "10px",
+  marginTop: "14px",
+};
+
+const coachMomentStyle: React.CSSProperties = {
+  border: "1px solid #e5e7eb",
+  borderLeft: "4px solid #98a2b3",
+  borderRadius: "14px",
+  padding: "12px 14px",
+  background: "#ffffff",
+};
+
+const coachMomentBadgeStyle: React.CSSProperties = {
+  display: "inline-block",
+  fontSize: "12px",
+  fontWeight: 900,
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+  color: "#475467",
+};
+
+const coachMomentTextStyle: React.CSSProperties = {
+  margin: "6px 0 0",
+  color: "#344054",
+  lineHeight: 1.55,
+};
 
 const heroStyle: React.CSSProperties = {
   background: "linear-gradient(135deg, #ffffff 0%, #f0faf6 55%, #e6f4ef 100%)",
