@@ -398,8 +398,7 @@ function getCoachMomentStyle(dimension: string): React.CSSProperties {
   return coachMomentStyle;
 }
 
-function getCoachMomentBadgeStyle(dimension: string): React.CSSProperties 
-{
+function getCoachMomentBadgeStyle(dimension: string): React.CSSProperties {
   const normalized = dimension.toLowerCase();
 
   if (normalized.includes("objection")) {
