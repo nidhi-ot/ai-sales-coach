@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, List, Literal, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from app.api.deps import (
     CurrentAccount,
@@ -532,7 +532,14 @@ async def get_session_details(
     scorecard_id = str(scorecard["id"]) if scorecard.get("id") else None
     scorecard_status = scorecard.get("status")
     raw_moments = scorecard.get("moments")
-    scorecard_moments = raw_moments if isinstance(raw_moments, list) else []
+    scorecard_moments = []
+
+    if isinstance(raw_moments, list):
+        for moment in raw_moments:
+            try:
+                scorecard_moments.append(CoachMomentResponse.model_validate(moment))
+            except ValidationError:
+                continue
 
     try:
         title = get_scenario_config(str(session_row.get("scenario"))).title

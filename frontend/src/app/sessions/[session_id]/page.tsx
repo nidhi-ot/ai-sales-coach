@@ -329,7 +329,7 @@ function groupMomentsByTranscriptEntry(
       return;
     }
 
-    let closestIndex = 0;
+    let closestIndex: number | null = null;
     let closestDistance = Number.POSITIVE_INFINITY;
 
     transcript.forEach((entry, index) => {
@@ -345,6 +345,10 @@ function groupMomentsByTranscriptEntry(
         closestIndex = index;
       }
     });
+
+    if (closestIndex === null) {
+      return;
+    }
 
     grouped.set(closestIndex, [...(grouped.get(closestIndex) || []), moment]);
   });
