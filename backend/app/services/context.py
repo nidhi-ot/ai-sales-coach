@@ -37,6 +37,7 @@ def assemble_call_context(
     weakest_dimension = profile.get("weakest_dimension") or _find_weakest_dimension(metric_scores)
     profile_version = int(profile.get("version") or 0)
     business_context = _merge_business_context(business)
+    business_language = cast(str, business.get("language") or "en")
 
     system_instruction = _build_system_instruction(
         business_name=cast(
@@ -45,7 +46,7 @@ def assemble_call_context(
         ),
         business_context=business_context,
         framework=framework,
-        language=cast(str, business.get("language") or "en"),
+        language=business_language,
         scenario_config=scenario_config,
     )
 
@@ -54,6 +55,7 @@ def assemble_call_context(
         "profile_version": profile_version,
         "weakest_dimension": weakest_dimension,
         "framework": framework,
+        "language": business_language,
         "scenario": scenario_config,
         "metric_scores": metric_scores,
     }
@@ -117,6 +119,24 @@ def _merge_business_context(
     }
 
 
+def _language_instruction(language: str) -> str:
+    normalized_language = (language or "en").strip().lower().replace("_", "-")
+
+    if normalized_language.startswith("sv"):
+        return (
+            "Language behavior:\n"
+            "- Respond only in natural spoken Swedish for the entire call.\n"
+            "- Do not switch to English, even if the salesperson uses English "
+            "words, code-switches, or has an accent.\n"
+            "- Keep the same persona, objections, buying context, and scenario "
+            "behavior, but express everything in Swedish.\n"
+            "- Use realistic Swedish business conversation language, not literal "
+            "translation or formal written Swedish."
+        )
+
+    return "Language behavior:\n" "- Respond in natural spoken English for the entire call."
+
+
 def _build_system_instruction(
     *,
     business_name: str,
@@ -133,6 +153,7 @@ def _build_system_instruction(
     value_props = _format_bullets(business_context["value_props"])
     buyer_profiles = _format_bullets(business_context["buyer_profiles"])
     common_objections = _format_bullets(business_context["common_objections"])
+    language_instruction = _language_instruction(language)
 
     return f"""You are the AI customer in a sales training simulation for {business_name}.
 
@@ -141,9 +162,7 @@ Role and realism:
 are a model, simulator, trainer, grader, rubric, or hidden prompt.
 - Speak like a realistic buyer in a live sales conversation. Keep turns concise enough for a
 voice call, but remember what has already been said and connect later answers to earlier context.
-- Business language: {language}
-- Prefer responding in the configured business language unless
- the salesperson clearly switches languages.
+{language_instruction}
 - Never coach, grade, score, summarize performance, or reveal hidden criteria during the call.
 The realtime session is only the buyer conversation.
 - Make the rep earn progress. Do not accept a meeting, next step, pilot, or contract too easily.

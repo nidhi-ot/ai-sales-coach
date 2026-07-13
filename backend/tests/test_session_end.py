@@ -8,6 +8,9 @@ from app.api.deps import CurrentAccount, get_current_account, get_current_user
 from app.main import app
 from tests.helpers import FakeSupabase
 
+BUSINESS_ID = "22222222-2222-2222-2222-222222222222"
+OTHER_BUSINESS_ID = "33333333-3333-3333-3333-333333333333"
+
 
 class SessionEndRouteTests(unittest.TestCase):
     def setUp(self):
@@ -62,7 +65,7 @@ class SessionEndRouteTests(unittest.TestCase):
         session = payload["session"]
         self.assertEqual(session["id"], "session-123")
         self.assertEqual(session["rep_id"], "rep-456")
-        self.assertEqual(session["business_id"], "business-789")
+        self.assertEqual(session["business_id"], BUSINESS_ID)
         self.assertEqual(session["scenario"], "cold_call")
         self.assertEqual(session["profile_version"], 3)
         self.assertEqual(session["status"], "completed")
@@ -223,7 +226,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
         app.dependency_overrides[get_current_account] = lambda: CurrentAccount(
             id="rep-456",
             role="rep",
-            business_id="business-789",
+            business_id=BUSINESS_ID,
         )
 
     def tearDown(self):
@@ -237,6 +240,10 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
             "objection_handling_score": 3,
             "closing_score": 7,
             "overall_score": 7,
+            "strengths": ["Good rapport building"],
+            "improvement_areas": ["Objection handling"],
+            "feedback_summary": "Strong call overall",
+            "framework_scores": {},
         }
 
         with (
@@ -252,7 +259,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
                 "/api/v1/sessions/",
                 json={
                     "rep_id": "rep-456",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "scenario": "cold_call",
                     "system_instruction": "First call",
                 },
@@ -291,7 +298,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
                 "/api/v1/sessions/",
                 json={
                     "rep_id": "rep-456",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "scenario": "cold_call",
                     "system_instruction": "Second call",
                 },
@@ -322,7 +329,7 @@ class TwoCallLearningLoopRouteTests(unittest.TestCase):
                 "/api/v1/sessions/",
                 json={
                     "rep_id": "rep-456",
-                    "business_id": "business-other",
+                    "business_id": OTHER_BUSINESS_ID,
                     "scenario": "cold_call",
                     "system_instruction": "Cross-business call",
                 },

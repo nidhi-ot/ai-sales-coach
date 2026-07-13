@@ -17,6 +17,7 @@ class ScorecardFeedback(BaseModel):
     strengths: list[str]
     improvement_areas: list[str]
     feedback_summary: str
+    moments: list[dict[str, Any]] = Field(default_factory=list)
 
     @field_validator("strengths", "improvement_areas", mode="before")
     @classmethod
@@ -68,6 +69,26 @@ FRAMEWORKS: dict[str, dict[str, Any]] = {
 }
 
 
+def _transcript_language_prompt(language: str) -> str:
+    normalized_language = (language or "en").strip().lower().replace("_", "-")
+
+    if normalized_language.startswith("sv"):
+        return (
+            "TRANSCRIPT LANGUAGE:\n"
+            "- The transcript is Swedish.\n"
+            "- Apply the exact same scoring rubric used for English calls.\n"
+            "- Do not penalize Swedish wording, phrasing, or spoken-language style.\n"
+            "- Evaluate sales skill, objection handling, discovery, and closing quality "
+            "based on meaning, not English fluency."
+        )
+
+    return (
+        "TRANSCRIPT LANGUAGE:\n"
+        "- The transcript is English.\n"
+        "- Apply the standard scoring rubric."
+    )
+
+
 async def gpt_analyze_transcript(
     rep_text: str,
     ai_text: str,
@@ -75,6 +96,7 @@ async def gpt_analyze_transcript(
     scenario_title: str,
     business_profile: dict[str, Any] | None = None,
     framework: str = "BANT",
+    transcript_language: str = "en",
 ) -> dict[str, Any]:
     """
     Analyze a sales call transcript using GPT-5.5 to generate scorecard feedback.
@@ -89,6 +111,7 @@ async def gpt_analyze_transcript(
         scenario_title: The scenario title for context
         business_profile: Business profile fields used to condition scoring rubrics
         framework: Sales methodology snapshotted on the session
+        transcript_language: The language of the transcript, for example "en" or "sv"
 
     Returns:
         Dictionary containing universal scores and framework-specific analysis
@@ -103,6 +126,7 @@ async def gpt_analyze_transcript(
     framework_prompt = _framework_prompt_section(selected_framework)
     framework_json = _framework_json_shape(selected_framework)
     business_context = _business_context_prompt_section(business_profile)
+    language_prompt = _transcript_language_prompt(transcript_language)
 
     prompt = f"""You are an expert sales coach evaluating a practice sales call.
 You are part of an AI Sales Coach platform.
@@ -119,6 +143,8 @@ SALES REPRESENTATIVE'S TRANSCRIPT:
 
 CUSTOMER'S RESPONSES:
 {ai_text}
+
+{language_prompt}
 
 TASK:
 Analyze this sales call on two dimensions:
@@ -146,6 +172,13 @@ EVALUATION CRITERIA:
 - Did they listen and respond to customer concerns?
 - For {selected_framework}: {FRAMEWORKS[selected_framework]["criteria"]}
 
+COACHING MOMENTS:
+Return 3-5 key coaching moments from the transcript. Each moment must include:
+- offset_ms: approximate timestamp in milliseconds from the start of the call
+- dimension: the scoring dimension or sales framework category that the moment relates to
+(must match the dimensions used elsewhere in this scorecard).
+- note: a short useful coaching note for the rep
+
 Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
 {{
   "rapport_score": <1-10>,
@@ -157,7 +190,14 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact format:
   "strengths": ["strength 1", "strength 2", "strength 3"],
   "improvement_areas": ["area 1", "area 2", "area 3"],
   "feedback_summary": "A concise summary of the feedback for the rep, highlighting key strengths
-and areas for improvement."
+and areas for improvement.",
+  "moments": [
+    {{
+      "offset_ms": 0,
+      "dimension": "the scoring dimension",
+      "note": "one concise coaching observation (1 to 2 sentences)."
+    }}
+  ]
 }}"""
 
     feedback = await _request_valid_feedback(
@@ -181,6 +221,7 @@ and areas for improvement."
         "strengths": feedback.strengths,
         "improvement_areas": feedback.improvement_areas,
         "feedback_summary": feedback.feedback_summary,
+        "moments": _normalize_moments(getattr(feedback, "moments", [])),
     }
 
 
@@ -246,6 +287,32 @@ def _parse_feedback(response_text: str) -> ScorecardFeedback:
 
     feedback = json.loads(response_text.strip())
     return ScorecardFeedback.model_validate(feedback)
+
+
+def _normalize_moments(moments: Any) -> list[dict[str, Any]]:
+    """Normalize GPT coaching moments into a safe JSON-serializable list."""
+    if not isinstance(moments, list):
+        return []
+
+    normalized_moments = []
+    for moment in moments:
+        if not isinstance(moment, dict):
+            continue
+
+        try:
+            offset_ms = int(moment.get("offset_ms", 0) or 0)
+        except (ValueError, TypeError):
+            offset_ms = 0
+
+        normalized_moments.append(
+            {
+                "offset_ms": max(0, offset_ms),
+                "dimension": str(moment.get("dimension", "general") or "general"),
+                "note": str(moment.get("note", "") or ""),
+            }
+        )
+
+    return normalized_moments
 
 
 def _normalize_framework(framework: str | None) -> str:

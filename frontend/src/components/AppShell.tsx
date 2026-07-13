@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -169,7 +170,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-
+        <LanguageSwitcher />
         <button
           onClick={handleLogout}
           style={{

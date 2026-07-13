@@ -67,9 +67,9 @@ def _first_row(data: Any) -> dict[str, Any] | None:
     return None
 
 
-async def _get_account_business_id(user_id: str) -> str:
+async def _get_account_business_id(user_id: str, supabase: Any | None = None) -> str:
     result = (
-        get_supabase()
+        (supabase or get_supabase())
         .table("salesperson_accounts")
         .select("business_id")
         .eq("id", user_id)
@@ -92,9 +92,14 @@ async def create_realtime_session(
 ):
     ensure_rep_access(str(current_user.id), str(config.rep_id))
 
-    business_id = await _get_account_business_id(str(current_user.id))
-    rep_profile_latest = await get_latest_profile(str(config.rep_id), business_id)
-    business_profile = await get_business_profile(business_id)
+    supabase = get_supabase()
+    business_id = await _get_account_business_id(str(current_user.id), supabase=supabase)
+    rep_profile_latest = await get_latest_profile(
+        str(config.rep_id),
+        business_id,
+        supabase=supabase,
+    )
+    business_profile = await get_business_profile(business_id, supabase=supabase)
 
     try:
         context = assemble_call_context(
@@ -148,10 +153,12 @@ async def create_realtime_session(
             metadata={
                 "system_instruction": instructions,
                 "framework": resolved_framework,
+                "language": context["language"],
                 "max_call_seconds": settings.max_call_seconds,
                 "max_call_grace_seconds": settings.max_call_grace_seconds,
                 "heartbeat_at": datetime.now(UTC).isoformat(),
             },
+            supabase=supabase,
         )
     except Exception as exc:
         raise HTTPException(
