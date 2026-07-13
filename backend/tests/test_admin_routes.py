@@ -7,7 +7,6 @@ from app.api.deps import CurrentAccount, get_current_account
 from app.main import app
 from tests.helpers import FakeSupabase
 
-
 BUSINESS_ID = "00000000-0000-0000-0000-000000000789"
 OTHER_BUSINESS_ID = "00000000-0000-0000-0000-000000000999"
 

@@ -93,6 +93,7 @@ class FakeTable:
     def _selected_rows(self) -> list[dict[str, Any]]:
         rows = [dict(row) for row in self._iter_rows() if self._matches(row)]
         if self.order_column is not None:
+
             def sort_key(row: dict[str, Any]) -> tuple[int, Any]:
                 value = row.get(self.order_column)
                 # None values sort last (lower priority), non-None values sort first
@@ -104,7 +105,7 @@ class FakeTable:
                     return (1, value)
                 # For string values, return (1, value) to sort before None values
                 return (1, str(value))
-            
+
             rows.sort(key=sort_key, reverse=self.order_desc)
         if self.limit_value is not None:
             rows = rows[: self.limit_value]

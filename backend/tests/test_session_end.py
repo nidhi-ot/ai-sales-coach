@@ -11,6 +11,7 @@ from tests.helpers import FakeSupabase
 BUSINESS_ID = "22222222-2222-2222-2222-222222222222"
 OTHER_BUSINESS_ID = "33333333-3333-3333-3333-333333333333"
 
+
 class SessionEndRouteTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
