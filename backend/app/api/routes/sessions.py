@@ -196,7 +196,7 @@ async def create_session(
 
     profile_rows = _row_dicts(profile.data)
     profile_version = int(profile_rows[0]["version"]) if profile_rows else 0
-    business_profile = await get_business_profile(business_id)
+    business_profile = await get_business_profile(business_id, supabase=supabase)
     resolved_framework = normalize_framework(
         business_profile.get("framework") if business_profile else None
     )

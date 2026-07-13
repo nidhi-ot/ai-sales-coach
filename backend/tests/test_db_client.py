@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from app.db.client import get_latest_profile
+from app.db.client import get_business_profile, get_latest_profile
 from tests.helpers import FakeSupabase
 
 
@@ -37,6 +37,17 @@ class DbClientProfileTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(profile)
         self.assertEqual(profile["id"], "profile-target-business")
         self.assertEqual(profile["business_id"], "business-789")
+
+    async def test_get_business_profile_uses_provided_supabase_client(self):
+        fake_supabase = FakeSupabase()
+
+        profile = await get_business_profile(
+            "22222222-2222-2222-2222-222222222222",
+            supabase=fake_supabase,
+        )
+
+        self.assertIsNotNone(profile)
+        self.assertEqual(profile["id"], "22222222-2222-2222-2222-222222222222")
 
 
 if __name__ == "__main__":

@@ -47,10 +47,10 @@ def _first(data: list[Any] | None) -> dict[str, Any] | None:
     return first_item if isinstance(first_item, dict) else None
 
 
-async def get_latest_profile(rep_id: str, business_id: str):
+async def get_latest_profile(rep_id: str, business_id: str, supabase: Client | None = None):
     """Get rep's latest salesperson profile version for a business."""
     result = (
-        get_supabase()
+        (supabase or get_supabase())
         .table("salesperson_profiles")
         .select("*")
         .eq("rep_id", rep_id)
@@ -63,10 +63,10 @@ async def get_latest_profile(rep_id: str, business_id: str):
     return _first(result.data)
 
 
-async def get_business_profile(business_id: str):
+async def get_business_profile(business_id: str, supabase: Client | None = None):
     """Get business profile configuration for prompt assembly."""
     result = (
-        get_supabase()
+        (supabase or get_supabase())
         .table("business_profiles")
         .select("*")
         .eq("id", business_id)
@@ -83,10 +83,11 @@ async def create_session(
     scenario: str,
     profile_version: int,
     metadata: dict[str, Any] | None = None,
+    supabase: Client | None = None,
 ):
     """Create new practice session."""
     result = (
-        get_supabase()
+        (supabase or get_supabase())
         .table("sessions")
         .insert(
             {
