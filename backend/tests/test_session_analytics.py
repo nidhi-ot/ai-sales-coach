@@ -27,7 +27,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
         created = fake_supabase.store["salesperson_profiles"][0]
         self.assertEqual(profile["id"], created["id"])
         self.assertEqual(created["rep_id"], "rep-456")
-        self.assertEqual(created["business_id"], "business-789")
+        self.assertEqual(created["business_id"], "22222222-2222-2222-2222-222222222222")
         self.assertEqual(created["call_id"], "session-123")
         self.assertEqual(created["version"], 1)
         self.assertEqual(created["weakest_dimension"], "objection_handling")
@@ -47,7 +47,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
             {
                 "id": "profile-1",
                 "rep_id": "rep-456",
-                "business_id": "business-789",
+                "business_id": "22222222-2222-2222-2222-222222222222",
                 "version": 1,
                 "call_id": "old-session",
                 "metric_scores": {},
@@ -96,7 +96,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
         ):
             profile = await create_next_salesperson_profile("session-123", scorecard)
 
-        self.assertEqual(profile["business_id"], "business-789")
+        self.assertEqual(profile["business_id"], "22222222-2222-2222-2222-222222222222")
         self.assertEqual(profile["version"], 1)
         self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 2)
 

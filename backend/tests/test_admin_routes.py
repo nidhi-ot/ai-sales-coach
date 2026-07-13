@@ -1,12 +1,14 @@
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from app.api.deps import CurrentAccount, get_current_account, get_current_user
+from app.api.deps import CurrentAccount, get_current_account
 from app.main import app
 from tests.helpers import FakeSupabase
+
+BUSINESS_ID = "00000000-0000-0000-0000-000000000789"
+OTHER_BUSINESS_ID = "00000000-0000-0000-0000-000000000999"
 
 
 class AdminRouteTests(unittest.TestCase):
@@ -16,9 +18,6 @@ class AdminRouteTests(unittest.TestCase):
     def tearDown(self):
         app.dependency_overrides.clear()
 
-    def _set_current_user(self, user_id: str) -> None:
-        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=user_id)
-
     def _set_current_account(self, account: CurrentAccount) -> None:
         app.dependency_overrides[get_current_account] = lambda: account
 
@@ -26,7 +25,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -44,7 +43,7 @@ class AdminRouteTests(unittest.TestCase):
                     "email": "admin@example.com",
                     "phone_number": "0700000002",
                     "employee_id": "EMP-ADMIN",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "role": "admin",
                     "is_active": True,
                     "created_at": "2026-07-01T10:00:00+00:00",
@@ -55,7 +54,7 @@ class AdminRouteTests(unittest.TestCase):
                     "email": "manager@example.com",
                     "phone_number": "0700000001",
                     "employee_id": "EMP-MANAGER",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "role": "manager",
                     "is_active": True,
                     "created_at": "2026-07-02T10:00:00+00:00",
@@ -66,7 +65,7 @@ class AdminRouteTests(unittest.TestCase):
                     "email": "rep@example.com",
                     "phone_number": "0700000000",
                     "employee_id": "EMP-REP",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "role": "rep",
                     "is_active": True,
                     "created_at": "2026-07-03T10:00:00+00:00",
@@ -79,7 +78,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -94,11 +93,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "admin-123",
                 "full_name": "Test Admin",
                 "phone_number": "0700000002",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "admin",
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -111,7 +112,7 @@ class AdminRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["business_id"], "business-789")
+        self.assertEqual(payload["business_id"], BUSINESS_ID)
         self.assertEqual(payload["framework"], "MEDDIC")
         self.assertIn("future sessions", payload["warning"])
         self.assertEqual(
@@ -123,7 +124,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -138,11 +139,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "manager-123",
                 "full_name": "Test Manager",
                 "phone_number": "0700000001",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "manager",
             }
         )
-        self._set_current_user("manager-123")
+        self._set_current_account(
+            CurrentAccount(id="manager-123", role="manager", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -159,7 +162,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -174,11 +177,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "admin-123",
                 "full_name": "Test Admin",
                 "phone_number": "0700000002",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "admin",
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -195,7 +200,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -210,11 +215,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "admin-123",
                 "full_name": "Test Admin",
                 "phone_number": "0700000002",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "admin",
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -232,14 +239,14 @@ class AdminRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(
-            payload["registration_link"].startswith("http://localhost:3001/register?invite=")
+            payload["registration_link"].startswith("http://127.0.0.1:3000/register?invite=")
         )
 
     def test_admin_invite_rejects_out_of_bounds_expiry(self):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -254,11 +261,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "admin-123",
                 "full_name": "Test Admin",
                 "phone_number": "0700000002",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "admin",
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -277,7 +286,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def test_admin_can_list_members(self):
         fake_supabase = self._make_member_supabase()
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -294,7 +305,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def test_admin_can_update_member_role(self):
         fake_supabase = self._make_member_supabase()
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -316,7 +329,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def test_admin_can_deactivate_member(self):
         fake_supabase = self._make_member_supabase()
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -338,7 +353,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def test_admin_update_uses_atomic_rpc(self):
         fake_supabase = self._make_member_supabase()
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -363,7 +380,7 @@ class AdminRouteTests(unittest.TestCase):
                 {
                     "id": "profile-1",
                     "rep_id": "rep-123",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "version": 1,
                     "call_id": "session-1",
                     "metric_scores": {"rapport": 7},
@@ -372,7 +389,7 @@ class AdminRouteTests(unittest.TestCase):
                 {
                     "id": "profile-2",
                     "rep_id": "rep-123",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "version": 2,
                     "call_id": "session-2",
                     "metric_scores": {"rapport": 8},
@@ -383,14 +400,14 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase.store["sessions"]["session-1"] = {
             "id": "session-1",
             "rep_id": "rep-123",
-            "business_id": "business-789",
+            "business_id": BUSINESS_ID,
             "scenario": "cold_call",
             "started_at": "2026-07-01T10:00:00+00:00",
         }
         fake_supabase.store["sessions"]["session-2"] = {
             "id": "session-2",
             "rep_id": "rep-123",
-            "business_id": "business-789",
+            "business_id": BUSINESS_ID,
             "scenario": "meeting",
             "started_at": "2026-07-02T10:00:00+00:00",
         }
@@ -420,7 +437,7 @@ class AdminRouteTests(unittest.TestCase):
                     "id": "scorecard-1",
                     "session_id": "session-1",
                     "rep_id": "rep-123",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "overall_score": 8,
                     "created_at": "2026-07-01T10:05:00+00:00",
                 },
@@ -428,13 +445,15 @@ class AdminRouteTests(unittest.TestCase):
                     "id": "scorecard-2",
                     "session_id": "session-2",
                     "rep_id": "rep-123",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "overall_score": 9,
                     "created_at": "2026-07-02T10:05:00+00:00",
                 },
             ]
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -457,7 +476,7 @@ class AdminRouteTests(unittest.TestCase):
             {
                 "id": "profile-1",
                 "rep_id": "rep-123",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "version": 1,
                 "call_id": "session-1",
                 "metric_scores": {"rapport": 7},
@@ -467,7 +486,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase.store["sessions"]["session-1"] = {
             "id": "session-1",
             "rep_id": "rep-123",
-            "business_id": "business-789",
+            "business_id": BUSINESS_ID,
             "scenario": "cold_call",
         }
         fake_supabase.store["transcripts"].append(
@@ -485,11 +504,13 @@ class AdminRouteTests(unittest.TestCase):
                 "id": "scorecard-1",
                 "session_id": "session-1",
                 "rep_id": "rep-123",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "overall_score": 8,
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -510,7 +531,7 @@ class AdminRouteTests(unittest.TestCase):
                     "email": "admin@example.com",
                     "phone_number": "0700000002",
                     "employee_id": "EMP-ADMIN",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "role": "admin",
                     "is_active": True,
                     "created_at": "2026-07-01T10:00:00+00:00",
@@ -521,7 +542,7 @@ class AdminRouteTests(unittest.TestCase):
                     "email": "manager@example.com",
                     "phone_number": "0700000001",
                     "employee_id": "EMP-MANAGER",
-                    "business_id": "business-789",
+                    "business_id": BUSINESS_ID,
                     "role": "manager",
                     "is_active": True,
                     "created_at": "2026-07-02T10:00:00+00:00",
@@ -535,7 +556,9 @@ class AdminRouteTests(unittest.TestCase):
 
     def test_admin_cannot_delete_self(self):
         fake_supabase = self._make_member_supabase()
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
@@ -552,7 +575,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = FakeSupabase(with_default_session=False)
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-789",
+                "id": BUSINESS_ID,
                 "name": "Optimal Trappstadning",
                 "framework": "BANT",
                 "context_data": {},
@@ -569,7 +592,7 @@ class AdminRouteTests(unittest.TestCase):
                 "email": "admin-target@example.com",
                 "phone_number": "0700000003",
                 "employee_id": "EMP-TARGET",
-                "business_id": "business-789",
+                "business_id": BUSINESS_ID,
                 "role": "admin",
                 "is_active": True,
                 "created_at": "2026-07-03T10:00:00+00:00",
@@ -579,7 +602,7 @@ class AdminRouteTests(unittest.TestCase):
             CurrentAccount(
                 id="admin-requester",
                 role="admin",
-                business_id="business-789",
+                business_id=BUSINESS_ID,
             )
         )
 
@@ -601,7 +624,7 @@ class AdminRouteTests(unittest.TestCase):
         fake_supabase = self._make_member_supabase()
         fake_supabase.store["business_profiles"].append(
             {
-                "id": "business-999",
+                "id": OTHER_BUSINESS_ID,
                 "name": "Other Company",
                 "framework": "SPIN",
                 "context_data": {},
@@ -618,13 +641,15 @@ class AdminRouteTests(unittest.TestCase):
                 "email": "other@example.com",
                 "phone_number": "0700000099",
                 "employee_id": "EMP-OTHER",
-                "business_id": "business-999",
+                "business_id": OTHER_BUSINESS_ID,
                 "role": "rep",
                 "is_active": True,
                 "created_at": "2026-07-04T10:00:00+00:00",
             }
         )
-        self._set_current_user("admin-123")
+        self._set_current_account(
+            CurrentAccount(id="admin-123", role="admin", business_id=BUSINESS_ID)
+        )
 
         with (
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
