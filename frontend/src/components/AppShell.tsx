@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { clearBusinessLanguage } from "../lib/businessLanguage";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     localStorage.removeItem("role");
     localStorage.removeItem("remember_me");
     localStorage.removeItem("last_session_id");
+    clearBusinessLanguage();
 
     router.push("/");
   }

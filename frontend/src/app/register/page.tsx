@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../lib/api";
+import { applyBusinessLanguage } from "../../lib/businessLanguage";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -81,6 +82,7 @@ export default function RegisterPage() {
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
+      applyBusinessLanguage(data.business_language);
       localStorage.setItem("full_name", data.full_name);
       localStorage.setItem("email", data.email || "");
       localStorage.setItem("phone_number", data.phone_number || "");
