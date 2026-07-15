@@ -20,16 +20,80 @@
     "microphonePermission": "Microphone permission will be requested.",
     "aiCustomerJoins": "The AI customer will join the call.",
     "endAnytime": "You can end the call anytime.",
-    "startCall": "Start Practice Call →"
+    "startCall": "Start Practice Call →",
+    "profileVersion": "Profile v{version}",
+    "aiRecommendedInline": "AI recommended",
+    "businessContexts": {
+      "apartmentAssociation": {
+        "title": "Apartment Association",
+        "description": "A residential property manager responsible for stair cleaning."
+      },
+      "officeBuilding": {
+        "title": "Office Building",
+        "description": "An office manager looking for reliable cleaning service."
+      },
+      "hotel": {
+        "title": "Hotel",
+        "description": "A hotel manager focused on cleanliness and guest experience."
+      },
+      "retailStore": {
+        "title": "Retail Store",
+        "description": "A store owner who wants a clean customer-facing space."
+      }
+    },
+    "focusAreas": {
+      "discovery": "Discovery",
+      "handlingObjections": "Handling Objections",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    }
   },
   "Call": {
+    "eyebrow": "Live Practice",
     "title": "Live Practice Call",
-    "connecting": "Connecting...",
-    "inCall": "In Call...",
-    "endingCall": "Ending Call...",
+    "scenario": "Scenario",
+    "status": "Status",
+    "timeLeft": "Time Left",
+    "callTime": "Call Time",
+    "ready": "Ready",
+    "connectingStatus": "Connecting",
+    "connected": "Connected",
+    "onHold": "On Hold",
+    "ending": "Ending",
+    "ended": "Ended",
+    "failed": "Failed",
+    "readyTitle": "Ready to Start",
+    "connectingTitle": "Connecting...",
+    "activeTitle": "AI Customer is Listening",
+    "holdingTitle": "Call On Hold",
+    "endingTitle": "Ending Call...",
+    "endedTitle": "Call Ended",
+    "failedTitle": "Connection Failed",
+    "readyDescription": "Click Start Call when you are ready. Microphone permission will be requested after that.",
+    "connectingDescription": "Creating realtime session and connecting audio.",
+    "activeDescription": "Speak naturally with the AI buyer. Your conversation is being captured for the scorecard.",
+    "holdingDescription": "Your microphone is muted. Resume when ready.",
+    "endingDescription": "Saving the transcript and closing the call connection.",
+    "endedDescription": "Your practice session has ended.",
+    "savedSuccess": "Your practice session has been saved successfully.",
+    "startCall": "Start Call",
+    "hold": "Hold",
+    "resume": "Resume",
     "endCall": "End Call",
     "mute": "Mute",
-    "unmute": "Unmute"
+    "unmute": "Unmute",
+    "viewScorecard": "View Scorecard",
+    "goToHistory": "Go to History",
+    "startAnother": "Start Another",
+    "backToScenarios": "Back to Scenarios",
+    "errors": {
+      "missingIdentity": "Missing rep or business information. Please login again.",
+      "createRealtimeSession": "Failed to create realtime session.",
+      "missingClientSecret": "Realtime session did not return client_secret.",
+      "webrtcFailed": "OpenAI WebRTC connection failed.",
+      "connectionFailed": "Microphone or realtime connection failed.",
+      "backendEndFailed": "Call ended locally, but ending the backend session failed."
+    }
   },
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
@@ -49,6 +113,58 @@
     "analysisFailedTitle": "Scorecard analysis failed",
     "analysisFailedDescription": "The analysis could not finish. Retry the scorecard generation.",
     "retry": "Retry analysis",
-    "retryFailed": "Failed to retry analysis."
+    "retryFailed": "Failed to retry analysis.",
+    "scoreMetrics": {
+      "overall": "Overall Score",
+      "rapport": "Rapport",
+      "needs": "Needs Discovery",
+      "objections": "Objection Handling",
+      "closing": "Closing"
+    },
+    "sections": {
+      "callMetrics": "Call Metrics",
+      "framework": "{framework} Framework",
+      "strengths": "Strengths",
+      "improvementAreas": "Improvement Areas",
+      "recommendation": "AI Coach Recommendation",
+      "feedbackSummary": "Feedback Summary"
+    },
+    "callMetrics": {
+      "duration": "Duration",
+      "repTalk": "Rep Talk",
+      "interruptions": "Interruptions",
+      "fillerWords": "Filler Words"
+    },
+    "frameworkMetrics": {
+      "budget": "Budget",
+      "authority": "Authority",
+      "need": "Need",
+      "timeline": "Timeline",
+      "metrics": "Metrics",
+      "economic_buyer": "Economic Buyer",
+      "decision_criteria": "Decision Criteria",
+      "decision_process": "Decision Process",
+      "identify_pain": "Identify Pain",
+      "champion": "Champion",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Implication",
+      "need_payoff": "Need Payoff"
+    },
+    "scoreStates": {
+      "scored": "Scored",
+      "notScored": "Not scored",
+      "strong": "Strong",
+      "good": "Good",
+      "needsPractice": "Needs practice"
+    },
+    "empty": {
+      "strengths": "No strengths provided yet.",
+      "improvements": "No improvement areas provided yet.",
+      "feedback": "Feedback summary is not available yet."
+    },
+    "recommendationText": "Continue practicing the area with the lowest score. Focus on asking better discovery questions, handling objections calmly, and clearly connecting product value to the customer need.",
+    "startAnotherPractice": "Start Another Practice →",
+    "internalSessionReference": "Internal session reference available."
   }
 }

@@ -20,16 +20,80 @@
     "microphonePermission": "Mikrofonbehörighet kommer att efterfrågas.",
     "aiCustomerJoins": "AI-kunden ansluter till samtalet.",
     "endAnytime": "Du kan avsluta samtalet när som helst.",
-    "startCall": "Starta övningssamtal →"
+    "startCall": "Starta övningssamtal →",
+    "profileVersion": "Profil v{version}",
+    "aiRecommendedInline": "AI-rekommenderat",
+    "businessContexts": {
+      "apartmentAssociation": {
+        "title": "Bostadsrättsförening",
+        "description": "En fastighetsansvarig som ansvarar för trappstädning."
+      },
+      "officeBuilding": {
+        "title": "Kontorsbyggnad",
+        "description": "En kontorschef som söker en pålitlig städtjänst."
+      },
+      "hotel": {
+        "title": "Hotell",
+        "description": "En hotellchef med fokus på renlighet och gästupplevelse."
+      },
+      "retailStore": {
+        "title": "Butik",
+        "description": "En butiksägare som vill ha en ren kundmiljö."
+      }
+    },
+    "focusAreas": {
+      "discovery": "Behovsanalys",
+      "handlingObjections": "Hantera invändningar",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    }
   },
   "Call": {
+    "eyebrow": "Liveövning",
     "title": "Live övningssamtal",
-    "connecting": "Ansluter...",
-    "inCall": "I samtal...",
-    "endingCall": "Avslutar samtal...",
+    "scenario": "Scenario",
+    "status": "Status",
+    "timeLeft": "Tid kvar",
+    "callTime": "Samtalstid",
+    "ready": "Redo",
+    "connectingStatus": "Ansluter",
+    "connected": "Ansluten",
+    "onHold": "Pausat",
+    "ending": "Avslutar",
+    "ended": "Avslutat",
+    "failed": "Misslyckades",
+    "readyTitle": "Redo att starta",
+    "connectingTitle": "Ansluter...",
+    "activeTitle": "AI-kunden lyssnar",
+    "holdingTitle": "Samtalet är pausat",
+    "endingTitle": "Avslutar samtal...",
+    "endedTitle": "Samtalet är avslutat",
+    "failedTitle": "Anslutningen misslyckades",
+    "readyDescription": "Klicka på Starta samtal när du är redo. Mikrofonbehörighet kommer att efterfrågas.",
+    "connectingDescription": "Skapar realtidssession och ansluter ljud.",
+    "activeDescription": "Prata naturligt med AI-kunden. Samtalet sparas för scorecardet.",
+    "holdingDescription": "Din mikrofon är avstängd. Fortsätt när du är redo.",
+    "endingDescription": "Sparar transkriptet och stänger samtalsanslutningen.",
+    "endedDescription": "Ditt övningssamtal har avslutats.",
+    "savedSuccess": "Ditt övningssamtal har sparats.",
+    "startCall": "Starta samtal",
+    "hold": "Pausa",
+    "resume": "Fortsätt",
     "endCall": "Avsluta samtal",
     "mute": "Stäng av mikrofon",
-    "unmute": "Slå på mikrofon"
+    "unmute": "Slå på mikrofon",
+    "viewScorecard": "Visa scorecard",
+    "goToHistory": "Gå till historik",
+    "startAnother": "Starta ny övning",
+    "backToScenarios": "Tillbaka till scenarier",
+    "errors": {
+      "missingIdentity": "Rep- eller företagsinformation saknas. Logga in igen.",
+      "createRealtimeSession": "Det gick inte att skapa realtidssessionen.",
+      "missingClientSecret": "Realtidssessionen returnerade ingen client_secret.",
+      "webrtcFailed": "OpenAI WebRTC-anslutningen misslyckades.",
+      "connectionFailed": "Mikrofonen eller realtidsanslutningen misslyckades.",
+      "backendEndFailed": "Samtalet avslutades lokalt, men backend-sessionen kunde inte avslutas."
+    }
   },
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
@@ -49,6 +113,58 @@
     "analysisFailedTitle": "Scorecard-analysen misslyckades",
     "analysisFailedDescription": "Analysen kunde inte slutföras. Försök generera scorecard igen.",
     "retry": "Försök analysera igen",
-    "retryFailed": "Det gick inte att försöka analysera igen."
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "scoreMetrics": {
+      "overall": "Totalpoäng",
+      "rapport": "Kontakt",
+      "needs": "Behovsanalys",
+      "objections": "Invändningshantering",
+      "closing": "Avslut"
+    },
+    "sections": {
+      "callMetrics": "Samtalsmätvärden",
+      "framework": "{framework}-ramverk",
+      "strengths": "Styrkor",
+      "improvementAreas": "Förbättringsområden",
+      "recommendation": "AI-coachens rekommendation",
+      "feedbackSummary": "Feedbacksammanfattning"
+    },
+    "callMetrics": {
+      "duration": "Varaktighet",
+      "repTalk": "Säljarens taltid",
+      "interruptions": "Avbrott",
+      "fillerWords": "Fyllnadsord"
+    },
+    "frameworkMetrics": {
+      "budget": "Budget",
+      "authority": "Beslutsmandat",
+      "need": "Behov",
+      "timeline": "Tidsplan",
+      "metrics": "Mätvärden",
+      "economic_buyer": "Ekonomisk beslutsfattare",
+      "decision_criteria": "Beslutskriterier",
+      "decision_process": "Beslutsprocess",
+      "identify_pain": "Identifierad smärta",
+      "champion": "Intern förespråkare",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Konsekvens",
+      "need_payoff": "Värde av behov"
+    },
+    "scoreStates": {
+      "scored": "Poängsatt",
+      "notScored": "Ej poängsatt",
+      "strong": "Starkt",
+      "good": "Bra",
+      "needsPractice": "Behöver övas"
+    },
+    "empty": {
+      "strengths": "Inga styrkor har angetts ännu.",
+      "improvements": "Inga förbättringsområden har angetts ännu.",
+      "feedback": "Feedbacksammanfattning är inte tillgänglig ännu."
+    },
+    "recommendationText": "Fortsätt öva på området med lägst poäng. Fokusera på bättre behovsfrågor, lugn invändningshantering och att tydligt koppla värdet till kundens behov.",
+    "startAnotherPractice": "Starta ny övning →",
+    "internalSessionReference": "Intern sessionsreferens finns tillgänglig."
   }
 }

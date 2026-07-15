@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
+import { useTranslations } from "next-intl";
 
 type CallStatus =
   | "ready"
@@ -40,6 +41,7 @@ function transcriptEntryKey(entry: TranscriptEntry) {
 
 export default function CallPage() {
   const router = useRouter();
+  const t = useTranslations("Call");
   const [scenario, setScenario] = useState("cold_call");
   const [businessContext, setBusinessContext] = useState(
     "apartment_association"
@@ -290,7 +292,7 @@ export default function CallPage() {
       const businessId = localStorage.getItem("business_id");
 
       if (!repId || !businessId) {
-        setError("Missing rep or business information. Please login again.");
+        setError(t("errors.missingIdentity"));
         setStatus("failed");
         return;
       }
@@ -335,7 +337,7 @@ export default function CallPage() {
       }
 
       if (!response.ok) {
-        setError(data.detail || "Failed to create realtime session.");
+        setError(data.detail || t("errors.createRealtimeSession"));
         setStatus("failed");
         cleanupCallResources();
         return;
@@ -344,7 +346,7 @@ export default function CallPage() {
       const clientSecret = data.client_secret;
 
       if (!clientSecret) {
-        setError("Realtime session did not return client_secret.");
+        setError(t("errors.missingIdentity"));
         setStatus("failed");
         cleanupCallResources();
         return;
@@ -391,7 +393,7 @@ export default function CallPage() {
       if (!realtimeResponse.ok) {
         const errorText = await realtimeResponse.text();
         console.error("OpenAI WebRTC error:", errorText);
-        setError("OpenAI WebRTC connection failed.");
+        setError(t("errors.webrtcFailed"));
         setStatus("failed");
         cleanupCallResources();
         return;
@@ -412,7 +414,7 @@ export default function CallPage() {
       }
 
       console.error(error);
-      setError("Microphone or realtime connection failed.");
+      setError(t("errors.connectionFailed"));
       setStatus("failed");
       cleanupCallResources();
     }
@@ -487,7 +489,7 @@ export default function CallPage() {
         setError(
           error instanceof Error
             ? error.message
-            : "Call ended locally, but ending the backend session failed."
+            : t("errors.backendEndFailed")
         );
       } finally {
         callStartedAtRef.current = null;
@@ -631,29 +633,29 @@ export default function CallPage() {
 
   const statusLabel =
     status === "ready"
-      ? "Ready"
+      ? t("ready")
       : status === "connecting"
-        ? "Connecting"
+        ? t("connectingStatus")
         : status === "active"
-          ? "Connected"
+          ? t("connected")
           : status === "holding"
-            ? "On Hold"
+            ? t("onHold")
             : status === "ending"
-              ? "Ending"
+              ? t("ending")
               : status === "ended"
-                ? "Ended"
-                : "Failed";
+                ? t("ended")
+                : t("failed");
 
   return (
     <AppShell>
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <section style={heroStyle}>
           <div>
-            <p style={eyebrowStyle}>Live Practice</p>
-            <h1 style={heroTitleStyle}>Live Practice Call</h1>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
+            <h1 style={heroTitleStyle}>{t("title")}</h1>
             <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-              <span style={pillStyle}>Scenario: {scenario.replace("_", " ")}</span>
-              <span style={pillStyle}>Status: {statusLabel}</span>
+              <span style={pillStyle}>{t("scenario")}: {scenario.replace("_", " ")}</span>
+              <span style={pillStyle}>{t("status")}: {statusLabel}</span>
             </div>
           </div>
 
@@ -666,7 +668,7 @@ export default function CallPage() {
             }}
           >
             <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              {countdownSeconds !== null ? "Time Left" : "Call Time"}
+              {countdownSeconds !== null ? t("timeLeft") : t("callTime")}
             </p>
             <strong
               style={{
@@ -694,34 +696,28 @@ export default function CallPage() {
             </div>
 
             <h2 style={{ margin: "18px 0 8px" }}>
-              {status === "ready" && "Ready to Start"}
-              {status === "connecting" && "Connecting..."}
-              {status === "active" && "AI Customer is Listening"}
-              {status === "holding" && "Call On Hold"}
-              {status === "ending" && "Ending Call..."}
-              {status === "ended" && "Call Ended"}
-              {status === "failed" && "Connection Failed"}
+              {status === "ready" && t("readyTitle")}
+              {status === "connecting" && t("connectingTitle")}
+              {status === "active" && t("activeTitle")}
+              {status === "holding" && t("holdingTitle")}
+              {status === "ending" && t("endingTitle")}
+              {status === "ended" && t("endedTitle")}
+              {status === "failed" && t("failedTitle")}
             </h2>
 
             <p style={{ color: status === "failed" ? "#b42318" : "#667085" }}>
-              {status === "ready" &&
-                "Click Start Call when you are ready. Microphone permission will be requested after that."}
-              {status === "connecting" &&
-                "Creating realtime session and connecting audio."}
-              {status === "active" &&
-                "Speak naturally with the AI buyer. Your conversation is being captured for the scorecard."}
-              {status === "holding" &&
-                "Your microphone is muted. Resume when ready."}
-              {status === "ending" &&
-                "Saving the transcript and closing the call connection."}
-              {status === "ended" &&
-                (error || "Your practice session has ended.")}
+              {status === "ready" && t("readyDescription")}
+              {status === "connecting" && t("connectingDescription")}
+              {status === "active" && t("activeDescription")}
+              {status === "holding" && t("holdingDescription")}
+              {status === "ending" && t("endingDescription")}
+              {status === "ended" && (error || t("endedDescription"))}
               {status === "failed" && error}
             </p>
 
             {status === "ended" && (
               <div style={savedBoxStyle}>
-                ✅ Your practice session has been saved successfully.
+                ✅ {t("savedSuccess")}
               </div>
             )}
           </div>
@@ -729,7 +725,7 @@ export default function CallPage() {
           <div style={controlBarStyle}>
             {status === "ready" && (
               <button onClick={startCall} style={primaryButton}>
-                ▶ Start Call
+                ▶ {t("startCall")}
               </button>
             )}
 
@@ -744,13 +740,13 @@ export default function CallPage() {
                       : {}),
                   }}
                 >
-                  {isMuted ? "🔇 Unmute" : "🎙️ Mute"}
+                  {isMuted ? `🔇 ${t("unmute")}` : `🎙️ ${t("mute")}`}
                 </button>
                 <button onClick={holdCall} style={secondaryButton}>
-                  ⏸ Hold
+                  ⏸ {t("hold")}
                 </button>
                 <button onClick={() => handleEndCall("manual")} style={dangerButton}>
-                  ⛔ End Call
+                  ⛔ {t("endCall")}
                 </button>
               </>
             )}
@@ -758,10 +754,10 @@ export default function CallPage() {
             {status === "holding" && (
               <>
                 <button onClick={resumeCall} style={primaryButton}>
-                  ▶ Resume
+                  ▶ {t("resume")}
                 </button>
                 <button onClick={() => handleEndCall("manual")} style={dangerButton}>
-                  ⛔ End Call
+                  ⛔ {t("endCall")}
                 </button>
               </>
             )}
@@ -776,18 +772,18 @@ export default function CallPage() {
                   }
                   style={primaryButton}
                 >
-                  View Scorecard
+                  {t("viewScorecard")}
                 </button>
 
                 <button onClick={() => router.push("/history")} style={secondaryButton}>
-                  Go to History
+                  {t("goToHistory")}
                 </button>
 
                 <button
                   onClick={() => router.push("/scenarios")}
                   style={secondaryButton}
                 >
-                  Start Another
+                  {t("startAnother")}
                 </button>
               </>
             )}
@@ -797,7 +793,7 @@ export default function CallPage() {
                 onClick={() => router.push("/scenarios")}
                 style={secondaryButton}
               >
-                Back to Scenarios
+                {t("backToScenarios")}
               </button>
             )}
           </div>
