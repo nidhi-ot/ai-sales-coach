@@ -311,6 +311,7 @@
     "connectionError": "Kunde inte ansluta till backend.",
     "analysisFailedTitle": "Scorecard-analysen misslyckades",
     "analysisFailedDescription": "Analysen kunde inte slutföras. Försök generera scorecard igen.",
+    "analysisPending": "Scorecard-analysen väntar fortfarande för detta samtal.",
     "retry": "Försök analysera igen",
     "retryFailed": "Det gick inte att försöka analysera igen.",
     "scoreMetrics": {

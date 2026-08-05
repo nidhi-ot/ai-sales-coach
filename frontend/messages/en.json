@@ -311,6 +311,7 @@
     "connectionError": "Could not connect to backend.",
     "analysisFailedTitle": "Scorecard analysis failed",
     "analysisFailedDescription": "The analysis could not finish. Retry the scorecard generation.",
+    "analysisPending": "Scorecard analysis is still pending for this session.",
     "retry": "Retry analysis",
     "retryFailed": "Failed to retry analysis.",
     "scoreMetrics": {
