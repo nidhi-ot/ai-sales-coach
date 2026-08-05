@@ -626,5 +626,75 @@
       "implication": "Konsekvens",
       "needPayoff": "Värde av behov"
     }
+  },
+  "Team": {
+    "managerDashboard": "Managerdashboard",
+    "loading": "Laddar teamets prestation...",
+    "title": "Teamdashboard",
+    "eyebrow": "Managervy",
+    "subtitle": "Följ teamets övningar, scorecards, utveckling och coachningsmöjligheter.",
+    "updatedNote": "Uppdaterat från de senaste scorecardsen och övningssessionerna.",
+    "errors": {
+      "load": "Det gick inte att ladda teaminformationen."
+    },
+    "summary": {
+      "totalReps": "Totalt antal säljare",
+      "totalSessions": "Totalt antal sessioner",
+      "averageScore": "Genomsnittspoäng",
+      "activeThisWeek": "Aktiva denna vecka"
+    },
+    "highlights": {
+      "topPerformer": "🏆 Bäst just nu",
+      "topPerformerMeta": "{sessions, plural, one {# session} other {# sessioner}} • {score}/10 i snitt",
+      "needsAttention": "⚠ Behöver uppmärksamhet",
+      "needsAttentionMeta": "Fokusera på {dimension}"
+    },
+    "performance": {
+      "title": "Teamprestation",
+      "subtitle": "Se varje säljares användning, genomsnittspoäng och svagaste färdighet."
+    },
+    "table": {
+      "rep": "Säljare",
+      "sessions": "Sessioner",
+      "lastPractice": "Senaste övning",
+      "avgScore": "Snittpoäng",
+      "weakestSkill": "Svagaste färdighet",
+      "status": "Status",
+      "action": "Åtgärd",
+      "viewDetails": "Visa detaljer"
+    },
+    "skillHealth": {
+      "title": "Färdighetshälsa"
+    },
+    "coachingPriority": {
+      "title": "Coachningsprioritet",
+      "empty": "Inga akuta coachningsbehov just nu.",
+      "weakSkill": "Svag färdighet",
+      "averageScore": "Genomsnittspoäng",
+      "practiceSessions": "{sessions, plural, one {# övningssession} other {# övningssessioner}}"
+    },
+    "fallbacks": {
+      "noData": "Ingen data ännu",
+      "noScorecards": "Inga scorecards finns ännu",
+      "noUrgentIssue": "Inget akut problem",
+      "everyoneOkay": "Alla ligger bra till",
+      "recentSessions": "senaste sessionerna",
+      "notEnoughData": "Inte tillräckligt med data",
+      "reviewSessions": "Granska sessioner",
+      "notAvailable": "Ej tillgängligt",
+      "noSessions": "Inga sessioner"
+    },
+    "status": {
+      "newRep": "Ny säljare",
+      "performingWell": "Presterar bra",
+      "improving": "Förbättras",
+      "needsCoaching": "Behöver coachning"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
   }
 }

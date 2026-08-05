@@ -626,5 +626,75 @@
       "implication": "Implication",
       "needPayoff": "Need Payoff"
     }
+  },
+  "Team": {
+    "managerDashboard": "Manager Dashboard",
+    "loading": "Loading team performance...",
+    "title": "Team Dashboard",
+    "eyebrow": "Manager View",
+    "subtitle": "Monitor team practice, scorecards, progress, and coaching opportunities.",
+    "updatedNote": "Updated from latest scorecards and practice sessions.",
+    "errors": {
+      "load": "Unable to load team information."
+    },
+    "summary": {
+      "totalReps": "Total Reps",
+      "totalSessions": "Total Sessions",
+      "averageScore": "Average Score",
+      "activeThisWeek": "Active This Week"
+    },
+    "highlights": {
+      "topPerformer": "🏆 Top Performer",
+      "topPerformerMeta": "{sessions, plural, one {# session} other {# sessions}} • {score}/10 avg score",
+      "needsAttention": "⚠ Needs Attention",
+      "needsAttentionMeta": "Focus on {dimension}"
+    },
+    "performance": {
+      "title": "Team Performance",
+      "subtitle": "View each rep's usage, average score, and weakest skill."
+    },
+    "table": {
+      "rep": "Rep",
+      "sessions": "Sessions",
+      "lastPractice": "Last Practice",
+      "avgScore": "Avg Score",
+      "weakestSkill": "Weakest Skill",
+      "status": "Status",
+      "action": "Action",
+      "viewDetails": "View Details"
+    },
+    "skillHealth": {
+      "title": "Skill Health"
+    },
+    "coachingPriority": {
+      "title": "Coaching Priority",
+      "empty": "No urgent coaching needs right now.",
+      "weakSkill": "Weak Skill",
+      "averageScore": "Average Score",
+      "practiceSessions": "{sessions, plural, one {# practice session} other {# practice sessions}}"
+    },
+    "fallbacks": {
+      "noData": "No data yet",
+      "noScorecards": "No scorecards available yet",
+      "noUrgentIssue": "No urgent issue",
+      "everyoneOkay": "Everyone is doing okay",
+      "recentSessions": "recent sessions",
+      "notEnoughData": "Not enough data",
+      "reviewSessions": "Review sessions",
+      "notAvailable": "N/A",
+      "noSessions": "No sessions"
+    },
+    "status": {
+      "newRep": "New Rep",
+      "performingWell": "Performing well",
+      "improving": "Improving",
+      "needsCoaching": "Needs coaching"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
   }
 }

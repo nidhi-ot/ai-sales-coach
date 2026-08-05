@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { authFetch, API_BASE_URL } from "../../lib/api";
 import AppShell from "../../components/AppShell";
 
@@ -37,7 +38,11 @@ type RawRep = {
   weakest_dimension?: string | null;
 };
 
+type Translate = ReturnType<typeof useTranslations>;
+
 export default function TeamPage() {
+  const t = useTranslations("Team");
+  const locale = useLocale();
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [progress, setProgress] = useState<TeamProgress>({});
   const [loading, setLoading] = useState(true);
@@ -109,7 +114,7 @@ const progressData = await progressRes.json();
   setError(
     err instanceof Error
       ? err.message
-      : "Unable to load team information."
+        : t("errors.load")
   );
 } finally {
       setLoading(false);
@@ -117,7 +122,7 @@ const progressData = await progressRes.json();
   }
 
   loadManagerData();
-}, []);
+}, [t]);
 
   const summary = useMemo(() => {
     const totalReps = team.length;
@@ -161,8 +166,8 @@ const progressData = await progressRes.json();
       <AppShell>
         <main style={pageStyle}>
           <div style={containerStyle}>
-            <h1 style={titleStyle}>Manager Dashboard</h1>
-            <p style={subtitleStyle}>Loading team performance...</p>
+            <h1 style={titleStyle}>{t("managerDashboard")}</h1>
+            <p style={subtitleStyle}>{t("loading")}</p>
           </div>
         </main>
       </AppShell>
@@ -173,7 +178,7 @@ if (error) {
     <AppShell>
       <main style={pageStyle}>
         <div style={containerStyle}>
-          <h1 style={titleStyle}>Team Dashboard</h1>
+          <h1 style={titleStyle}>{t("title")}</h1>
 
           <div
             style={{
@@ -199,53 +204,60 @@ if (error) {
       <main style={pageStyle}>
         <section style={containerStyle}>
           <div style={headerStyle}>
-            <p style={eyebrowStyle}>Manager View</p>
-            <h1 style={titleStyle}>Team Dashboard</h1>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
+            <h1 style={titleStyle}>{t("title")}</h1>
             <p style={subtitleStyle}>
-              Monitor team practice, scorecards, progress, and coaching
-              opportunities.
+              {t("subtitle")}
             </p>
           </div>
 
           <section style={summaryGridStyle}>
-            <SummaryCard title="Total Reps" value={summary.totalReps.toString()} />
+            <SummaryCard title={t("summary.totalReps")} value={summary.totalReps.toString()} />
             <SummaryCard
-              title="Total Sessions"
+              title={t("summary.totalSessions")}
               value={summary.totalSessions.toString()}
             />
-            <SummaryCard title="Average Score" value={`${summary.avgScore}/10`} />
+            <SummaryCard title={t("summary.averageScore")} value={`${summary.avgScore}/10`} />
             <SummaryCard
-              title="Active This Week"
+              title={t("summary.activeThisWeek")}
               value={summary.activeThisWeek.toString()}
             />
           </section>
 
           <p style={updatedNoteStyle}>
-            Updated from latest scorecards and practice sessions.
+            {t("updatedNote")}
           </p>
 
           <section style={highlightGridStyle}>
             <div style={highlightCardStyle}>
-              <p style={highlightLabelStyle}>🏆 Top Performer</p>
+              <p style={highlightLabelStyle}>{t("highlights.topPerformer")}</p>
               <h3 style={highlightTitleStyle}>
-                {topPerformer?.name ?? "No data yet"}
+                {topPerformer?.name ?? t("fallbacks.noData")}
               </h3>
               <p style={highlightTextStyle}>
                 {topPerformer
-                  ? `${topPerformer.sessions} sessions • ${topPerformer.average_score}/10 avg score`
-                  : "No scorecards available yet"}
+                  ? t("highlights.topPerformerMeta", {
+                      sessions: topPerformer.sessions,
+                      score: topPerformer.average_score ?? 0,
+                    })
+                  : t("fallbacks.noScorecards")}
               </p>
             </div>
 
             <div style={highlightCardStyle}>
-              <p style={highlightLabelStyle}>⚠ Needs Attention</p>
+              <p style={highlightLabelStyle}>{t("highlights.needsAttention")}</p>
               <h3 style={highlightTitleStyle}>
-                {needsAttention?.name ?? "No urgent issue"}
+                {needsAttention?.name ?? t("fallbacks.noUrgentIssue")}
               </h3>
               <p style={highlightTextStyle}>
                 {needsAttention
-                  ? `Focus on ${needsAttention.weakest_dimension ?? "recent sessions"}`
-                  : "Everyone is doing okay"}
+                  ? t("highlights.needsAttentionMeta", {
+                      dimension: formatDimension(
+                        needsAttention.weakest_dimension,
+                        t
+                      ),
+                    })
+                  : t("fallbacks.everyoneOkay")}
               </p>
             </div>
           </section>
@@ -253,22 +265,22 @@ if (error) {
           <section style={layoutStyle}>
             <div style={mainColumnStyle}>
               <section style={cardStyle}>
-                <h2 style={cardTitleStyle}>Team Performance</h2>
+                <h2 style={cardTitleStyle}>{t("performance.title")}</h2>
                 <p style={cardSubtitleStyle}>
-                  View each rep&apos;s usage, average score, and weakest skill.
+                  {t("performance.subtitle")}
                 </p>
 
                 <div style={tableWrapStyle}>
                   <table style={tableStyle}>
                     <thead>
                       <tr>
-                        <Th>Rep</Th>
-                        <Th>Sessions</Th>
-                        <Th>Last Practice</Th>
-                        <Th>Avg Score</Th>
-                        <Th>Weakest Skill</Th>
-                        <Th>Status</Th>
-                        <Th>Action</Th>
+                        <Th>{t("table.rep")}</Th>
+                        <Th>{t("table.sessions")}</Th>
+                        <Th>{t("table.lastPractice")}</Th>
+                        <Th>{t("table.avgScore")}</Th>
+                        <Th>{t("table.weakestSkill")}</Th>
+                        <Th>{t("table.status")}</Th>
+                        <Th>{t("table.action")}</Th>
                       </tr>
                     </thead>
 
@@ -279,11 +291,17 @@ if (error) {
                             <strong>{rep.name}</strong>
                           </Td>
                           <Td>{rep.sessions}</Td>
-                          <Td>{formatDateTime(rep.last_practice)}</Td>
+                          <Td>{formatDateTime(rep.last_practice, locale, t("fallbacks.noSessions"))}</Td>
                           <Td>
                             <ScoreBadge score={rep.average_score} />
                           </Td>
-                          <Td>{rep.weakest_dimension ?? "Not enough data"}</Td>
+                          <Td>
+                            {formatDimension(
+                              rep.weakest_dimension,
+                              t,
+                              t("fallbacks.notEnoughData")
+                            )}
+                          </Td>
                           <Td>
                             <StatusBadge score={rep.average_score} />
                           </Td>
@@ -292,7 +310,7 @@ if (error) {
                               href={`/team/reps/${rep.rep_id}?business_id=${businessId}`}
                               style={viewButtonStyle}
                             >
-                              View Details
+                              {t("table.viewDetails")}
                             </Link>
                           </Td>
                         </tr>
@@ -305,25 +323,25 @@ if (error) {
 
             <aside style={sideColumnStyle}>
               <section style={cardStyle}>
-                <h2 style={cardTitleStyle}>Skill Health</h2>
-                <ProgressRow label="Rapport" value={progress.rapport?.average ?? 0} />
+                <h2 style={cardTitleStyle}>{t("skillHealth.title")}</h2>
+                <ProgressRow label={t("dimensions.rapport")} value={progress.rapport?.average ?? 0} />
                 <ProgressRow
-                  label="Discovery"
+                  label={t("dimensions.discovery")}
                   value={progress.discovery?.average ?? 0}
                 />
                 <ProgressRow
-                  label="Objection Handling"
+                  label={t("dimensions.objectionHandling")}
                   value={progress.objection_handling?.average ?? 0}
                 />
-                <ProgressRow label="Closing" value={progress.closing?.average ?? 0} />
+                <ProgressRow label={t("dimensions.closing")} value={progress.closing?.average ?? 0} />
               </section>
 
               <section style={cardStyle}>
-                <h2 style={cardTitleStyle}>Coaching Priority</h2>
+                <h2 style={cardTitleStyle}>{t("coachingPriority.title")}</h2>
 
                 {team.filter((rep) => (rep.average_score ?? 100) < 7.5).length ===
                 0 ? (
-                  <p style={mutedStyle}>No urgent coaching needs right now.</p>
+                  <p style={mutedStyle}>{t("coachingPriority.empty")}</p>
                 ) : (
                   team
                     .filter((rep) => (rep.average_score ?? 100) < 7.5)
@@ -333,20 +351,30 @@ if (error) {
                         <strong>{rep.name}</strong>
 
                         <div style={attentionMetaStyle}>
-                          <span>Weak Skill</span>
-                          <b>{rep.weakest_dimension ?? "Review sessions"}</b>
-                        </div>
-
-                        <div style={attentionMetaStyle}>
-                          <span>Average Score</span>
+                          <span>{t("coachingPriority.weakSkill")}</span>
                           <b>
-                            {rep.average_score !== null
-                              ? `${rep.average_score}/10`
-                              : "N/A"}
+                            {formatDimension(
+                              rep.weakest_dimension,
+                              t,
+                              t("fallbacks.reviewSessions")
+                            )}
                           </b>
                         </div>
 
-                        <p style={mutedStyle}>{rep.sessions} practice sessions</p>
+                        <div style={attentionMetaStyle}>
+                          <span>{t("coachingPriority.averageScore")}</span>
+                          <b>
+                            {rep.average_score !== null
+                              ? `${rep.average_score}/10`
+                              : t("fallbacks.notAvailable")}
+                          </b>
+                        </div>
+
+                        <p style={mutedStyle}>
+                          {t("coachingPriority.practiceSessions", {
+                            sessions: rep.sessions,
+                          })}
+                        </p>
                       </div>
                     ))
                 )}
@@ -387,8 +415,10 @@ function ProgressRow({ label, value }: { label: string; value: number | null }) 
 }
 
 function ScoreBadge({ score }: { score: number | null }) {
+  const t = useTranslations("Team");
+
   if (score === null || score === undefined) {
-    return <span style={neutralBadgeStyle}>N/A</span>;
+    return <span style={neutralBadgeStyle}>{t("fallbacks.notAvailable")}</span>;
   }
 
   if (score >= 8) return <span style={successBadgeStyle}>{score.toFixed(1)}/10</span>;
@@ -399,14 +429,16 @@ function ScoreBadge({ score }: { score: number | null }) {
 }
 
 function StatusBadge({ score }: { score: number | null }) {
+  const t = useTranslations("Team");
+
   if (score === null || score === undefined) {
-    return <span style={neutralBadgeStyle}>New Rep</span>;
+    return <span style={neutralBadgeStyle}>{t("status.newRep")}</span>;
   }
 
-  if (score >= 8) return <span style={successBadgeStyle}>Performing well</span>;
-  if (score >= 6) return <span style={goodBadgeStyle}>Improving</span>;
+  if (score >= 8) return <span style={successBadgeStyle}>{t("status.performingWell")}</span>;
+  if (score >= 6) return <span style={goodBadgeStyle}>{t("status.improving")}</span>;
 
-  return <span style={dangerBadgeStyle}>Needs coaching</span>;
+  return <span style={dangerBadgeStyle}>{t("status.needsCoaching")}</span>;
 }
 
 function Th({ children }: { children: ReactNode }) {
@@ -417,10 +449,10 @@ function Td({ children }: { children: ReactNode }) {
   return <td style={tdStyle}>{children}</td>;
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) return "No sessions";
+function formatDateTime(value: string | null, locale: string, emptyLabel: string) {
+  if (!value) return emptyLabel;
 
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString(locale === "sv" ? "sv-SE" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -428,6 +460,35 @@ function formatDateTime(value: string | null) {
     minute: "2-digit",
   });
 }
+
+function formatDimension(
+  value: string | null,
+  t: Translate,
+  fallback = t("fallbacks.recentSessions")
+) {
+  if (!value) return fallback;
+
+  const normalized = value.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  const key = dimensionTranslationKeys[normalized];
+
+  if (key) {
+    return t(`dimensions.${key}`);
+  }
+
+  return value.replace(/_/g, " ");
+}
+
+const dimensionTranslationKeys: Record<string, string> = {
+  rapport: "rapport",
+  rapport_score: "rapport",
+  discovery: "discovery",
+  needs_discovery: "discovery",
+  needs_discovery_score: "discovery",
+  objection_handling: "objectionHandling",
+  objection_handling_score: "objectionHandling",
+  closing: "closing",
+  closing_score: "closing",
+};
 
 const pageStyle = {
   minHeight: "100vh",
