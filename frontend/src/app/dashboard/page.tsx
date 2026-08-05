@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
@@ -38,13 +39,24 @@ type DimensionsResponse = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useTranslations("Dashboard");
 
-  const [fullName, setFullName] = useState("Sales Rep");
+  const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
   const [dimensions, setDimensions] = useState<DimensionsResponse["dimensions"]>({});
   const [loading, setLoading] = useState(true);
+  const displayName = fullName || t("defaultName");
+  const scenarioLabels: Record<string, string> = {
+    cold_call: t("scenarios.coldCall"),
+    hot_call: t("scenarios.hotCall"),
+    directsales: t("scenarios.directSales"),
+    meeting: t("scenarios.meeting"),
+    objection_handling: t("scenarios.objectionHandling"),
+    value_proposition: t("scenarios.valueProposition"),
+    closing: t("scenarios.closing"),
+  };
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
@@ -178,7 +190,7 @@ export default function DashboardPage() {
 }
 
   if (role === "manager") {
-    return <ManagerDashboard fullName={fullName} onViewTeam={() => router.push("/team")} />;
+    return <ManagerDashboard fullName={displayName} onViewTeam={() => router.push("/team")} />;
   }
 
   return (
@@ -187,9 +199,11 @@ export default function DashboardPage() {
         <section style={heroStyle}>
           <div style={heroInnerStyle}>
             <div>
-              <p style={eyebrowStyle}>AI Sales Coach Dashboard</p>
-              <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
-              <p style={heroSubtitleStyle}>Ready to level up your sales game today?</p>
+              <p style={eyebrowStyle}>{t("eyebrow")}</p>
+              <h1 style={heroTitleStyle}>
+                {t("hero.greeting", { name: displayName })}
+              </h1>
+              <p style={heroSubtitleStyle}>{t("hero.subtitle")}</p>
             </div>
 
             <button
@@ -197,21 +211,21 @@ export default function DashboardPage() {
               onClick={() => router.push("/scenarios")}
               style={primaryButtonStyle}
             >
-              Start Practice →
+              {t("hero.startPractice")}
             </button>
           </div>
         </section>
 
         <div style={statsGridStyle}>
           <StatCard
-            title="Practice Calls"
+            title={t("stats.practiceCalls.title")}
             value={loading ? "..." : stats?.total_calls ?? 0}
-            subtitle="Total completed calls"
+            subtitle={t("stats.practiceCalls.subtitle")}
             icon="☎️"
           />
 
           <StatCard
-            title="Average Score"
+            title={t("stats.averageScore.title")}
             value={
               loading
                 ? "..."
@@ -219,12 +233,12 @@ export default function DashboardPage() {
                   ? stats.avg_score.toFixed(1)
                   : "--"
             }
-            subtitle="Based on scorecards"
+            subtitle={t("stats.averageScore.subtitle")}
             icon="📊"
           />
 
           <StatCard
-            title="Best Score"
+            title={t("stats.bestScore.title")}
             value={
               loading
                 ? "..."
@@ -232,12 +246,12 @@ export default function DashboardPage() {
                   ? stats.best_score.toFixed(1)
                   : "--"
             }
-            subtitle="Personal best"
+            subtitle={t("stats.bestScore.subtitle")}
             icon="🏆"
           />
 
           <StatCard
-            title="Last Practice"
+            title={t("stats.lastPractice.title")}
             value={
               loading
                 ? "..."
@@ -248,8 +262,10 @@ export default function DashboardPage() {
             subtitle={
               stats?.improvement_rate !== null &&
               stats?.improvement_rate !== undefined
-                ? `${stats.improvement_rate}% improvement`
-                : "No trend yet"
+                ? t("stats.lastPractice.improvement", {
+                    value: stats.improvement_rate,
+                  })
+                : t("stats.lastPractice.noTrend")
             }
             icon="🎯"
           />
@@ -259,8 +275,8 @@ export default function DashboardPage() {
           <section style={panelStyle}>
             <div style={headerStyle}>
               <div>
-                <h2 style={titleStyle}>Recent Practice</h2>
-                <p style={subtitleStyle}>Your latest training sessions</p>
+                <h2 style={titleStyle}>{t("recent.title")}</h2>
+                <p style={subtitleStyle}>{t("recent.subtitle")}</p>
               </div>
 
               <button
@@ -268,14 +284,14 @@ export default function DashboardPage() {
                 onClick={() => router.push("/history")}
                 style={linkButtonStyle}
               >
-                View all
+                {t("recent.viewAll")}
               </button>
             </div>
 
             {loading ? (
-              <p style={emptyTextStyle}>Loading recent sessions...</p>
+              <p style={emptyTextStyle}>{t("recent.loading")}</p>
             ) : recentSessions.length === 0 ? (
-              <p style={emptyTextStyle}>No practice sessions yet.</p>
+              <p style={emptyTextStyle}>{t("recent.empty")}</p>
             ) : (
               <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
                 {recentSessions.map((session) => (
@@ -284,7 +300,7 @@ export default function DashboardPage() {
 
                     <div style={{ flex: 1 }}>
                       <strong style={{ color: "#101828" }}>
-                        {formatScenario(session.scenario)}
+                        {formatScenario(session.scenario, scenarioLabels)}
                       </strong>
 
                       <p style={sessionDateStyle}>
@@ -306,16 +322,22 @@ export default function DashboardPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Your Progress</h2>
-            <p style={subtitleStyle}>Skill growth overview</p>
+            <h2 style={titleStyle}>{t("progress.title")}</h2>
+            <p style={subtitleStyle}>{t("progress.subtitle")}</p>
 
             <div style={{ marginTop: "22px", display: "grid", gap: "18px" }}>
-              <ProgressRow label="Discovery" score={dimensions?.discovery?.latest} />
               <ProgressRow
-                label="Objection Handling"
+                label={t("progress.skills.discovery")}
+                score={dimensions?.discovery?.latest}
+              />
+              <ProgressRow
+                label={t("progress.skills.objectionHandling")}
                 score={dimensions?.objection_handling?.latest}
               />
-              <ProgressRow label="Closing" score={dimensions?.closing?.latest} />
+              <ProgressRow
+                label={t("progress.skills.closing")}
+                score={dimensions?.closing?.latest}
+              />
             </div>
           </section>
         </div>
@@ -631,7 +653,11 @@ function ProgressRow({
   );
 }
 
-function formatScenario(value: string) {
+function formatScenario(value: string, labels: Record<string, string>) {
+  if (labels[value]) {
+    return labels[value];
+  }
+
   return value
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());

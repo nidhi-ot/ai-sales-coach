@@ -145,6 +145,59 @@
       }
     }
   },
+  "Dashboard": {
+    "defaultName": "Sales Rep",
+    "eyebrow": "AI Sales Coach Dashboard",
+    "hero": {
+      "greeting": "Good Morning, {name} 👋",
+      "subtitle": "Ready to level up your sales game today?",
+      "startPractice": "Start Practice →"
+    },
+    "stats": {
+      "practiceCalls": {
+        "title": "Practice Calls",
+        "subtitle": "Total completed calls"
+      },
+      "averageScore": {
+        "title": "Average Score",
+        "subtitle": "Based on scorecards"
+      },
+      "bestScore": {
+        "title": "Best Score",
+        "subtitle": "Personal best"
+      },
+      "lastPractice": {
+        "title": "Last Practice",
+        "improvement": "{value}% improvement",
+        "noTrend": "No trend yet"
+      }
+    },
+    "recent": {
+      "title": "Recent Practice",
+      "subtitle": "Your latest training sessions",
+      "viewAll": "View all",
+      "loading": "Loading recent sessions...",
+      "empty": "No practice sessions yet."
+    },
+    "progress": {
+      "title": "Your Progress",
+      "subtitle": "Skill growth overview",
+      "skills": {
+        "discovery": "Discovery",
+        "objectionHandling": "Objection Handling",
+        "closing": "Closing"
+      }
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "hotCall": "Hot Call",
+      "directSales": "Direct Sales",
+      "meeting": "Meeting",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    }
+  },
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
     "title": "AI Sales Coach Evaluation 🎉",

@@ -145,6 +145,59 @@
       }
     }
   },
+  "Dashboard": {
+    "defaultName": "Säljare",
+    "eyebrow": "AI Sales Coach-dashboard",
+    "hero": {
+      "greeting": "God morgon, {name} 👋",
+      "subtitle": "Redo att vässa dina säljfärdigheter i dag?",
+      "startPractice": "Starta övning →"
+    },
+    "stats": {
+      "practiceCalls": {
+        "title": "Övningssamtal",
+        "subtitle": "Totalt antal slutförda samtal"
+      },
+      "averageScore": {
+        "title": "Snittpoäng",
+        "subtitle": "Baserat på scorecards"
+      },
+      "bestScore": {
+        "title": "Bästa poäng",
+        "subtitle": "Personbästa"
+      },
+      "lastPractice": {
+        "title": "Senaste övning",
+        "improvement": "{value}% förbättring",
+        "noTrend": "Ingen trend ännu"
+      }
+    },
+    "recent": {
+      "title": "Senaste övningar",
+      "subtitle": "Dina senaste träningssessioner",
+      "viewAll": "Visa alla",
+      "loading": "Laddar senaste sessioner...",
+      "empty": "Inga övningssessioner ännu."
+    },
+    "progress": {
+      "title": "Dina framsteg",
+      "subtitle": "Översikt över färdighetsutveckling",
+      "skills": {
+        "discovery": "Behovsanalys",
+        "objectionHandling": "Invändningshantering",
+        "closing": "Avslut"
+      }
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "hotCall": "Varmt samtal",
+      "directSales": "Direktförsäljning",
+      "meeting": "Möte",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    }
+  },
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
     "title": "AI Sales Coach-utvärdering 🎉",
