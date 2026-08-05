@@ -721,6 +721,38 @@
       "backendConnection": "Kunde inte ansluta till backend"
     }
   },
+  "Register": {
+    "logoAlt": "AI Sales Coach",
+    "title": "Skapa konto",
+    "subtitle": "Gå med i AI Sales Coach och starta din övningsresa.",
+    "fullNameLabel": "Fullständigt namn",
+    "fullNamePlaceholder": "Ange ditt fullständiga namn",
+    "emailLabel": "E-post",
+    "emailPlaceholder": "Ange din e-post",
+    "phoneLabel": "Telefonnummer",
+    "phonePlaceholder": "Ange ditt telefonnummer",
+    "employeeIdLabel": "Medarbetar-ID",
+    "employeeIdPlaceholder": "Valfritt medarbetar-ID",
+    "inviteMissing": "Inbjudningstoken saknas. Registreringen fungerar bara om öppen registrering är aktiverad.",
+    "passwordLabel": "Lösenord",
+    "passwordPlaceholder": "Skapa lösenord",
+    "confirmPasswordLabel": "Bekräfta lösenord",
+    "confirmPasswordPlaceholder": "Bekräfta lösenord",
+    "createAccount": "Skapa konto",
+    "creating": "Skapar...",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "signIn": "Logga in",
+    "success": "Kontot har skapats. Du skickas vidare till inloggningen...",
+    "errors": {
+      "fullNameRequired": "Ange ditt fullständiga namn",
+      "emailRequired": "Ange din e-post",
+      "phoneRequired": "Ange ditt telefonnummer",
+      "passwordRequired": "Ange ett lösenord",
+      "passwordMismatch": "Lösenorden matchar inte",
+      "accountCreationFailed": "Det gick inte att skapa kontot",
+      "backendConnection": "Kunde inte ansluta till backend"
+    }
+  },
   "TeamRep": {
     "loading": "Laddar säljarens detaljer...",
     "backToTeam": "← Tillbaka till teamet",

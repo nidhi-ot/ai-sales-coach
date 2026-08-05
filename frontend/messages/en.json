@@ -721,6 +721,38 @@
       "backendConnection": "Could not connect to backend"
     }
   },
+  "Register": {
+    "logoAlt": "AI Sales Coach",
+    "title": "Create Account",
+    "subtitle": "Join AI Sales Coach and start your practice journey.",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "employeeIdLabel": "Employee ID",
+    "employeeIdPlaceholder": "Optional employee ID",
+    "inviteMissing": "Invite token missing. This signup will only work if open signup is enabled.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Create password",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "createAccount": "Create Account",
+    "creating": "Creating...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "success": "Account created successfully. Redirecting to login...",
+    "errors": {
+      "fullNameRequired": "Please enter your full name",
+      "emailRequired": "Please enter your email",
+      "phoneRequired": "Please enter your phone number",
+      "passwordRequired": "Please enter a password",
+      "passwordMismatch": "Passwords do not match",
+      "accountCreationFailed": "Account creation failed",
+      "backendConnection": "Could not connect to backend"
+    }
+  },
   "TeamRep": {
     "loading": "Loading rep details...",
     "backToTeam": "← Back to Team",
