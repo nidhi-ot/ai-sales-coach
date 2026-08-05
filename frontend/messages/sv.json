@@ -196,6 +196,100 @@
       "objectionHandling": "Invändningshantering",
       "valueProposition": "Värdeerbjudande",
       "closing": "Avslut"
+    },
+    "manager": {
+      "eyebrow": "AI Manager-dashboard",
+      "greeting": "God morgon, {name} 👋",
+      "subtitle": "Följ teamets prestation, coachningsprioriteringar och säljövningsframsteg.",
+      "viewTeam": "Visa team →",
+      "days": {
+        "mon": "Mån",
+        "tue": "Tis",
+        "wed": "Ons",
+        "thu": "Tor",
+        "fri": "Fre",
+        "sat": "Lör",
+        "sun": "Sön"
+      },
+      "skills": {
+        "rapport": "Kontakt",
+        "discovery": "Behovsanalys",
+        "objections": "Invändningar",
+        "closing": "Avslut"
+      },
+      "kpis": {
+        "teamScore": "Teamets poäng",
+        "sessions": "Sessioner",
+        "sessionsTrend": "+14 denna vecka",
+        "activeReps": "Aktiva säljare",
+        "activeTrend": "90% aktiva",
+        "needCoaching": "Behöver coachning",
+        "priorityReps": "Prioriterade säljare"
+      },
+      "sections": {
+        "sessionsTrend": "Sessionstrend",
+        "sessionsTrendSubtitle": "Övningsaktivitet denna vecka",
+        "skillDistribution": "Färdighetsfördelning",
+        "skillDistributionSubtitle": "Genomsnittspoäng per färdighetsområde",
+        "teamPerformance": "Teamets prestation",
+        "teamPerformanceSubtitle": "Styrkor och svagare områden",
+        "coachingPriority": "Coachningsprioritet",
+        "coachingPrioritySubtitle": "Säljare som behöver managerstöd"
+      },
+      "priority": {
+        "weakestSkill": "Svagaste färdighet: {skill}"
+      }
+    },
+    "admin": {
+      "title": "Adminyta",
+      "subtitle": "Konfigurera hur AI Sales Coach fungerar för din organisation.",
+      "cards": {
+        "businessProfile": {
+          "title": "Företagsprofil"
+        },
+        "scenarioOverrides": {
+          "title": "Scenarioanpassningar"
+        },
+        "teamManagement": {
+          "title": "Teamhantering"
+        }
+      },
+      "rows": {
+        "status": "Status",
+        "framework": "Ramverk",
+        "language": "Språk",
+        "defaultScenarios": "Standardscenarier",
+        "customizedScenarios": "Anpassade scenarier",
+        "users": "Användare",
+        "managers": "Managers",
+        "admins": "Admins"
+      },
+      "values": {
+        "configured": "Konfigurerad",
+        "swedish": "Svenska"
+      },
+      "actions": {
+        "edit": "Redigera",
+        "configure": "Konfigurera",
+        "manage": "Hantera"
+      },
+      "recent": {
+        "title": "Senaste ändringar",
+        "today": "I dag",
+        "recently": "Nyligen",
+        "businessProfile": {
+          "title": "Företagsprofil uppdaterad",
+          "description": "Uppdaterade företagsbeskrivning, mål-ICP och säljmål."
+        },
+        "coldCall": {
+          "title": "Målet för kallsamtal ändrades",
+          "description": "Justerade samtalsmål och framgångskriterier."
+        },
+        "managerInvited": {
+          "title": "Ny manager inbjuden",
+          "description": "En inbjudningslänk för manager skapades."
+        }
+      }
     }
   },
   "Scorecard": {
@@ -310,6 +404,160 @@
       "valueProposition": "Värdeerbjudande",
       "closing": "Avslut"
     }
+  },
+  "Progress": {
+    "eyebrow": "Lärandeframsteg",
+    "title": "Dina framsteg",
+    "subtitle": "Följ hur dina säljfärdigheter utvecklas över olika profilversioner.",
+    "loading": "Laddar framstegshistorik...",
+    "error": "Kunde inte ladda framstegshistorik.",
+    "notAvailable": "Ej tillgängligt",
+    "empty": {
+      "title": "Ingen framstegsdata ännu",
+      "description": "Slutför ett övningssamtal och skapa ett scorecard för att få din första lärandeprofil."
+    },
+    "stats": {
+      "currentFocus": "Aktuellt fokus",
+      "bestSkill": "Starkaste färdighet",
+      "versions": "Versioner"
+    },
+    "chart": {
+      "title": "Profilutveckling",
+      "subtitle": "Jämför dina färdighetspoäng från profil v1 till din senaste profil."
+    },
+    "history": {
+      "title": "Senaste profilhistorik",
+      "subtitle": "De senaste profilversionerna och deras fokusområden.",
+      "profileVersion": "Profil v{version}",
+      "focus": "Fokus: {dimension}",
+      "noDate": "Inget datum",
+      "showLess": "Visa mindre",
+      "viewAll": "Visa alla"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
+  },
+  "Settings": {
+    "fallbackUser": "Användare",
+    "eyebrow": "Inställningar",
+    "managerEyebrow": "Managerinställningar",
+    "title": "Hantera inställningar",
+    "subtitle": "Hantera ditt konto, AI-coachens inställningar, notiser och utseende.",
+    "managerSubtitle": "Hantera dashboardinställningar, coachningsvarningar och teamnotiser.",
+    "saveChanges": "Spara ändringar",
+    "saved": "Inställningarna har sparats.",
+    "currentSetup": "Aktuell inställning",
+    "securityDescription": "Uppdatera ditt lösenord och hantera kontosäkerhet.",
+    "changePassword": "Ändra lösenord",
+    "adminWorkspaceDescription": "Admininställningar hanteras i adminkonsolen, inklusive företagsprofil, scenarioanpassningar och teaminbjudningar.",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Säljare"
+    },
+    "sections": {
+      "account": "Konto",
+      "appearance": "Utseende",
+      "security": "Säkerhet",
+      "adminWorkspace": "Adminarbetsyta",
+      "aiCoachPreferences": "AI-coachens inställningar",
+      "notifications": "Notiser",
+      "managerNotifications": "Managernotiser",
+      "dashboardPreferences": "Dashboardinställningar"
+    },
+    "fields": {
+      "fullName": "Fullständigt namn",
+      "email": "E-post",
+      "role": "Roll",
+      "organization": "Organisation",
+      "theme": "Tema",
+      "accentColor": "Accentfärg",
+      "fontSize": "Textstorlek",
+      "layoutDensity": "Layouttäthet",
+      "preferredLanguage": "Föredraget språk",
+      "defaultDifficulty": "Standardnivå",
+      "coachingStyle": "Coachningsstil",
+      "feedbackTiming": "Feedbacktidpunkt",
+      "defaultDashboard": "Standarddashboard",
+      "reportFrequency": "Rapportfrekvens",
+      "coachingAlertLevel": "Coachningsvarningsnivå",
+      "defaultTeamFilter": "Standardfilter för team",
+      "language": "Språk",
+      "notifications": "Notiser",
+      "dashboard": "Dashboard"
+    },
+    "toggles": {
+      "practiceReminders": "Övningspåminnelser",
+      "scorecardNotifications": "Scorecardnotiser",
+      "weeklyProgressSummary": "Veckovis framstegssammanfattning",
+      "achievementAlerts": "Prestationsnotiser",
+      "weeklyTeamReport": "Veckovis teamrapport",
+      "coachingAlerts": "Coachningsvarningar",
+      "inactiveRepReminders": "Påminnelser för inaktiva säljare",
+      "newScorecardNotifications": "Notiser om nya scorecards"
+    },
+    "summary": {
+      "teamAlerts": "Teamvarningar",
+      "practiceAlerts": "Övningsvarningar",
+      "repView": "Säljarvy"
+    },
+    "options": {
+      "english": "Engelska",
+      "swedish": "Svenska",
+      "beginner": "Nybörjare",
+      "intermediate": "Medel",
+      "advanced": "Avancerad",
+      "balanced": "Balanserad",
+      "detailed": "Detaljerad",
+      "strict": "Strikt",
+      "afterCall": "Efter samtal",
+      "realTime": "I realtid",
+      "both": "Båda",
+      "light": "Ljust",
+      "system": "System",
+      "dark": "Mörkt",
+      "emeraldGreen": "Smaragdgrön",
+      "blue": "Blå",
+      "purple": "Lila",
+      "small": "Liten",
+      "medium": "Medel",
+      "large": "Stor",
+      "comfortable": "Bekväm",
+      "compact": "Kompakt",
+      "managerDashboard": "Managerdashboard",
+      "teamDashboard": "Teamdashboard",
+      "daily": "Dagligen",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "low": "Låg",
+      "high": "Hög",
+      "allReps": "Alla säljare",
+      "needsCoaching": "Behöver coachning",
+      "activeThisWeek": "Aktiva denna vecka"
+    }
+  },
+  "Profile": {
+    "fallbackName": "Säljare",
+    "eyebrow": "Säljarprofil",
+    "title": "Din profil",
+    "subtitle": "Hantera dina kontouppgifter för AI Sales Coach.",
+    "fields": {
+      "email": "E-post",
+      "phoneNumber": "Telefonnummer",
+      "employeeId": "Anställnings-ID",
+      "role": "Roll",
+      "business": "Verksamhet"
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Säljare"
+    },
+    "localSessionNote": "Den här profilen visar värdena som sparats i din lokala appsession."
   },
   "SessionDetail": {
     "eyebrow": "Sessionsdetaljer",

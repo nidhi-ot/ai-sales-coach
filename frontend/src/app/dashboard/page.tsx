@@ -113,81 +113,78 @@ export default function DashboardPage() {
   }, []);
 
   if (role === "admin") {
-  return (
-    <AppShell>
-      <div style={adminPageStyle}>
-        <section style={adminHeaderStyle}>
-          <div>
-            <h1 style={adminTitleStyle}>Admin Workspace</h1>
-            <p style={adminSubtitleStyle}>
-              Configure how the AI Sales Coach behaves for your organization.
-            </p>
-          </div>
-        </section>
+    return (
+      <AppShell>
+        <div style={adminPageStyle}>
+          <section style={adminHeaderStyle}>
+            <div>
+              <h1 style={adminTitleStyle}>{t("admin.title")}</h1>
+              <p style={adminSubtitleStyle}>{t("admin.subtitle")}</p>
+            </div>
+          </section>
 
-        <section style={adminCardsGridStyle}>
-          <AdminOverviewCard
-            icon="🏢"
-            title="Business Profile"
-            rows={[
-              ["Status", "Configured"],
-              ["Framework", "BANT"],
-              ["Language", "Swedish"],
-            ]}
-            buttonLabel="Edit"
-            onClick={() => router.push("/admin?tab=business")}
-          />
-
-          <AdminOverviewCard
-            icon="🎛️"
-            title="Scenario Overrides"
-            rows={[
-              ["Default Scenarios", "4"],
-              ["Customized Scenarios", "1"],
-            ]}
-            buttonLabel="Configure"
-            onClick={() => router.push("/admin?tab=scenarios")}
-          />
-
-          <AdminOverviewCard
-            icon="👥"
-            title="Team Management"
-            rows={[
-              ["Users", "12"],
-              ["Managers", "2"],
-              ["Admins", "1"],
-            ]}
-            buttonLabel="Manage"
-            onClick={() => router.push("/admin?tab=invites")}
-          />
-        </section>
-
-
-        <section style={adminPanelStyle}>
-          <h2 style={adminSectionTitleStyle}>Recent Changes</h2>
-
-          <div style={timelineStyle}>
-            <RecentChange
-              title="Business profile updated"
-              time="Today"
-              description="Updated company description, target ICP, and sales objectives."
+          <section style={adminCardsGridStyle}>
+            <AdminOverviewCard
+              icon="🏢"
+              title={t("admin.cards.businessProfile.title")}
+              rows={[
+                [t("admin.rows.status"), t("admin.values.configured")],
+                [t("admin.rows.framework"), "BANT"],
+                [t("admin.rows.language"), t("admin.values.swedish")],
+              ]}
+              buttonLabel={t("admin.actions.edit")}
+              onClick={() => router.push("/admin?tab=business")}
             />
-            <RecentChange
-              title="Cold Call objective modified"
-              time="Recently"
-              description="Adjusted conversation goals and success criteria."
+
+            <AdminOverviewCard
+              icon="🎛️"
+              title={t("admin.cards.scenarioOverrides.title")}
+              rows={[
+                [t("admin.rows.defaultScenarios"), "4"],
+                [t("admin.rows.customizedScenarios"), "1"],
+              ]}
+              buttonLabel={t("admin.actions.configure")}
+              onClick={() => router.push("/admin?tab=scenarios")}
             />
-            <RecentChange
-              title="New manager invited"
-              time="Recently"
-              description="A manager invite link was created."
+
+            <AdminOverviewCard
+              icon="👥"
+              title={t("admin.cards.teamManagement.title")}
+              rows={[
+                [t("admin.rows.users"), "12"],
+                [t("admin.rows.managers"), "2"],
+                [t("admin.rows.admins"), "1"],
+              ]}
+              buttonLabel={t("admin.actions.manage")}
+              onClick={() => router.push("/admin?tab=invites")}
             />
-          </div>
-        </section>
-      </div>
-    </AppShell>
-  );
-}
+          </section>
+
+          <section style={adminPanelStyle}>
+            <h2 style={adminSectionTitleStyle}>{t("admin.recent.title")}</h2>
+
+            <div style={timelineStyle}>
+              <RecentChange
+                title={t("admin.recent.businessProfile.title")}
+                time={t("admin.recent.today")}
+                description={t("admin.recent.businessProfile.description")}
+              />
+              <RecentChange
+                title={t("admin.recent.coldCall.title")}
+                time={t("admin.recent.recently")}
+                description={t("admin.recent.coldCall.description")}
+              />
+              <RecentChange
+                title={t("admin.recent.managerInvited.title")}
+                time={t("admin.recent.recently")}
+                description={t("admin.recent.managerInvited.description")}
+              />
+            </div>
+          </section>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (role === "manager") {
     return <ManagerDashboard fullName={displayName} onViewTeam={() => router.push("/team")} />;
@@ -438,27 +435,29 @@ function ManagerDashboard({
   fullName: string;
   onViewTeam: () => void;
 }) {
+  const t = useTranslations("Dashboard");
+
   const sessionsTrend = [
-    { day: "Mon", sessions: 8 },
-    { day: "Tue", sessions: 12 },
-    { day: "Wed", sessions: 15 },
-    { day: "Thu", sessions: 10 },
-    { day: "Fri", sessions: 18 },
-    { day: "Sat", sessions: 6 },
-    { day: "Sun", sessions: 8 },
+    { day: t("manager.days.mon"), sessions: 8 },
+    { day: t("manager.days.tue"), sessions: 12 },
+    { day: t("manager.days.wed"), sessions: 15 },
+    { day: t("manager.days.thu"), sessions: 10 },
+    { day: t("manager.days.fri"), sessions: 18 },
+    { day: t("manager.days.sat"), sessions: 6 },
+    { day: t("manager.days.sun"), sessions: 8 },
   ];
 
   const skillData = [
-    { name: "Rapport", value: 72 },
-    { name: "Discovery", value: 68 },
-    { name: "Objections", value: 61 },
-    { name: "Closing", value: 55 },
+    { name: t("manager.skills.rapport"), value: 72 },
+    { name: t("manager.skills.discovery"), value: 68 },
+    { name: t("manager.skills.objections"), value: 61 },
+    { name: t("manager.skills.closing"), value: 55 },
   ];
 
   const coachingData = [
-    { name: "ABC", skill: "Closing", score: 48 },
-    { name: "Nidhi", skill: "Discovery", score: 58 },
-    { name: "Fortuna", skill: "Objections", score: 64 },
+    { name: "ABC", skill: t("manager.skills.closing"), score: 48 },
+    { name: "Nidhi", skill: t("manager.skills.discovery"), score: 58 },
+    { name: "Fortuna", skill: t("manager.skills.objections"), score: 64 },
   ];
   const chartPalette = ["#006b4f", "#00a36c", "#f59e0b", "#ef4444"];
   const maxSessions = Math.max(...sessionsTrend.map((item) => item.sessions));
@@ -469,30 +468,45 @@ function ManagerDashboard({
         <section style={heroStyle}>
           <div style={heroInnerStyle}>
             <div>
-              <p style={eyebrowStyle}>AI Manager Dashboard</p>
-              <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
-              <p style={heroSubtitleStyle}>
-                Track team performance, coaching priorities, and sales practice progress.
-              </p>
+              <p style={eyebrowStyle}>{t("manager.eyebrow")}</p>
+              <h1 style={heroTitleStyle}>
+                {t("manager.greeting", { name: fullName })}
+              </h1>
+              <p style={heroSubtitleStyle}>{t("manager.subtitle")}</p>
             </div>
 
             <button type="button" onClick={onViewTeam} style={primaryButtonStyle}>
-              View Team →
+              {t("manager.viewTeam")}
             </button>
           </div>
         </section>
 
         <div style={statsGridStyle}>
-          <ManagerKpi title="Team Score" value="72%" trend="+6%" icon="⭐" />
-          <ManagerKpi title="Sessions" value="77" trend="+14 this week" icon="🎙️" />
-          <ManagerKpi title="Active Reps" value="9" trend="90% active" icon="👥" />
-          <ManagerKpi title="Need Coaching" value="3" trend="Priority reps" icon="🚩" />
+          <ManagerKpi title={t("manager.kpis.teamScore")} value="72%" trend="+6%" icon="⭐" />
+          <ManagerKpi
+            title={t("manager.kpis.sessions")}
+            value="77"
+            trend={t("manager.kpis.sessionsTrend")}
+            icon="🎙️"
+          />
+          <ManagerKpi
+            title={t("manager.kpis.activeReps")}
+            value="9"
+            trend={t("manager.kpis.activeTrend")}
+            icon="👥"
+          />
+          <ManagerKpi
+            title={t("manager.kpis.needCoaching")}
+            value="3"
+            trend={t("manager.kpis.priorityReps")}
+            icon="🚩"
+          />
         </div>
 
         <div style={managerChartGridStyle}>
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Sessions Trend</h2>
-            <p style={subtitleStyle}>Practice activity this week</p>
+            <h2 style={titleStyle}>{t("manager.sections.sessionsTrend")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.sessionsTrendSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={barChartStyle}>
@@ -514,8 +528,8 @@ function ManagerDashboard({
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Skill Distribution</h2>
-            <p style={subtitleStyle}>Average score by skill area</p>
+            <h2 style={titleStyle}>{t("manager.sections.skillDistribution")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.skillDistributionSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
@@ -543,8 +557,8 @@ function ManagerDashboard({
 
         <div style={managerChartGridStyle}>
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Team Performance</h2>
-            <p style={subtitleStyle}>Skill strengths and weak areas</p>
+            <h2 style={titleStyle}>{t("manager.sections.teamPerformance")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.teamPerformanceSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
@@ -569,15 +583,17 @@ function ManagerDashboard({
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Coaching Priority</h2>
-            <p style={subtitleStyle}>Reps who need manager attention</p>
+            <h2 style={titleStyle}>{t("manager.sections.coachingPriority")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.coachingPrioritySubtitle")}</p>
 
             <div style={{ display: "grid", gap: "14px", marginTop: "22px" }}>
               {coachingData.map((rep) => (
                 <div key={rep.name} style={priorityCardStyle}>
                   <div>
                     <strong>{rep.name}</strong>
-                    <p style={subtitleStyle}>Weakest skill: {rep.skill}</p>
+                    <p style={subtitleStyle}>
+                      {t("manager.priority.weakestSkill", { skill: rep.skill })}
+                    </p>
                   </div>
 
                   <span style={priorityBadgeStyle}>{rep.score}%</span>

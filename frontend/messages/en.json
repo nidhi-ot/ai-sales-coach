@@ -196,6 +196,100 @@
       "objectionHandling": "Objection Handling",
       "valueProposition": "Value Proposition",
       "closing": "Closing"
+    },
+    "manager": {
+      "eyebrow": "AI Manager Dashboard",
+      "greeting": "Good Morning, {name} 👋",
+      "subtitle": "Track team performance, coaching priorities, and sales practice progress.",
+      "viewTeam": "View Team →",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "skills": {
+        "rapport": "Rapport",
+        "discovery": "Discovery",
+        "objections": "Objections",
+        "closing": "Closing"
+      },
+      "kpis": {
+        "teamScore": "Team Score",
+        "sessions": "Sessions",
+        "sessionsTrend": "+14 this week",
+        "activeReps": "Active Reps",
+        "activeTrend": "90% active",
+        "needCoaching": "Need Coaching",
+        "priorityReps": "Priority reps"
+      },
+      "sections": {
+        "sessionsTrend": "Sessions Trend",
+        "sessionsTrendSubtitle": "Practice activity this week",
+        "skillDistribution": "Skill Distribution",
+        "skillDistributionSubtitle": "Average score by skill area",
+        "teamPerformance": "Team Performance",
+        "teamPerformanceSubtitle": "Skill strengths and weak areas",
+        "coachingPriority": "Coaching Priority",
+        "coachingPrioritySubtitle": "Reps who need manager attention"
+      },
+      "priority": {
+        "weakestSkill": "Weakest skill: {skill}"
+      }
+    },
+    "admin": {
+      "title": "Admin Workspace",
+      "subtitle": "Configure how the AI Sales Coach behaves for your organization.",
+      "cards": {
+        "businessProfile": {
+          "title": "Business Profile"
+        },
+        "scenarioOverrides": {
+          "title": "Scenario Overrides"
+        },
+        "teamManagement": {
+          "title": "Team Management"
+        }
+      },
+      "rows": {
+        "status": "Status",
+        "framework": "Framework",
+        "language": "Language",
+        "defaultScenarios": "Default Scenarios",
+        "customizedScenarios": "Customized Scenarios",
+        "users": "Users",
+        "managers": "Managers",
+        "admins": "Admins"
+      },
+      "values": {
+        "configured": "Configured",
+        "swedish": "Swedish"
+      },
+      "actions": {
+        "edit": "Edit",
+        "configure": "Configure",
+        "manage": "Manage"
+      },
+      "recent": {
+        "title": "Recent Changes",
+        "today": "Today",
+        "recently": "Recently",
+        "businessProfile": {
+          "title": "Business profile updated",
+          "description": "Updated company description, target ICP, and sales objectives."
+        },
+        "coldCall": {
+          "title": "Cold Call objective modified",
+          "description": "Adjusted conversation goals and success criteria."
+        },
+        "managerInvited": {
+          "title": "New manager invited",
+          "description": "A manager invite link was created."
+        }
+      }
     }
   },
   "Scorecard": {
@@ -310,6 +404,160 @@
       "valueProposition": "Value Proposition",
       "closing": "Closing"
     }
+  },
+  "Progress": {
+    "eyebrow": "Learning Progress",
+    "title": "Your Progress",
+    "subtitle": "Track how your sales skills evolve across profile versions.",
+    "loading": "Loading progress history...",
+    "error": "Could not load progress history.",
+    "notAvailable": "N/A",
+    "empty": {
+      "title": "No progress data yet",
+      "description": "Complete a practice call and generate a scorecard to create your first learning profile."
+    },
+    "stats": {
+      "currentFocus": "Current Focus",
+      "bestSkill": "Best Skill",
+      "versions": "Versions"
+    },
+    "chart": {
+      "title": "Profile Evolution",
+      "subtitle": "Compare your skill scores from profile v1 to your latest profile."
+    },
+    "history": {
+      "title": "Recent Profile History",
+      "subtitle": "Latest profile versions and their focus areas.",
+      "profileVersion": "Profile v{version}",
+      "focus": "Focus: {dimension}",
+      "noDate": "No date",
+      "showLess": "Show Less",
+      "viewAll": "View All"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
+  },
+  "Settings": {
+    "fallbackUser": "User",
+    "eyebrow": "Settings",
+    "managerEyebrow": "Manager Settings",
+    "title": "Manage Preferences",
+    "subtitle": "Manage your account, AI coach preferences, notifications, and appearance.",
+    "managerSubtitle": "Manage dashboard preferences, coaching alerts, and team notifications.",
+    "saveChanges": "Save Changes",
+    "saved": "Settings saved successfully.",
+    "currentSetup": "Current Setup",
+    "securityDescription": "Update your password and manage account security.",
+    "changePassword": "Change Password",
+    "adminWorkspaceDescription": "Admin settings are managed from the Admin Console, including business profile, scenario overrides, and team invitations.",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Sales Representative"
+    },
+    "sections": {
+      "account": "Account",
+      "appearance": "Appearance",
+      "security": "Security",
+      "adminWorkspace": "Admin Workspace",
+      "aiCoachPreferences": "AI Coach Preferences",
+      "notifications": "Notifications",
+      "managerNotifications": "Manager Notifications",
+      "dashboardPreferences": "Dashboard Preferences"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "role": "Role",
+      "organization": "Organization",
+      "theme": "Theme",
+      "accentColor": "Accent Color",
+      "fontSize": "Font Size",
+      "layoutDensity": "Layout Density",
+      "preferredLanguage": "Preferred Language",
+      "defaultDifficulty": "Default Difficulty",
+      "coachingStyle": "Coaching Style",
+      "feedbackTiming": "Feedback Timing",
+      "defaultDashboard": "Default Dashboard",
+      "reportFrequency": "Report Frequency",
+      "coachingAlertLevel": "Coaching Alert Level",
+      "defaultTeamFilter": "Default Team Filter",
+      "language": "Language",
+      "notifications": "Notifications",
+      "dashboard": "Dashboard"
+    },
+    "toggles": {
+      "practiceReminders": "Practice reminders",
+      "scorecardNotifications": "Scorecard notifications",
+      "weeklyProgressSummary": "Weekly progress summary",
+      "achievementAlerts": "Achievement alerts",
+      "weeklyTeamReport": "Weekly team report",
+      "coachingAlerts": "Coaching alerts",
+      "inactiveRepReminders": "Inactive rep reminders",
+      "newScorecardNotifications": "New scorecard notifications"
+    },
+    "summary": {
+      "teamAlerts": "Team alerts",
+      "practiceAlerts": "Practice alerts",
+      "repView": "Rep view"
+    },
+    "options": {
+      "english": "English",
+      "swedish": "Swedish",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "balanced": "Balanced",
+      "detailed": "Detailed",
+      "strict": "Strict",
+      "afterCall": "After call",
+      "realTime": "Real-time",
+      "both": "Both",
+      "light": "Light",
+      "system": "System",
+      "dark": "Dark",
+      "emeraldGreen": "Emerald Green",
+      "blue": "Blue",
+      "purple": "Purple",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "comfortable": "Comfortable",
+      "compact": "Compact",
+      "managerDashboard": "Manager Dashboard",
+      "teamDashboard": "Team Dashboard",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "low": "Low",
+      "high": "High",
+      "allReps": "All reps",
+      "needsCoaching": "Needs coaching",
+      "activeThisWeek": "Active this week"
+    }
+  },
+  "Profile": {
+    "fallbackName": "Sales Rep",
+    "eyebrow": "Sales Profile",
+    "title": "Your Profile",
+    "subtitle": "Manage your AI Sales Coach account information.",
+    "fields": {
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "employeeId": "Employee ID",
+      "role": "Role",
+      "business": "Business"
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Sales Representative"
+    },
+    "localSessionNote": "This profile mirrors the values stored in your local app session."
   },
   "SessionDetail": {
     "eyebrow": "Session Details",
