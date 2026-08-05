@@ -355,7 +355,7 @@ export default function ScorecardsClients() {
               {scoreMetrics(scorecard).map((metric) => (
                 <ScoreCard
                   key={metric.key}
-                  title={t("callMetrics.fillerWords")}
+                  title={scoreMetricLabels[metric.key] ?? metric.label}
                   value={metric.value}
                   icon={metric.icon}
                   warning={metric.warning}
@@ -463,7 +463,7 @@ export default function ScorecardsClients() {
                 onClick={() => router.push("/scenarios")}
                 style={primaryButtonStyle}
               >
-                {t("startAnotherPractice")} →
+                {t("startAnotherPractice")}
               </button>
             </section>
 

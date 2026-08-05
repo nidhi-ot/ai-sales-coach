@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
 
@@ -18,6 +19,7 @@ type Session = {
 
 export default function HistoryPage() {
   const router = useRouter();
+  const t = useTranslations("History");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [pollRunId, setPollRunId] = useState(0);
@@ -61,14 +63,14 @@ export default function HistoryPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.detail || "Failed to retry analysis.");
+        alert(data.detail || t("retryFailed"));
         return;
       }
 
       setPollRunId((current) => current + 1);
       await loadSessions();
     } catch (error) {
-      alert("Failed to retry analysis.");
+      alert(t("retryFailed"));
     }
   }
 
@@ -134,18 +136,32 @@ export default function HistoryPage() {
   ).length;
 
   const latestSession = sessions[0];
+  const statusLabels: Record<string, string> = {
+    completed: t("status.completed"),
+    processing: t("status.processing"),
+    active: t("status.active"),
+    draft: t("status.draft"),
+    failed: t("status.failed"),
+  };
+  const scenarioLabels: Record<string, string> = {
+    cold_call: t("scenarios.coldCall"),
+    direct_sales: t("scenarios.directSales"),
+    objection_handling: t("scenarios.objectionHandling"),
+    value_proposition: t("scenarios.valueProposition"),
+    closing: t("scenarios.closing"),
+  };
 
   return (
     <AppShell>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <section style={heroStyle}>
           <div>
-            <p style={eyebrowStyle}>Practice History</p>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
 
-            <h1 style={heroTitleStyle}>Session History</h1>
+            <h1 style={heroTitleStyle}>{t("title")}</h1>
 
             <p style={heroSubtitleStyle}>
-              Review your practice history, session results, and AI coaching feedback.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -153,16 +169,16 @@ export default function HistoryPage() {
             onClick={() => router.push("/scenarios")}
             style={primaryButtonStyle}
           >
-            Start New Practice →
+            {t("startNewPractice")}
           </button>
         </section>
 
         <div style={statsGridStyle}>
-          <StatBox title="Total Sessions" value={sessions.length} icon="🎙️" />
-          <StatBox title="Completed" value={completedCount} icon="✅" />
-          <StatBox title="Active / Draft" value={activeCount} icon="⏳" />
+          <StatBox title={t("stats.total")} value={sessions.length} icon="🎙️" />
+          <StatBox title={t("stats.completed")} value={completedCount} icon="✅" />
+          <StatBox title={t("stats.activeDraft")} value={activeCount} icon="⏳" />
           <StatBox
-            title="Latest Practice"
+            title={t("stats.latest")}
             value={
               latestSession?.started_at
                 ? new Date(latestSession.started_at).toLocaleDateString()
@@ -175,28 +191,28 @@ export default function HistoryPage() {
         <section style={panelStyle}>
           <div style={sectionHeaderStyle}>
             <div>
-              <h2 style={sectionTitleStyle}>Practice Sessions</h2>
+              <h2 style={sectionTitleStyle}>{t("sessionsTitle")}</h2>
               <p style={sectionSubtitleStyle}>
-                Select a session to view its scorecard.
+                {t("sessionsSubtitle")}
               </p>
             </div>
           </div>
 
           {loading ? (
-            <p style={{ color: "#667085" }}>Loading sessions...</p>
+            <p style={{ color: "#667085" }}>{t("loading")}</p>
           ) : sessions.length === 0 ? (
             <div style={emptyStateStyle}>
               <div style={{ fontSize: "42px" }}>🎯</div>
-              <h3 style={{ marginBottom: "8px" }}>No practice sessions yet</h3>
+              <h3 style={{ marginBottom: "8px" }}>{t("emptyTitle")}</h3>
               <p style={{ color: "#667085" }}>
-                Start your first practice call to see history here.
+                {t("emptyDescription")}
               </p>
 
               <button
                 onClick={() => router.push("/scenarios")}
                 style={primaryButtonStyle}
               >
-                Start Practice
+                {t("startPractice")}
               </button>
             </div>
           ) : (
@@ -218,7 +234,7 @@ export default function HistoryPage() {
                         }}
                       >
                         <h3 style={{ margin: 0, color: "#101828" }}>
-                          {formatScenario(session.scenario)}
+                          {scenarioLabels[session.scenario] ?? formatScenario(session.scenario)}
                         </h3>
 
                         <span
@@ -228,7 +244,7 @@ export default function HistoryPage() {
                             color: completed ? "#027a48" : "#b54708",
                           }}
                         >
-                          {session.status}
+                          {statusLabels[session.status] ?? formatScenario(session.status)}
                         </span>
                       </div>
 
@@ -242,14 +258,14 @@ export default function HistoryPage() {
                         {session.started_at
                           ? new Date(session.started_at).toLocaleString()
                           : "-"}{" "}
-                        • Duration:{" "}
+                        • {t("duration")}:{" "}
                         {formatDuration(session.duration_seconds)}
                       </p>
                     </div>
 
                     <div style={scorePillStyle}>
                       {session.scorecard_status === "processing" ? (
-                        "Processing..."
+                        t("scorecardStatus.processing")
                       ) : session.scorecard_status === "failed" ? (
                         <button
                           onClick={() => retryAnalysis(session.id)}
@@ -260,12 +276,12 @@ export default function HistoryPage() {
                             borderRadius: "999px",
                           }}
                         >
-                          Retry analysis
+                          {t("retry")}
                         </button>
                       ) : session.overall_score != null ? (
                         `${session.overall_score}/10`
                       ) : (
-                        "Not scored"
+                        t("scorecardStatus.notScored")
                       )}
                     </div>
 
@@ -274,7 +290,7 @@ export default function HistoryPage() {
                         onClick={() => router.push(`/sessions/${session.id}`)}
                         style={secondaryButtonStyle}
                       >
-                        View Details
+                        {t("viewDetails")}
                       </button>
 
                       <button
@@ -283,7 +299,7 @@ export default function HistoryPage() {
                         }
                         style={viewButtonStyle}
                       >
-                        View Scorecard
+                        {t("viewScorecard")}
                       </button>
                     </div>
                   </div>

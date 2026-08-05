@@ -2,12 +2,14 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { clearBusinessLanguage } from "../lib/businessLanguage";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("AppShell");
   const [role, setRole] = useState("rep");
 
   useEffect(() => {
@@ -32,46 +34,27 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   const navItems =
-    
-  role === "admin"
-    ? [
-        { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-        { label: "Admin", href: "/admin", icon: "🛠️" },
-        { label: "Settings", href: "/settings", icon: "⚙️" },
-      ]
-    : role === "manager"
+    role === "admin"
       ? [
-          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-          { label: "Team", href: "/team", icon: "👥" },
-          { label: "Settings", href: "/settings", icon: "⚙️" },
+          { label: t("nav.dashboard"), href: "/dashboard", icon: "🏠" },
+          { label: t("nav.admin"), href: "/admin", icon: "🛠️" },
+          { label: t("nav.settings"), href: "/settings", icon: "⚙️" },
         ]
-      : [
-          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-          { label: "Practice", href: "/scenarios", icon: "🎯" },
-          { label: "History", href: "/history", icon: "🕘" },
-          { label: "Scorecards", href: "/scorecards", icon: "📋" },
-          { label: "Profile", href: "/profile", icon: "👤" },
-          { label: "Progress", href: "/progress", icon: "📈" },
-          { label: "Settings", href: "/settings", icon: "⚙️" },
-        ];
-    role === "manager"
-      ? [
-          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-          { label: "Team", href: "/team", icon: "👥" },
-          { label: "Settings", href: "/settings", icon: "⚙️" },
-        ]
-      : [
-          { label: "Dashboard", href: "/dashboard", icon: "🏠" },
-          { label: "Practice", href: "/scenarios", icon: "🎯" },
-          { label: "History", href: "/history", icon: "🕘" },
-          { label: "Scorecards", href: "/scorecards", icon: "📋" },
-          { label: "Profile", href: "/profile", icon: "👤" },
-          { label: "Progress", href: "/progress", icon: "📈" },
-          { label: "Settings", href: "/settings", icon: "⚙️" },
-          ...(role === "admin"
-            ? [{ label: "Admin", href: "/admin", icon: "🛡️" }]
-            : []),
-        ];
+      : role === "manager"
+        ? [
+            { label: t("nav.dashboard"), href: "/dashboard", icon: "🏠" },
+            { label: t("nav.team"), href: "/team", icon: "👥" },
+            { label: t("nav.settings"), href: "/settings", icon: "⚙️" },
+          ]
+        : [
+            { label: t("nav.dashboard"), href: "/dashboard", icon: "🏠" },
+            { label: t("nav.practice"), href: "/scenarios", icon: "🎯" },
+            { label: t("nav.history"), href: "/history", icon: "🕘" },
+            { label: t("nav.scorecards"), href: "/scorecards", icon: "📋" },
+            { label: t("nav.profile"), href: "/profile", icon: "👤" },
+            { label: t("nav.progress"), href: "/progress", icon: "📈" },
+            { label: t("nav.settings"), href: "/settings", icon: "⚙️" },
+          ];
 
   return (
     <main
@@ -186,7 +169,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             cursor: "pointer",
           }}
         >
-          🚪 Logout
+          🚪 {t("logout")}
         </button>
       </aside>
 

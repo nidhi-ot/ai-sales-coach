@@ -95,6 +95,20 @@
       "backendEndFailed": "Call ended locally, but ending the backend session failed."
     }
   },
+  "AppShell": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "practice": "Practice",
+      "history": "History",
+      "scorecards": "Scorecards",
+      "profile": "Profile",
+      "progress": "Progress",
+      "settings": "Settings",
+      "team": "Team",
+      "admin": "Admin"
+    },
+    "logout": "Logout"
+  },
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
     "title": "AI Sales Coach Evaluation 🎉",
@@ -166,5 +180,114 @@
     "recommendationText": "Continue practicing the area with the lowest score. Focus on asking better discovery questions, handling objections calmly, and clearly connecting product value to the customer need.",
     "startAnotherPractice": "Start Another Practice →",
     "internalSessionReference": "Internal session reference available."
+  },
+  "History": {
+    "eyebrow": "Practice History",
+    "title": "Session History",
+    "subtitle": "Review your practice history, session results, and AI coaching feedback.",
+    "startNewPractice": "Start New Practice →",
+    "sessionsTitle": "Practice Sessions",
+    "sessionsSubtitle": "Select a session to view its scorecard.",
+    "loading": "Loading sessions...",
+    "emptyTitle": "No practice sessions yet",
+    "emptyDescription": "Start your first practice call to see history here.",
+    "startPractice": "Start Practice",
+    "duration": "Duration",
+    "retry": "Retry analysis",
+    "retryFailed": "Failed to retry analysis.",
+    "viewDetails": "View Details",
+    "viewScorecard": "View Scorecard",
+    "stats": {
+      "total": "Total Sessions",
+      "completed": "Completed",
+      "activeDraft": "Active / Draft",
+      "latest": "Latest Practice"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed"
+    },
+    "scorecardStatus": {
+      "processing": "Processing...",
+      "notScored": "Not scored"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    }
+  },
+  "SessionDetail": {
+    "eyebrow": "Session Details",
+    "fallbackTitle": "Practice Session",
+    "subtitle": "Review the full transcript, status, and timing for this practice call.",
+    "retry": "Retry analysis",
+    "retryFailed": "Failed to retry analysis.",
+    "processingScorecard": "Processing scorecard...",
+    "viewScorecard": "View Scorecard",
+    "backToHistory": "Back to History",
+    "sessionStatus": "Session Status",
+    "unknown": "Unknown",
+    "loading": "Loading session details...",
+    "notFound": "No session details found for this call.",
+    "summaryTitle": "Session Summary",
+    "transcriptTitle": "Transcript",
+    "transcriptCount": "{count, plural, one {# transcript entry captured for this session.} other {# transcript entries captured for this session.}}",
+    "emptyTranscript": "No transcript entries were stored for this session.",
+    "coachNote": "Coach note",
+    "summary": {
+      "scenario": "Scenario",
+      "started": "Started",
+      "ended": "Ended",
+      "duration": "Duration"
+    },
+    "speakers": {
+      "rep": "Rep",
+      "aiCustomer": "AI Customer"
+    },
+    "errors": {
+      "notFound": "Session not found.",
+      "connection": "Could not connect to backend.",
+      "noSessionId": "No session ID found."
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    },
+    "dimensions": {
+      "rapport": "Rapport Score",
+      "needsDiscovery": "Needs Discovery Score",
+      "objectionHandling": "Objection Handling Score",
+      "closing": "Closing Score",
+      "budget": "Budget",
+      "authority": "Authority",
+      "need": "Need",
+      "timeline": "Timeline",
+      "metrics": "Metrics",
+      "economicBuyer": "Economic Buyer",
+      "decisionCriteria": "Decision Criteria",
+      "decisionProcess": "Decision Process",
+      "identifyPain": "Identify Pain",
+      "champion": "Champion",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Implication",
+      "needPayoff": "Need Payoff"
+    }
   }
 }

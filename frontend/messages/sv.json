@@ -95,6 +95,20 @@
       "backendEndFailed": "Samtalet avslutades lokalt, men backend-sessionen kunde inte avslutas."
     }
   },
+  "AppShell": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "practice": "Öva",
+      "history": "Historik",
+      "scorecards": "Scorecards",
+      "profile": "Profil",
+      "progress": "Framsteg",
+      "settings": "Inställningar",
+      "team": "Team",
+      "admin": "Admin"
+    },
+    "logout": "Logga ut"
+  },
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
     "title": "AI Sales Coach-utvärdering 🎉",
@@ -166,5 +180,114 @@
     "recommendationText": "Fortsätt öva på området med lägst poäng. Fokusera på bättre behovsfrågor, lugn invändningshantering och att tydligt koppla värdet till kundens behov.",
     "startAnotherPractice": "Starta ny övning →",
     "internalSessionReference": "Intern sessionsreferens finns tillgänglig."
+  },
+  "History": {
+    "eyebrow": "Övningshistorik",
+    "title": "Sessionshistorik",
+    "subtitle": "Granska din övningshistorik, dina resultat och AI-coachens feedback.",
+    "startNewPractice": "Starta ny övning →",
+    "sessionsTitle": "Övningssessioner",
+    "sessionsSubtitle": "Välj en session för att visa dess scorecard.",
+    "loading": "Laddar sessioner...",
+    "emptyTitle": "Inga övningssessioner ännu",
+    "emptyDescription": "Starta ditt första övningssamtal för att se historik här.",
+    "startPractice": "Starta övning",
+    "duration": "Varaktighet",
+    "retry": "Försök analysera igen",
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "viewDetails": "Visa detaljer",
+    "viewScorecard": "Visa scorecard",
+    "stats": {
+      "total": "Totalt antal sessioner",
+      "completed": "Slutförda",
+      "activeDraft": "Aktiva / utkast",
+      "latest": "Senaste övning"
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades"
+    },
+    "scorecardStatus": {
+      "processing": "Bearbetas...",
+      "notScored": "Ej poängsatt"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    }
+  },
+  "SessionDetail": {
+    "eyebrow": "Sessionsdetaljer",
+    "fallbackTitle": "Övningssession",
+    "subtitle": "Granska hela transkriptet, statusen och tiden för detta övningssamtal.",
+    "retry": "Försök analysera igen",
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "processingScorecard": "Bearbetar scorecard...",
+    "viewScorecard": "Visa scorecard",
+    "backToHistory": "Tillbaka till historik",
+    "sessionStatus": "Sessionsstatus",
+    "unknown": "Okänd",
+    "loading": "Laddar sessionsdetaljer...",
+    "notFound": "Inga sessionsdetaljer hittades för detta samtal.",
+    "summaryTitle": "Sessionssammanfattning",
+    "transcriptTitle": "Transkript",
+    "transcriptCount": "{count, plural, one {# transkriptrad sparades för denna session.} other {# transkriptrader sparades för denna session.}}",
+    "emptyTranscript": "Inga transkriptrader sparades för denna session.",
+    "coachNote": "Coachnotering",
+    "summary": {
+      "scenario": "Scenario",
+      "started": "Startade",
+      "ended": "Avslutades",
+      "duration": "Varaktighet"
+    },
+    "speakers": {
+      "rep": "Säljare",
+      "aiCustomer": "AI-kund"
+    },
+    "errors": {
+      "notFound": "Sessionen hittades inte.",
+      "connection": "Kunde inte ansluta till backend.",
+      "noSessionId": "Inget sessions-ID hittades."
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    },
+    "dimensions": {
+      "rapport": "Kontaktpoäng",
+      "needsDiscovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslutspoäng",
+      "budget": "Budget",
+      "authority": "Beslutsmandat",
+      "need": "Behov",
+      "timeline": "Tidsplan",
+      "metrics": "Mätvärden",
+      "economicBuyer": "Ekonomisk beslutsfattare",
+      "decisionCriteria": "Beslutskriterier",
+      "decisionProcess": "Beslutsprocess",
+      "identifyPain": "Identifierad smärta",
+      "champion": "Intern förespråkare",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Konsekvens",
+      "needPayoff": "Värde av behov"
+    }
   }
 }

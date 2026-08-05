@@ -79,7 +79,12 @@ def _transcript_language_prompt(language: str) -> str:
             "- Apply the exact same scoring rubric used for English calls.\n"
             "- Do not penalize Swedish wording, phrasing, or spoken-language style.\n"
             "- Evaluate sales skill, objection handling, discovery, and closing quality "
-            "based on meaning, not English fluency."
+            "based on meaning, not English fluency.\n"
+            "- Return every user-facing feedback field in Swedish.\n"
+            "- This includes strengths, improvement_areas, feedback_summary, and moments notes.\n"
+            "- Keep JSON field names exactly as requested.\n"
+            "- Do not translate JSON keys.\n"
+            "- Do not return English feedback text."
         )
 
     return (
