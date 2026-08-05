@@ -696,5 +696,76 @@
       "objectionHandling": "Objection Handling",
       "closing": "Closing"
     }
+  },
+  "TeamRep": {
+    "loading": "Loading rep details...",
+    "backToTeam": "← Back to Team",
+    "eyebrow": "Manager View",
+    "title": "Rep Details",
+    "subtitle": "Review this rep's practice history, scorecards, and transcripts.",
+    "errors": {
+      "missingBusiness": "Missing business information. Please go back to the team page.",
+      "sessions": "Failed to load sessions ({status})",
+      "scorecards": "Failed to load scorecards ({status})",
+      "transcripts": "Failed to load transcripts ({status})",
+      "load": "Unable to load representative details."
+    },
+    "summary": {
+      "sessions": "Sessions",
+      "scorecards": "Scorecards",
+      "latestScore": "Latest Score",
+      "lastPractice": "Last Practice"
+    },
+    "practiceSessions": {
+      "title": "Practice Sessions",
+      "empty": "No sessions found for this rep."
+    },
+    "transcripts": {
+      "title": "Transcript Preview",
+      "empty": "No transcripts available.",
+      "noneForSession": "No transcript saved for this session."
+    },
+    "scorecard": {
+      "title": "Latest Scorecard",
+      "empty": "No scorecard available yet."
+    },
+    "coachingNotes": {
+      "title": "Manager Coaching Notes",
+      "body": "Use this view to identify patterns, review objections, and prepare targeted feedback for the rep."
+    },
+    "session": {
+      "statusLabel": "Status"
+    },
+    "fallbacks": {
+      "notAvailable": "N/A",
+      "noStartDate": "No start date",
+      "practiceSession": "Practice Session"
+    },
+    "speakers": {
+      "rep": "Rep",
+      "aiCustomer": "AI Customer",
+      "unknown": "Speaker"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed",
+      "unknown": "Unknown"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
   }
 }

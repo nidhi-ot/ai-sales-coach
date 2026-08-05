@@ -696,5 +696,76 @@
       "objectionHandling": "Invändningshantering",
       "closing": "Avslut"
     }
+  },
+  "TeamRep": {
+    "loading": "Laddar säljarens detaljer...",
+    "backToTeam": "← Tillbaka till teamet",
+    "eyebrow": "Managervy",
+    "title": "Säljardetaljer",
+    "subtitle": "Granska säljarens övningshistorik, scorecards och transkript.",
+    "errors": {
+      "missingBusiness": "Verksamhetsinformation saknas. Gå tillbaka till teamsidan.",
+      "sessions": "Det gick inte att ladda sessioner ({status})",
+      "scorecards": "Det gick inte att ladda scorecards ({status})",
+      "transcripts": "Det gick inte att ladda transkript ({status})",
+      "load": "Det gick inte att ladda säljarens detaljer."
+    },
+    "summary": {
+      "sessions": "Sessioner",
+      "scorecards": "Scorecards",
+      "latestScore": "Senaste poäng",
+      "lastPractice": "Senaste övning"
+    },
+    "practiceSessions": {
+      "title": "Övningssessioner",
+      "empty": "Inga sessioner hittades för den här säljaren."
+    },
+    "transcripts": {
+      "title": "Transkriptförhandsvisning",
+      "empty": "Inga transkript finns tillgängliga.",
+      "noneForSession": "Inget transkript sparades för den här sessionen."
+    },
+    "scorecard": {
+      "title": "Senaste scorecard",
+      "empty": "Inget scorecard finns ännu."
+    },
+    "coachingNotes": {
+      "title": "Managercoachning",
+      "body": "Använd den här vyn för att hitta mönster, granska invändningar och förbereda riktad feedback till säljaren."
+    },
+    "session": {
+      "statusLabel": "Status"
+    },
+    "fallbacks": {
+      "notAvailable": "Ej tillgängligt",
+      "noStartDate": "Inget startdatum",
+      "practiceSession": "Övningssession"
+    },
+    "speakers": {
+      "rep": "Säljare",
+      "aiCustomer": "AI-kund",
+      "unknown": "Talare"
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades",
+      "unknown": "Okänd"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
   }
 }
