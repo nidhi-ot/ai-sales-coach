@@ -2,6 +2,7 @@
   "PracticeSetup": {
     "eyebrow": "Practice Setup",
     "title": "Let's get you ready",
+    "loading": "Loading practice setup...",
     "subtitle": "Choose the customer context and focus area before starting your AI practice call.",
     "businessContext": "Business Context",
     "businessContextDescription": "Choose what type of customer the AI should act as.",

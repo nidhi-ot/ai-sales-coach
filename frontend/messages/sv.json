@@ -2,6 +2,7 @@
   "PracticeSetup": {
     "eyebrow": "Övningsinställning",
     "title": "Låt oss förbereda samtalet",
+    "loading": "Laddar övningsinställning...",
     "subtitle": "Välj kundkontext och fokusområde innan AI-samtalet startar.",
     "businessContext": "Kundkontext",
     "businessContextDescription": "Välj vilken typ av kund AI:n ska spela.",
