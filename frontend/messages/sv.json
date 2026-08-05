@@ -51,6 +51,7 @@
   "Call": {
     "eyebrow": "Liveövning",
     "title": "Live övningssamtal",
+    "loading": "Laddar samtal...",
     "scenario": "Scenario",
     "status": "Status",
     "timeLeft": "Tid kvar",

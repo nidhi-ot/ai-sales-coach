@@ -51,6 +51,7 @@
   "Call": {
     "eyebrow": "Live Practice",
     "title": "Live Practice Call",
+    "loading": "Loading call...",
     "scenario": "Scenario",
     "status": "Status",
     "timeLeft": "Time Left",
