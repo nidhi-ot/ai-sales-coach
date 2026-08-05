@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { API_BASE_URL } from "../../lib/api";
 import { applyBusinessLanguage } from "../../lib/businessLanguage";
 
 
 export default function LoginPage() {
+  const t = useTranslations("Login");
   const router = useRouter();
 
   const [identifier, setIdentifier] = useState("");
@@ -18,12 +20,12 @@ export default function LoginPage() {
     setError("");
 
     if (!identifier.trim()) {
-      setError("Please enter your email or phone number");
+      setError(t("errors.identifierRequired"));
       return;
     }
 
     if (!password.trim()) {
-      setError("Please enter your password");
+      setError(t("errors.passwordRequired"));
       return;
     }
 
@@ -42,7 +44,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.detail || "Login failed");
+        setError(data.detail || t("errors.loginFailed"));
         return;
       }
 
@@ -62,7 +64,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      setError("Could not connect to backend");
+      setError(t("errors.backendConnection"));
     }
   }
 
@@ -101,7 +103,7 @@ export default function LoginPage() {
         >
           <img
             src="/logo.png"
-            alt="AI Sales Coach"
+            alt={t("logoAlt")}
             style={{
               width: "76px",
               height: "76px",
@@ -110,7 +112,7 @@ export default function LoginPage() {
             }}
           />
 
-          <span style={badgeStyle}>AI Sales Coach</span>
+          <span style={badgeStyle}>{t("badge")}</span>
 
           <h1
             style={{
@@ -120,23 +122,23 @@ export default function LoginPage() {
               fontWeight: 900,
             }}
           >
-            Welcome back!
+            {t("title")}
           </h1>
 
-          <label style={labelStyle}>Email or Phone</label>
+          <label style={labelStyle}>{t("identifierLabel")}</label>
           <input
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Enter email or phone number"
+            placeholder={t("identifierPlaceholder")}
             style={inputStyle}
           />
 
-          <label style={labelStyle}>Password</label>
+          <label style={labelStyle}>{t("passwordLabel")}</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            placeholder={t("passwordPlaceholder")}
             style={inputStyle}
           />
 
@@ -154,11 +156,11 @@ export default function LoginPage() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
-              Remember me
+              {t("rememberMe")}
             </label>
 
             <button type="button" style={linkButtonStyle}>
-              Forgot password?
+              {t("forgotPassword")}
             </button>
           </div>
 
@@ -179,17 +181,17 @@ export default function LoginPage() {
           )}
 
           <button onClick={handleSignIn} style={buttonStyle}>
-            Sign In
+            {t("signIn")}
           </button>
 
           <p style={{ textAlign: "center", marginTop: "24px", color: "#667085" }}>
-            New here?{" "}
+            {t("newHere")}{" "}
             <button
               type="button"
               onClick={() => router.push("/register")}
               style={linkButtonStyle}
             >
-              Create an account
+              {t("createAccount")}
             </button>
           </p>
 
@@ -202,14 +204,14 @@ export default function LoginPage() {
               lineHeight: "1.6",
             }}
           >
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            {t("legal")}
           </p>
         </section>
 
         <div style={{ flex: 1, position: "relative" }}>
           <img
             src="/staircase.jpg"
-            alt="Building"
+            alt={t("imageAlt")}
             style={{
               width: "100%",
               height: "100%",
@@ -240,12 +242,11 @@ export default function LoginPage() {
             }}
           >
             <h3 style={{ marginTop: 0, marginBottom: "8px", fontSize: "22px" }}>
-              Practice calls. Get feedback. Improve faster.
+              {t("promoTitle")}
             </h3>
 
             <p style={{ margin: 0, color: "#667085", lineHeight: "1.6" }}>
-              Train with realistic AI customer conversations and receive focused
-              coaching after every session.
+              {t("promoBody")}
             </p>
           </div>
         </div>

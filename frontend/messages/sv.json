@@ -697,6 +697,30 @@
       "closing": "Avslut"
     }
   },
+  "Login": {
+    "logoAlt": "AI Sales Coach",
+    "imageAlt": "Byggnad",
+    "badge": "AI Sales Coach",
+    "title": "Välkommen tillbaka!",
+    "identifierLabel": "E-post eller telefon",
+    "identifierPlaceholder": "Ange e-post eller telefonnummer",
+    "passwordLabel": "Lösenord",
+    "passwordPlaceholder": "Ange ditt lösenord",
+    "rememberMe": "Kom ihåg mig",
+    "forgotPassword": "Glömt lösenord?",
+    "signIn": "Logga in",
+    "newHere": "Ny här?",
+    "createAccount": "Skapa ett konto",
+    "legal": "Genom att fortsätta godkänner du våra användarvillkor och vår integritetspolicy.",
+    "promoTitle": "Öva samtal. Få feedback. Bli bättre snabbare.",
+    "promoBody": "Träna med realistiska AI-kundsamtal och få fokuserad coachning efter varje session.",
+    "errors": {
+      "identifierRequired": "Ange din e-post eller ditt telefonnummer",
+      "passwordRequired": "Ange ditt lösenord",
+      "loginFailed": "Inloggningen misslyckades",
+      "backendConnection": "Kunde inte ansluta till backend"
+    }
+  },
   "TeamRep": {
     "loading": "Laddar säljarens detaljer...",
     "backToTeam": "← Tillbaka till teamet",
