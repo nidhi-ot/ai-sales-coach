@@ -109,6 +109,42 @@
     },
     "logout": "Logga ut"
   },
+  "Scenarios": {
+    "eyebrow": "Övningsupplägg",
+    "title": "Välj övningsscenario",
+    "subtitle": "Välj samtalstyp och starta ett realistiskt AI-säljövningssamtal. AI-kunden svarar utifrån det valda scenariot.",
+    "selectedScenario": "Valt scenario",
+    "whatHappensNext": "Vad händer sedan?",
+    "preparingCall": "Förbereder samtal...",
+    "startPracticeCall": "Starta övningssamtal →",
+    "steps": {
+      "microphone": "Mikrofonbehörighet kommer att begäras.",
+      "aiCustomer": "AI-kunden ansluter till samtalet.",
+      "endAnytime": "Du kan avsluta samtalet när som helst."
+    },
+    "items": {
+      "coldCall": {
+        "title": "Kallsamtal",
+        "label": "Prospektering",
+        "description": "Presentera AI Sales Coach för en potentiell kund som inte känner dig."
+      },
+      "hotCall": {
+        "title": "Varmt samtal",
+        "label": "Uppföljning",
+        "description": "Följ upp med en potentiell kund som redan är intresserad av AI Sales Coach."
+      },
+      "directSales": {
+        "title": "Direktförsäljning",
+        "label": "Avslut",
+        "description": "Försök sälja in AI Sales Coach direkt under samtalet."
+      },
+      "meeting": {
+        "title": "Möte",
+        "label": "Beslutsfattare",
+        "description": "Genomför ett säljmöte om AI Sales Coach med en beslutsfattare."
+      }
+    }
+  },
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
     "title": "AI Sales Coach-utvärdering 🎉",

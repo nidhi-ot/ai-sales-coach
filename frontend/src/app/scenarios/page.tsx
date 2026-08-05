@@ -2,44 +2,46 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AppShell from "../../components/AppShell";
-
-const scenarios = [
-  {
-    id: "cold_call",
-    title: "Cold Call",
-    icon: "☎️",
-    label: "Prospecting",
-    description: "Pitch AI Sales Coach to a prospect who does not know you.",
-  },
-  {
-    id: "hot_call",
-    title: "Hot Call",
-    icon: "🔥",
-    label: "Follow-up",
-    description: "Follow up with a prospect already interested in AI Sales Coach.",
-  },
-  {
-    id: "directsales",
-    title: "Direct Sales",
-    icon: "🛒",
-    label: "Closing",
-    description: "Close AI Sales Coach directly on the call.",
-  },
-  {
-    id: "meeting",
-    title: "Meeting",
-    icon: "👥",
-    label: "Decision-maker",
-    description: "Run an AI Sales Coach sales meeting with a decision-maker.",
-  },
-];
 
 export default function ScenariosPage() {
   const router = useRouter();
+  const t = useTranslations("Scenarios");
   const [selectedScenario, setSelectedScenario] = useState("cold_call");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const scenarios = [
+    {
+      id: "cold_call",
+      title: t("items.coldCall.title"),
+      icon: "☎️",
+      label: t("items.coldCall.label"),
+      description: t("items.coldCall.description"),
+    },
+    {
+      id: "hot_call",
+      title: t("items.hotCall.title"),
+      icon: "🔥",
+      label: t("items.hotCall.label"),
+      description: t("items.hotCall.description"),
+    },
+    {
+      id: "directsales",
+      title: t("items.directSales.title"),
+      icon: "🛒",
+      label: t("items.directSales.label"),
+      description: t("items.directSales.description"),
+    },
+    {
+      id: "meeting",
+      title: t("items.meeting.title"),
+      icon: "👥",
+      label: t("items.meeting.label"),
+      description: t("items.meeting.description"),
+    },
+  ];
 
   function startSession() {
   setError("");
@@ -71,7 +73,7 @@ export default function ScenariosPage() {
               fontSize: "14px",
             }}
           >
-            Practice Setup
+            {t("eyebrow")}
           </p>
 
           <h1
@@ -83,7 +85,7 @@ export default function ScenariosPage() {
               letterSpacing: "-0.8px",
             }}
           >
-            Choose your practice scenario
+            {t("title")}
           </h1>
 
           <p
@@ -95,8 +97,7 @@ export default function ScenariosPage() {
               lineHeight: "1.6",
             }}
           >
-            Select a conversation type and start a realistic AI sales practice
-            call. The AI customer will respond based on the selected scenario.
+            {t("subtitle")}
           </p>
         </section>
 
@@ -238,7 +239,7 @@ export default function ScenariosPage() {
                 fontSize: "14px",
               }}
             >
-              Selected scenario
+              {t("selectedScenario")}
             </p>
 
             <h2
@@ -270,7 +271,9 @@ export default function ScenariosPage() {
                 border: "1px solid #eef2f6",
               }}
             >
-              <strong style={{ color: "#101828" }}>What happens next?</strong>
+              <strong style={{ color: "#101828" }}>
+                {t("whatHappensNext")}
+              </strong>
 
               <ul
                 style={{
@@ -280,9 +283,9 @@ export default function ScenariosPage() {
                   lineHeight: "1.8",
                 }}
               >
-                <li>Microphone permission will be requested.</li>
-                <li>The AI customer will join the call.</li>
-                <li>You can end the call anytime.</li>
+                <li>{t("steps.microphone")}</li>
+                <li>{t("steps.aiCustomer")}</li>
+                <li>{t("steps.endAnytime")}</li>
               </ul>
             </div>
 
@@ -306,7 +309,7 @@ export default function ScenariosPage() {
                 boxShadow: "0 12px 24px rgba(0, 107, 79, 0.24)",
               }}
             >
-              {loading ? "Preparing Call..." : "Start Practice Call →"}
+              {loading ? t("preparingCall") : t("startPracticeCall")}
             </button>
           </aside>
         </div>

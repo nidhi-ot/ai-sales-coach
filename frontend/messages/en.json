@@ -109,6 +109,42 @@
     },
     "logout": "Logout"
   },
+  "Scenarios": {
+    "eyebrow": "Practice Setup",
+    "title": "Choose your practice scenario",
+    "subtitle": "Select a conversation type and start a realistic AI sales practice call. The AI customer will respond based on the selected scenario.",
+    "selectedScenario": "Selected scenario",
+    "whatHappensNext": "What happens next?",
+    "preparingCall": "Preparing Call...",
+    "startPracticeCall": "Start Practice Call →",
+    "steps": {
+      "microphone": "Microphone permission will be requested.",
+      "aiCustomer": "The AI customer will join the call.",
+      "endAnytime": "You can end the call anytime."
+    },
+    "items": {
+      "coldCall": {
+        "title": "Cold Call",
+        "label": "Prospecting",
+        "description": "Pitch AI Sales Coach to a prospect who does not know you."
+      },
+      "hotCall": {
+        "title": "Hot Call",
+        "label": "Follow-up",
+        "description": "Follow up with a prospect already interested in AI Sales Coach."
+      },
+      "directSales": {
+        "title": "Direct Sales",
+        "label": "Closing",
+        "description": "Close AI Sales Coach directly on the call."
+      },
+      "meeting": {
+        "title": "Meeting",
+        "label": "Decision-maker",
+        "description": "Run an AI Sales Coach sales meeting with a decision-maker."
+      }
+    }
+  },
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
     "title": "AI Sales Coach Evaluation 🎉",
