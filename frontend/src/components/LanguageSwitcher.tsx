@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { applyBusinessLanguage } from "../lib/businessLanguage";
+
 
 function getLocaleFromCookie(): "en" | "sv" {
   const localeCookie = document.cookie
@@ -23,7 +25,7 @@ export default function LanguageSwitcher() {
   function changeLanguage() {
     const nextLocale = current === "sv" ? "en" : "sv";
 
-    document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    applyBusinessLanguage(nextLocale);
     window.location.reload();
   }
 

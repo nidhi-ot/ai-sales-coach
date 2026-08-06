@@ -1,50 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import AppShell from "../../components/AppShell";
 
 export default function ProfilePage() {
-  const [fullName, setFullName] = useState("Sales Rep");
+  const t = useTranslations("Profile");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("-");
   const [phone, setPhone] = useState("-");
   const [employeeId, setEmployeeId] = useState("-");
   const [role, setRole] = useState("rep");
 
   useEffect(() => {
-    setFullName(localStorage.getItem("full_name") || "Sales Rep");
+    setFullName(localStorage.getItem("full_name") || t("fallbackName"));
     setEmail(localStorage.getItem("email") || "-");
     setPhone(localStorage.getItem("phone_number") || "-");
     setEmployeeId(localStorage.getItem("employee_id") || "-");
     setRole(localStorage.getItem("role") || "rep");
-  }, []);
+  }, [t]);
+
+  const displayName = fullName || t("fallbackName");
+  const displayRole =
+    role === "admin"
+      ? t("roles.admin")
+      : role === "manager"
+        ? t("roles.manager")
+        : t("roles.rep");
 
   return (
     <AppShell>
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
         <section style={heroStyle}>
-          <p style={eyebrowStyle}>Sales Profile</p>
-          <h1 style={titleStyle}>Your Profile</h1>
-          <p style={subtitleStyle}>
-            Manage your AI Sales Coach account information.
-          </p>
+          <p style={eyebrowStyle}>{t("eyebrow")}</p>
+          <h1 style={titleStyle}>{t("title")}</h1>
+          <p style={subtitleStyle}>{t("subtitle")}</p>
         </section>
 
         <section style={panelStyle}>
-          <div style={avatarStyle}>{fullName.charAt(0).toUpperCase()}</div>
+          <div style={avatarStyle}>{displayName.charAt(0).toUpperCase()}</div>
 
-          <h2 style={{ marginBottom: "4px" }}>{fullName}</h2>
-          <p style={{ color: "#667085", marginTop: 0 }}>Sales Representative</p>
+          <h2 style={{ marginBottom: "4px" }}>{displayName}</h2>
+          <p style={{ color: "#667085", marginTop: 0 }}>{displayRole}</p>
 
           <div style={gridStyle}>
-            <InfoCard label="Email" value={email} />
-            <InfoCard label="Phone Number" value={phone} />
-            <InfoCard label="Employee ID" value={employeeId} />
-            <InfoCard label="Role" value={role} />
-            <InfoCard label="Business" value="AI Sales Coach" />
+            <InfoCard label={t("fields.email")} value={email} />
+            <InfoCard label={t("fields.phoneNumber")} value={phone} />
+            <InfoCard label={t("fields.employeeId")} value={employeeId} />
+            <InfoCard label={t("fields.role")} value={displayRole} />
+            <InfoCard label={t("fields.business")} value="AI Sales Coach" />
           </div>
 
           <p style={{ color: "#667085", margin: "20px 0 0" }}>
-            This profile mirrors the values stored in your local app session.
+            {t("localSessionNote")}
           </p>
         </section>
       </div>

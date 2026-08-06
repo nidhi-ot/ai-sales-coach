@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AppShell from "../../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../../lib/api";
 
@@ -34,6 +35,7 @@ type SessionDetails = {
 
 export default function SessionDetailsPage() {
   const router = useRouter();
+  const t = useTranslations("SessionDetail");
   const params = useParams() as { session_id?: string | string[] };
   const routeSessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
@@ -43,6 +45,40 @@ export default function SessionDetailsPage() {
   const [details, setDetails] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const statusLabels: Record<string, string> = {
+    completed: t("status.completed"),
+    processing: t("status.processing"),
+    active: t("status.active"),
+    draft: t("status.draft"),
+    failed: t("status.failed"),
+  };
+  const scenarioLabels: Record<string, string> = {
+    cold_call: t("scenarios.coldCall"),
+    direct_sales: t("scenarios.directSales"),
+    objection_handling: t("scenarios.objectionHandling"),
+    value_proposition: t("scenarios.valueProposition"),
+    closing: t("scenarios.closing"),
+  };
+  const dimensionLabels: Record<string, string> = {
+    rapport_score: t("dimensions.rapport"),
+    needs_discovery_score: t("dimensions.needsDiscovery"),
+    objection_handling_score: t("dimensions.objectionHandling"),
+    closing_score: t("dimensions.closing"),
+    budget: t("dimensions.budget"),
+    authority: t("dimensions.authority"),
+    need: t("dimensions.need"),
+    timeline: t("dimensions.timeline"),
+    metrics: t("dimensions.metrics"),
+    economic_buyer: t("dimensions.economicBuyer"),
+    decision_criteria: t("dimensions.decisionCriteria"),
+    decision_process: t("dimensions.decisionProcess"),
+    identify_pain: t("dimensions.identifyPain"),
+    champion: t("dimensions.champion"),
+    situation: t("dimensions.situation"),
+    problem: t("dimensions.problem"),
+    implication: t("dimensions.implication"),
+    need_payoff: t("dimensions.needPayoff"),
+  };
 
   async function loadDetails() {
     if (!sessionId) return;
@@ -52,14 +88,14 @@ export default function SessionDetailsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.detail || "Session not found.");
+        setError(data.detail || t("errors.notFound"));
         return;
       }
 
       setDetails(data);
     } catch (requestError) {
       console.error("Failed to load session details:", requestError);
-      setError("Could not connect to backend.");
+      setError(t("errors.connection"));
     } finally {
       setLoading(false);
     }
@@ -67,7 +103,7 @@ export default function SessionDetailsPage() {
 
   useEffect(() => {
     if (!sessionId) {
-      setError("No session ID found.");
+      setError(t("errors.noSessionId"));
       setLoading(false);
       return;
     }
@@ -102,16 +138,13 @@ export default function SessionDetailsPage() {
       <div style={{ maxWidth: "1180px", margin: "0 auto" }}>
         <section style={heroStyle}>
           <div>
-            <p style={eyebrowStyle}>Session Details</p>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
 
             <h1 style={heroTitleStyle}>
-              {details?.title || "Practice Session"}
+              {details?.title || t("fallbackTitle")}
             </h1>
 
-            <p style={heroSubtitleStyle}>
-              Review the full transcript, status, and timing for this practice
-              call.
-            </p>
+            <p style={heroSubtitleStyle}>{t("subtitle")}</p>
 
             <div style={heroActionsStyle}>
               {sessionId && details?.scorecard_status === "failed" ? (
@@ -126,7 +159,7 @@ export default function SessionDetailsPage() {
                       const data = await response.json();
 
                       if (!response.ok) {
-                        alert(data.detail || "Failed to retry analysis.");
+                        alert(data.detail || t("retryFailed"));
                         return;
                       }
 
@@ -136,45 +169,47 @@ export default function SessionDetailsPage() {
 
                       await loadDetails();
                     } catch (error) {
-                      alert("Failed to retry analysis.");
+                      alert(t("retryFailed"));
                     }
                   }}
                   style={secondaryButtonStyle}
                 >
-                  Retry analysis
+                  {t("retry")}
                 </button>
               ) : sessionId && details?.scorecard_status === "processing" ? (
                 <button disabled style={{ ...secondaryButtonStyle, opacity: 0.6 }}>
-                  Processing scorecard...
+                  {t("processingScorecard")}
                 </button>
               ) : sessionId ? (
                 <button
                   onClick={() => router.push(`/scorecards?session_id=${sessionId}`)}
                   style={secondaryButtonStyle}
                 >
-                  View Scorecard
+                  {t("viewScorecard")}
                 </button>
               ) : null}
 
               <button onClick={() => router.push("/history")} style={primaryButtonStyle}>
-                Back to History
+                {t("backToHistory")}
               </button>
             </div>
           </div>
 
           <div style={summaryCardStyle}>
             <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              Session Status
+              {t("sessionStatus")}
             </p>
             <strong style={{ fontSize: "24px", color: "#101828" }}>
-              {details?.status || "Unknown"}
+              {details?.status
+                ? statusLabels[details.status] ?? formatScenario(details.status)
+                : t("unknown")}
             </strong>
           </div>
         </section>
 
         {loading ? (
           <section style={panelStyle}>
-            <p style={{ color: "#667085", margin: 0 }}>Loading session details...</p>
+            <p style={{ color: "#667085", margin: 0 }}>{t("loading")}</p>
           </section>
         ) : error ? (
           <section style={panelStyle}>
@@ -183,26 +218,29 @@ export default function SessionDetailsPage() {
         ) : !details ? (
           <section style={panelStyle}>
             <p style={{ color: "#667085", margin: 0 }}>
-              No session details found for this call.
+              {t("notFound")}
             </p>
           </section>
         ) : (
           <>
             <section style={panelStyle}>
-              <h2 style={sectionTitleStyle}>Session Summary</h2>
+              <h2 style={sectionTitleStyle}>{t("summaryTitle")}</h2>
 
               <div style={summaryGridStyle}>
                 <SummaryItem
-                  label="Scenario"
-                  value={formatScenario(details.scenario || details.title)}
+                  label={t("summary.scenario")}
+                  value={formatScenario(details.scenario || details.title, scenarioLabels)}
                 />
                 <SummaryItem
-                  label="Started"
+                  label={t("summary.started")}
                   value={formatDate(details.created_at)}
                 />
-                <SummaryItem label="Ended" value={formatDate(details.ended_at)} />
                 <SummaryItem
-                  label="Duration"
+                  label={t("summary.ended")}
+                  value={formatDate(details.ended_at)}
+                />
+                <SummaryItem
+                  label={t("summary.duration")}
                   value={formatDuration(details.duration)}
                 />
               </div>
@@ -211,17 +249,16 @@ export default function SessionDetailsPage() {
             <section style={panelStyle}>
               <div style={sectionHeaderStyle}>
                 <div>
-                  <h2 style={sectionTitleStyle}>Transcript</h2>
+                  <h2 style={sectionTitleStyle}>{t("transcriptTitle")}</h2>
                   <p style={sectionSubtitleStyle}>
-                    {details.transcript.length} transcript entries captured for this
-                    session.
+                    {t("transcriptCount", { count: details.transcript.length })}
                   </p>
                 </div>
               </div>
 
               {details.transcript.length === 0 ? (
                 <p style={{ color: "#667085", margin: 0 }}>
-                  No transcript entries were stored for this session.
+                  {t("emptyTranscript")}
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: "12px", marginTop: "18px" }}>
@@ -238,7 +275,9 @@ export default function SessionDetailsPage() {
                               color: entry.speaker === "rep" ? "#027a48" : "#175cd3",
                             }}
                           >
-                            {entry.speaker === "rep" ? "Rep" : "AI Customer"}
+                            {entry.speaker === "rep"
+                              ? t("speakers.rep")
+                              : t("speakers.aiCustomer")}
                           </span>
 
                           <span style={{ color: "#667085", fontSize: "13px" }}>
@@ -258,7 +297,8 @@ export default function SessionDetailsPage() {
                                 style={getCoachMomentStyle(moment.dimension)}
                               >
                                 <span style={getCoachMomentBadgeStyle(moment.dimension)}>
-                                  Coach note · {formatDimensionLabel(moment.dimension)}
+                                  {t("coachNote")} ·{" "}
+                                  {formatDimensionLabel(moment.dimension, dimensionLabels)}
                                 </span>
 
                                 <p style={coachMomentTextStyle}>{moment.note}</p>
@@ -288,7 +328,11 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatScenario(value: string) {
+function formatScenario(value: string, labels?: Record<string, string>) {
+  if (labels?.[value]) {
+    return labels[value];
+  }
+
   return value
     .replaceAll("_", " ")
     .split(" ")
@@ -356,7 +400,11 @@ function groupMomentsByTranscriptEntry(
   return grouped;
 }
 
-function formatDimensionLabel(value: string) {
+function formatDimensionLabel(value: string, labels: Record<string, string>) {
+  if (labels[value]) {
+    return labels[value];
+  }
+
   return value
     .replaceAll("_", " ")
     .split(" ")

@@ -1,11 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../lib/api";
+import { applyBusinessLanguage } from "../../lib/businessLanguage";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("Register");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -29,27 +32,27 @@ export default function RegisterPage() {
     setSuccessMessage("");
 
     if (!fullName.trim()) {
-      setError("Please enter your full name");
+      setError(t("errors.fullNameRequired"));
       return;
     }
 
     if (!email.trim()) {
-      setError("Please enter your email");
+      setError(t("errors.emailRequired"));
       return;
     }
 
     if (!phoneNumber.trim()) {
-      setError("Please enter your phone number");
+      setError(t("errors.phoneRequired"));
       return;
     }
 
     if (!password.trim()) {
-      setError("Please enter a password");
+      setError(t("errors.passwordRequired"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("errors.passwordMismatch"));
       return;
     }
 
@@ -74,13 +77,14 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.detail || "Account creation failed");
+        setError(data.detail || t("errors.accountCreationFailed"));
         return;
       }
 
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
+      applyBusinessLanguage(data.business_language);
       localStorage.setItem("full_name", data.full_name);
       localStorage.setItem("email", data.email || "");
       localStorage.setItem("phone_number", data.phone_number || "");
@@ -89,13 +93,13 @@ export default function RegisterPage() {
       }
       localStorage.setItem("role", data.role || "rep");
 
-      setSuccessMessage("Account created successfully. Redirecting to login...");
+      setSuccessMessage(t("success"));
       setTimeout(() => {
         router.push("/login");
       }, 1500);
     } catch (error) {
       console.error(error);
-      setError(error instanceof Error ? error.message : "Could not connect to backend");
+      setError(error instanceof Error ? error.message : t("errors.backendConnection"));
     } finally {
       setLoading(false);
     }
@@ -107,7 +111,7 @@ export default function RegisterPage() {
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
           <img
             src="/logo.png"
-            alt="AI Sales Coach"
+            alt={t("logoAlt")}
             style={{
               width: "110px",
               height: "110px",
@@ -115,66 +119,64 @@ export default function RegisterPage() {
             }}
           />
 
-          <h1 style={{ marginBottom: "8px" }}>Create Account</h1>
+          <h1 style={{ marginBottom: "8px" }}>{t("title")}</h1>
 
-          <p style={{ color: "#667085" }}>
-            Join AI Sales Coach and start your practice journey.
-          </p>
+          <p style={{ color: "#667085" }}>{t("subtitle")}</p>
         </div>
 
-        <label style={labelStyle}>Full Name</label>
+        <label style={labelStyle}>{t("fullNameLabel")}</label>
         <input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Enter your full name"
+          placeholder={t("fullNamePlaceholder")}
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Email</label>
+        <label style={labelStyle}>{t("emailLabel")}</label>
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
+          placeholder={t("emailPlaceholder")}
           type="email"
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Phone Number</label>
+        <label style={labelStyle}>{t("phoneLabel")}</label>
         <input
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="Enter your phone number"
+          placeholder={t("phonePlaceholder")}
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Employee ID</label>
+        <label style={labelStyle}>{t("employeeIdLabel")}</label>
         <input
           value={employeeId}
           onChange={(e) => setEmployeeId(e.target.value)}
-          placeholder="Optional employee ID"
+          placeholder={t("employeeIdPlaceholder")}
           style={inputStyle}
         />
 
         {!inviteToken && (
           <p style={{ color: "#b54708", fontSize: "14px", marginTop: "-4px" }}>
-            Invite token missing. This signup will only work if open signup is enabled.
+            {t("inviteMissing")}
           </p>
         )}
 
-        <label style={labelStyle}>Password</label>
+        <label style={labelStyle}>{t("passwordLabel")}</label>
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create password"
+          placeholder={t("passwordPlaceholder")}
           type="password"
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Confirm Password</label>
+        <label style={labelStyle}>{t("confirmPasswordLabel")}</label>
         <input
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm password"
+          placeholder={t("confirmPasswordPlaceholder")}
           type="password"
           style={inputStyle}
         />
@@ -186,17 +188,17 @@ export default function RegisterPage() {
         )}
 
         <button onClick={handleCreateAccount} disabled={loading} style={buttonStyle}>
-          {loading ? "Creating..." : "Create Account"}
+          {loading ? t("creating") : t("createAccount")}
         </button>
 
         <p style={{ textAlign: "center", marginTop: "22px", color: "#667085" }}>
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <button
             type="button"
             onClick={() => router.push("/login")}
             style={linkButtonStyle}
           >
-            Sign in
+            {t("signIn")}
           </button>
         </p>
       </section>

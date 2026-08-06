@@ -7,7 +7,9 @@ const supportedLocales = ["en", "sv"] as const;
 type SupportedLocale = (typeof supportedLocales)[number];
 
 function normalizeLocale(value: string | undefined): SupportedLocale {
-  if (value?.startsWith("sv")) {
+  const normalized = value?.trim().toLowerCase().replace("_", "-");
+
+  if (normalized?.startsWith("sv")) {
     return "sv";
   }
 
@@ -18,8 +20,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const cookieLocale = cookies().get("NEXT_LOCALE")?.value;
   const requestedLocale = await requestLocale;
 
-  const locale = normalizeLocale(requestedLocale || cookieLocale);
-  
+  const locale = normalizeLocale(cookieLocale || requestedLocale);
+
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,
