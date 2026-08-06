@@ -2,6 +2,7 @@
   "PracticeSetup": {
     "eyebrow": "Practice Setup",
     "title": "Let's get you ready",
+    "loading": "Loading practice setup...",
     "subtitle": "Choose the customer context and focus area before starting your AI practice call.",
     "businessContext": "Business Context",
     "businessContextDescription": "Choose what type of customer the AI should act as.",
@@ -20,16 +21,278 @@
     "microphonePermission": "Microphone permission will be requested.",
     "aiCustomerJoins": "The AI customer will join the call.",
     "endAnytime": "You can end the call anytime.",
-    "startCall": "Start Practice Call →"
+    "startCall": "Start Practice Call →",
+    "profileVersion": "Profile v{version}",
+    "aiRecommendedInline": "AI recommended",
+    "businessContexts": {
+      "apartmentAssociation": {
+        "title": "Apartment Association",
+        "description": "A residential property manager responsible for stair cleaning."
+      },
+      "officeBuilding": {
+        "title": "Office Building",
+        "description": "An office manager looking for reliable cleaning service."
+      },
+      "hotel": {
+        "title": "Hotel",
+        "description": "A hotel manager focused on cleanliness and guest experience."
+      },
+      "retailStore": {
+        "title": "Retail Store",
+        "description": "A store owner who wants a clean customer-facing space."
+      }
+    },
+    "focusAreas": {
+      "discovery": "Discovery",
+      "handlingObjections": "Handling Objections",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    }
   },
   "Call": {
+    "eyebrow": "Live Practice",
     "title": "Live Practice Call",
-    "connecting": "Connecting...",
-    "inCall": "In Call...",
-    "endingCall": "Ending Call...",
+    "loading": "Loading call...",
+    "scenario": "Scenario",
+    "status": "Status",
+    "timeLeft": "Time Left",
+    "callTime": "Call Time",
+    "ready": "Ready",
+    "connectingStatus": "Connecting",
+    "connected": "Connected",
+    "onHold": "On Hold",
+    "ending": "Ending",
+    "ended": "Ended",
+    "failed": "Failed",
+    "readyTitle": "Ready to Start",
+    "connectingTitle": "Connecting...",
+    "activeTitle": "AI Customer is Listening",
+    "holdingTitle": "Call On Hold",
+    "endingTitle": "Ending Call...",
+    "endedTitle": "Call Ended",
+    "failedTitle": "Connection Failed",
+    "readyDescription": "Click Start Call when you are ready. Microphone permission will be requested after that.",
+    "connectingDescription": "Creating realtime session and connecting audio.",
+    "activeDescription": "Speak naturally with the AI buyer. Your conversation is being captured for the scorecard.",
+    "holdingDescription": "Your microphone is muted. Resume when ready.",
+    "endingDescription": "Saving the transcript and closing the call connection.",
+    "endedDescription": "Your practice session has ended.",
+    "savedSuccess": "Your practice session has been saved successfully.",
+    "startCall": "Start Call",
+    "hold": "Hold",
+    "resume": "Resume",
     "endCall": "End Call",
     "mute": "Mute",
-    "unmute": "Unmute"
+    "unmute": "Unmute",
+    "viewScorecard": "View Scorecard",
+    "goToHistory": "Go to History",
+    "startAnother": "Start Another",
+    "backToScenarios": "Back to Scenarios",
+    "errors": {
+      "missingIdentity": "Missing rep or business information. Please login again.",
+      "createRealtimeSession": "Failed to create realtime session.",
+      "missingClientSecret": "Realtime session did not return client_secret.",
+      "webrtcFailed": "OpenAI WebRTC connection failed.",
+      "connectionFailed": "Microphone or realtime connection failed.",
+      "backendEndFailed": "Call ended locally, but ending the backend session failed."
+    }
+  },
+  "AppShell": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "practice": "Practice",
+      "history": "History",
+      "scorecards": "Scorecards",
+      "profile": "Profile",
+      "progress": "Progress",
+      "settings": "Settings",
+      "team": "Team",
+      "admin": "Admin"
+    },
+    "logout": "Logout"
+  },
+  "Scenarios": {
+    "eyebrow": "Practice Setup",
+    "title": "Choose your practice scenario",
+    "subtitle": "Select a conversation type and start a realistic AI sales practice call. The AI customer will respond based on the selected scenario.",
+    "selectedScenario": "Selected scenario",
+    "whatHappensNext": "What happens next?",
+    "preparingCall": "Preparing Call...",
+    "startPracticeCall": "Start Practice Call →",
+    "steps": {
+      "microphone": "Microphone permission will be requested.",
+      "aiCustomer": "The AI customer will join the call.",
+      "endAnytime": "You can end the call anytime."
+    },
+    "items": {
+      "coldCall": {
+        "title": "Cold Call",
+        "label": "Prospecting",
+        "description": "Pitch AI Sales Coach to a prospect who does not know you."
+      },
+      "hotCall": {
+        "title": "Hot Call",
+        "label": "Follow-up",
+        "description": "Follow up with a prospect already interested in AI Sales Coach."
+      },
+      "directSales": {
+        "title": "Direct Sales",
+        "label": "Closing",
+        "description": "Close AI Sales Coach directly on the call."
+      },
+      "meeting": {
+        "title": "Meeting",
+        "label": "Decision-maker",
+        "description": "Run an AI Sales Coach sales meeting with a decision-maker."
+      }
+    }
+  },
+  "Dashboard": {
+    "defaultName": "Sales Rep",
+    "eyebrow": "AI Sales Coach Dashboard",
+    "hero": {
+      "greeting": "Good Morning, {name} 👋",
+      "subtitle": "Ready to level up your sales game today?",
+      "startPractice": "Start Practice →"
+    },
+    "stats": {
+      "practiceCalls": {
+        "title": "Practice Calls",
+        "subtitle": "Total completed calls"
+      },
+      "averageScore": {
+        "title": "Average Score",
+        "subtitle": "Based on scorecards"
+      },
+      "bestScore": {
+        "title": "Best Score",
+        "subtitle": "Personal best"
+      },
+      "lastPractice": {
+        "title": "Last Practice",
+        "improvement": "{value}% improvement",
+        "noTrend": "No trend yet"
+      }
+    },
+    "recent": {
+      "title": "Recent Practice",
+      "subtitle": "Your latest training sessions",
+      "viewAll": "View all",
+      "loading": "Loading recent sessions...",
+      "empty": "No practice sessions yet."
+    },
+    "progress": {
+      "title": "Your Progress",
+      "subtitle": "Skill growth overview",
+      "skills": {
+        "discovery": "Discovery",
+        "objectionHandling": "Objection Handling",
+        "closing": "Closing"
+      }
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "hotCall": "Hot Call",
+      "directSales": "Direct Sales",
+      "meeting": "Meeting",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    },
+    "manager": {
+      "eyebrow": "AI Manager Dashboard",
+      "greeting": "Good Morning, {name} 👋",
+      "subtitle": "Track team performance, coaching priorities, and sales practice progress.",
+      "viewTeam": "View Team →",
+      "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "skills": {
+        "rapport": "Rapport",
+        "discovery": "Discovery",
+        "objections": "Objections",
+        "closing": "Closing"
+      },
+      "kpis": {
+        "teamScore": "Team Score",
+        "sessions": "Sessions",
+        "sessionsTrend": "+14 this week",
+        "activeReps": "Active Reps",
+        "activeTrend": "90% active",
+        "needCoaching": "Need Coaching",
+        "priorityReps": "Priority reps"
+      },
+      "sections": {
+        "sessionsTrend": "Sessions Trend",
+        "sessionsTrendSubtitle": "Practice activity this week",
+        "skillDistribution": "Skill Distribution",
+        "skillDistributionSubtitle": "Average score by skill area",
+        "teamPerformance": "Team Performance",
+        "teamPerformanceSubtitle": "Skill strengths and weak areas",
+        "coachingPriority": "Coaching Priority",
+        "coachingPrioritySubtitle": "Reps who need manager attention"
+      },
+      "priority": {
+        "weakestSkill": "Weakest skill: {skill}"
+      }
+    },
+    "admin": {
+      "title": "Admin Workspace",
+      "subtitle": "Configure how the AI Sales Coach behaves for your organization.",
+      "cards": {
+        "businessProfile": {
+          "title": "Business Profile"
+        },
+        "scenarioOverrides": {
+          "title": "Scenario Overrides"
+        },
+        "teamManagement": {
+          "title": "Team Management"
+        }
+      },
+      "rows": {
+        "status": "Status",
+        "framework": "Framework",
+        "language": "Language",
+        "defaultScenarios": "Default Scenarios",
+        "customizedScenarios": "Customized Scenarios",
+        "users": "Users",
+        "managers": "Managers",
+        "admins": "Admins"
+      },
+      "values": {
+        "configured": "Configured",
+        "swedish": "Swedish"
+      },
+      "actions": {
+        "edit": "Edit",
+        "configure": "Configure",
+        "manage": "Manage"
+      },
+      "recent": {
+        "title": "Recent Changes",
+        "today": "Today",
+        "recently": "Recently",
+        "businessProfile": {
+          "title": "Business profile updated",
+          "description": "Updated company description, target ICP, and sales objectives."
+        },
+        "coldCall": {
+          "title": "Cold Call objective modified",
+          "description": "Adjusted conversation goals and success criteria."
+        },
+        "managerInvited": {
+          "title": "New manager invited",
+          "description": "A manager invite link was created."
+        }
+      }
+    }
   },
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
@@ -48,7 +311,520 @@
     "connectionError": "Could not connect to backend.",
     "analysisFailedTitle": "Scorecard analysis failed",
     "analysisFailedDescription": "The analysis could not finish. Retry the scorecard generation.",
+    "analysisPending": "Scorecard analysis is still pending for this session.",
     "retry": "Retry analysis",
-    "retryFailed": "Failed to retry analysis."
+    "retryFailed": "Failed to retry analysis.",
+    "scoreMetrics": {
+      "overall": "Overall Score",
+      "rapport": "Rapport",
+      "needs": "Needs Discovery",
+      "objections": "Objection Handling",
+      "closing": "Closing"
+    },
+    "sections": {
+      "callMetrics": "Call Metrics",
+      "framework": "{framework} Framework",
+      "strengths": "Strengths",
+      "improvementAreas": "Improvement Areas",
+      "recommendation": "AI Coach Recommendation",
+      "feedbackSummary": "Feedback Summary"
+    },
+    "callMetrics": {
+      "duration": "Duration",
+      "repTalk": "Rep Talk",
+      "interruptions": "Interruptions",
+      "fillerWords": "Filler Words"
+    },
+    "frameworkMetrics": {
+      "budget": "Budget",
+      "authority": "Authority",
+      "need": "Need",
+      "timeline": "Timeline",
+      "metrics": "Metrics",
+      "economic_buyer": "Economic Buyer",
+      "decision_criteria": "Decision Criteria",
+      "decision_process": "Decision Process",
+      "identify_pain": "Identify Pain",
+      "champion": "Champion",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Implication",
+      "need_payoff": "Need Payoff"
+    },
+    "scoreStates": {
+      "scored": "Scored",
+      "notScored": "Not scored",
+      "strong": "Strong",
+      "good": "Good",
+      "needsPractice": "Needs practice"
+    },
+    "empty": {
+      "strengths": "No strengths provided yet.",
+      "improvements": "No improvement areas provided yet.",
+      "feedback": "Feedback summary is not available yet."
+    },
+    "recommendationText": "Continue practicing the area with the lowest score. Focus on asking better discovery questions, handling objections calmly, and clearly connecting product value to the customer need.",
+    "startAnotherPractice": "Start Another Practice →",
+    "internalSessionReference": "Internal session reference available."
+  },
+  "History": {
+    "eyebrow": "Practice History",
+    "title": "Session History",
+    "subtitle": "Review your practice history, session results, and AI coaching feedback.",
+    "startNewPractice": "Start New Practice →",
+    "sessionsTitle": "Practice Sessions",
+    "sessionsSubtitle": "Select a session to view its scorecard.",
+    "loading": "Loading sessions...",
+    "emptyTitle": "No practice sessions yet",
+    "emptyDescription": "Start your first practice call to see history here.",
+    "startPractice": "Start Practice",
+    "duration": "Duration",
+    "retry": "Retry analysis",
+    "retryFailed": "Failed to retry analysis.",
+    "viewDetails": "View Details",
+    "viewScorecard": "View Scorecard",
+    "stats": {
+      "total": "Total Sessions",
+      "completed": "Completed",
+      "activeDraft": "Active / Draft",
+      "latest": "Latest Practice"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed"
+    },
+    "scorecardStatus": {
+      "processing": "Processing...",
+      "notScored": "Not scored"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    }
+  },
+  "Progress": {
+    "eyebrow": "Learning Progress",
+    "title": "Your Progress",
+    "subtitle": "Track how your sales skills evolve across profile versions.",
+    "loading": "Loading progress history...",
+    "error": "Could not load progress history.",
+    "notAvailable": "N/A",
+    "empty": {
+      "title": "No progress data yet",
+      "description": "Complete a practice call and generate a scorecard to create your first learning profile."
+    },
+    "stats": {
+      "currentFocus": "Current Focus",
+      "bestSkill": "Best Skill",
+      "versions": "Versions"
+    },
+    "chart": {
+      "title": "Profile Evolution",
+      "subtitle": "Compare your skill scores from profile v1 to your latest profile."
+    },
+    "history": {
+      "title": "Recent Profile History",
+      "subtitle": "Latest profile versions and their focus areas.",
+      "profileVersion": "Profile v{version}",
+      "focus": "Focus: {dimension}",
+      "noDate": "No date",
+      "showLess": "Show Less",
+      "viewAll": "View All"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
+  },
+  "Settings": {
+    "fallbackUser": "User",
+    "eyebrow": "Settings",
+    "managerEyebrow": "Manager Settings",
+    "title": "Manage Preferences",
+    "subtitle": "Manage your account, AI coach preferences, notifications, and appearance.",
+    "managerSubtitle": "Manage dashboard preferences, coaching alerts, and team notifications.",
+    "saveChanges": "Save Changes",
+    "saved": "Settings saved successfully.",
+    "currentSetup": "Current Setup",
+    "securityDescription": "Update your password and manage account security.",
+    "changePassword": "Change Password",
+    "adminWorkspaceDescription": "Admin settings are managed from the Admin Console, including business profile, scenario overrides, and team invitations.",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Sales Representative"
+    },
+    "sections": {
+      "account": "Account",
+      "appearance": "Appearance",
+      "security": "Security",
+      "adminWorkspace": "Admin Workspace",
+      "aiCoachPreferences": "AI Coach Preferences",
+      "notifications": "Notifications",
+      "managerNotifications": "Manager Notifications",
+      "dashboardPreferences": "Dashboard Preferences"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "role": "Role",
+      "organization": "Organization",
+      "theme": "Theme",
+      "accentColor": "Accent Color",
+      "fontSize": "Font Size",
+      "layoutDensity": "Layout Density",
+      "preferredLanguage": "Preferred Language",
+      "defaultDifficulty": "Default Difficulty",
+      "coachingStyle": "Coaching Style",
+      "feedbackTiming": "Feedback Timing",
+      "defaultDashboard": "Default Dashboard",
+      "reportFrequency": "Report Frequency",
+      "coachingAlertLevel": "Coaching Alert Level",
+      "defaultTeamFilter": "Default Team Filter",
+      "language": "Language",
+      "notifications": "Notifications",
+      "dashboard": "Dashboard"
+    },
+    "toggles": {
+      "practiceReminders": "Practice reminders",
+      "scorecardNotifications": "Scorecard notifications",
+      "weeklyProgressSummary": "Weekly progress summary",
+      "achievementAlerts": "Achievement alerts",
+      "weeklyTeamReport": "Weekly team report",
+      "coachingAlerts": "Coaching alerts",
+      "inactiveRepReminders": "Inactive rep reminders",
+      "newScorecardNotifications": "New scorecard notifications"
+    },
+    "summary": {
+      "teamAlerts": "Team alerts",
+      "practiceAlerts": "Practice alerts",
+      "repView": "Rep view"
+    },
+    "options": {
+      "english": "English",
+      "swedish": "Swedish",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "balanced": "Balanced",
+      "detailed": "Detailed",
+      "strict": "Strict",
+      "afterCall": "After call",
+      "realTime": "Real-time",
+      "both": "Both",
+      "light": "Light",
+      "system": "System",
+      "dark": "Dark",
+      "emeraldGreen": "Emerald Green",
+      "blue": "Blue",
+      "purple": "Purple",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "comfortable": "Comfortable",
+      "compact": "Compact",
+      "managerDashboard": "Manager Dashboard",
+      "teamDashboard": "Team Dashboard",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "low": "Low",
+      "high": "High",
+      "allReps": "All reps",
+      "needsCoaching": "Needs coaching",
+      "activeThisWeek": "Active this week"
+    }
+  },
+  "Profile": {
+    "fallbackName": "Sales Rep",
+    "eyebrow": "Sales Profile",
+    "title": "Your Profile",
+    "subtitle": "Manage your AI Sales Coach account information.",
+    "fields": {
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "employeeId": "Employee ID",
+      "role": "Role",
+      "business": "Business"
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Sales Representative"
+    },
+    "localSessionNote": "This profile mirrors the values stored in your local app session."
+  },
+  "SessionDetail": {
+    "eyebrow": "Session Details",
+    "fallbackTitle": "Practice Session",
+    "subtitle": "Review the full transcript, status, and timing for this practice call.",
+    "retry": "Retry analysis",
+    "retryFailed": "Failed to retry analysis.",
+    "processingScorecard": "Processing scorecard...",
+    "viewScorecard": "View Scorecard",
+    "backToHistory": "Back to History",
+    "sessionStatus": "Session Status",
+    "unknown": "Unknown",
+    "loading": "Loading session details...",
+    "notFound": "No session details found for this call.",
+    "summaryTitle": "Session Summary",
+    "transcriptTitle": "Transcript",
+    "transcriptCount": "{count, plural, one {# transcript entry captured for this session.} other {# transcript entries captured for this session.}}",
+    "emptyTranscript": "No transcript entries were stored for this session.",
+    "coachNote": "Coach note",
+    "summary": {
+      "scenario": "Scenario",
+      "started": "Started",
+      "ended": "Ended",
+      "duration": "Duration"
+    },
+    "speakers": {
+      "rep": "Rep",
+      "aiCustomer": "AI Customer"
+    },
+    "errors": {
+      "notFound": "Session not found.",
+      "connection": "Could not connect to backend.",
+      "noSessionId": "No session ID found."
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    },
+    "dimensions": {
+      "rapport": "Rapport Score",
+      "needsDiscovery": "Needs Discovery Score",
+      "objectionHandling": "Objection Handling Score",
+      "closing": "Closing Score",
+      "budget": "Budget",
+      "authority": "Authority",
+      "need": "Need",
+      "timeline": "Timeline",
+      "metrics": "Metrics",
+      "economicBuyer": "Economic Buyer",
+      "decisionCriteria": "Decision Criteria",
+      "decisionProcess": "Decision Process",
+      "identifyPain": "Identify Pain",
+      "champion": "Champion",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Implication",
+      "needPayoff": "Need Payoff"
+    }
+  },
+  "Team": {
+    "managerDashboard": "Manager Dashboard",
+    "loading": "Loading team performance...",
+    "title": "Team Dashboard",
+    "eyebrow": "Manager View",
+    "subtitle": "Monitor team practice, scorecards, progress, and coaching opportunities.",
+    "updatedNote": "Updated from latest scorecards and practice sessions.",
+    "errors": {
+      "load": "Unable to load team information."
+    },
+    "summary": {
+      "totalReps": "Total Reps",
+      "totalSessions": "Total Sessions",
+      "averageScore": "Average Score",
+      "activeThisWeek": "Active This Week"
+    },
+    "highlights": {
+      "topPerformer": "🏆 Top Performer",
+      "topPerformerMeta": "{sessions, plural, one {# session} other {# sessions}} • {score}/10 avg score",
+      "needsAttention": "⚠ Needs Attention",
+      "needsAttentionMeta": "Focus on {dimension}"
+    },
+    "performance": {
+      "title": "Team Performance",
+      "subtitle": "View each rep's usage, average score, and weakest skill."
+    },
+    "table": {
+      "rep": "Rep",
+      "sessions": "Sessions",
+      "lastPractice": "Last Practice",
+      "avgScore": "Avg Score",
+      "weakestSkill": "Weakest Skill",
+      "status": "Status",
+      "action": "Action",
+      "viewDetails": "View Details"
+    },
+    "skillHealth": {
+      "title": "Skill Health"
+    },
+    "coachingPriority": {
+      "title": "Coaching Priority",
+      "empty": "No urgent coaching needs right now.",
+      "weakSkill": "Weak Skill",
+      "averageScore": "Average Score",
+      "practiceSessions": "{sessions, plural, one {# practice session} other {# practice sessions}}"
+    },
+    "fallbacks": {
+      "noData": "No data yet",
+      "noScorecards": "No scorecards available yet",
+      "noUrgentIssue": "No urgent issue",
+      "everyoneOkay": "Everyone is doing okay",
+      "recentSessions": "recent sessions",
+      "notEnoughData": "Not enough data",
+      "reviewSessions": "Review sessions",
+      "notAvailable": "N/A",
+      "noSessions": "No sessions"
+    },
+    "status": {
+      "newRep": "New Rep",
+      "performingWell": "Performing well",
+      "improving": "Improving",
+      "needsCoaching": "Needs coaching"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
+  },
+  "Login": {
+    "logoAlt": "AI Sales Coach",
+    "imageAlt": "Building",
+    "badge": "AI Sales Coach",
+    "title": "Welcome back!",
+    "identifierLabel": "Email or Phone",
+    "identifierPlaceholder": "Enter email or phone number",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign In",
+    "newHere": "New here?",
+    "createAccount": "Create an account",
+    "legal": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+    "promoTitle": "Practice calls. Get feedback. Improve faster.",
+    "promoBody": "Train with realistic AI customer conversations and receive focused coaching after every session.",
+    "errors": {
+      "identifierRequired": "Please enter your email or phone number",
+      "passwordRequired": "Please enter your password",
+      "loginFailed": "Login failed",
+      "backendConnection": "Could not connect to backend"
+    }
+  },
+  "Register": {
+    "logoAlt": "AI Sales Coach",
+    "title": "Create Account",
+    "subtitle": "Join AI Sales Coach and start your practice journey.",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Enter your email",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "employeeIdLabel": "Employee ID",
+    "employeeIdPlaceholder": "Optional employee ID",
+    "inviteMissing": "Invite token missing. This signup will only work if open signup is enabled.",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Create password",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "createAccount": "Create Account",
+    "creating": "Creating...",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "success": "Account created successfully. Redirecting to login...",
+    "errors": {
+      "fullNameRequired": "Please enter your full name",
+      "emailRequired": "Please enter your email",
+      "phoneRequired": "Please enter your phone number",
+      "passwordRequired": "Please enter a password",
+      "passwordMismatch": "Passwords do not match",
+      "accountCreationFailed": "Account creation failed",
+      "backendConnection": "Could not connect to backend"
+    }
+  },
+  "TeamRep": {
+    "loading": "Loading rep details...",
+    "backToTeam": "← Back to Team",
+    "eyebrow": "Manager View",
+    "title": "Rep Details",
+    "subtitle": "Review this rep's practice history, scorecards, and transcripts.",
+    "errors": {
+      "missingBusiness": "Missing business information. Please go back to the team page.",
+      "sessions": "Failed to load sessions ({status})",
+      "scorecards": "Failed to load scorecards ({status})",
+      "transcripts": "Failed to load transcripts ({status})",
+      "load": "Unable to load representative details."
+    },
+    "summary": {
+      "sessions": "Sessions",
+      "scorecards": "Scorecards",
+      "latestScore": "Latest Score",
+      "lastPractice": "Last Practice"
+    },
+    "practiceSessions": {
+      "title": "Practice Sessions",
+      "empty": "No sessions found for this rep."
+    },
+    "transcripts": {
+      "title": "Transcript Preview",
+      "empty": "No transcripts available.",
+      "noneForSession": "No transcript saved for this session."
+    },
+    "scorecard": {
+      "title": "Latest Scorecard",
+      "empty": "No scorecard available yet."
+    },
+    "coachingNotes": {
+      "title": "Manager Coaching Notes",
+      "body": "Use this view to identify patterns, review objections, and prepare targeted feedback for the rep."
+    },
+    "session": {
+      "statusLabel": "Status"
+    },
+    "fallbacks": {
+      "notAvailable": "N/A",
+      "noStartDate": "No start date",
+      "practiceSession": "Practice Session"
+    },
+    "speakers": {
+      "rep": "Rep",
+      "aiCustomer": "AI Customer",
+      "unknown": "Speaker"
+    },
+    "status": {
+      "completed": "Completed",
+      "processing": "Processing",
+      "active": "Active",
+      "draft": "Draft",
+      "failed": "Failed",
+      "unknown": "Unknown"
+    },
+    "scenarios": {
+      "coldCall": "Cold Call",
+      "directSales": "Direct Sales",
+      "objectionHandling": "Objection Handling",
+      "valueProposition": "Value Proposition",
+      "closing": "Closing"
+    },
+    "dimensions": {
+      "rapport": "Rapport",
+      "discovery": "Discovery",
+      "objectionHandling": "Objection Handling",
+      "closing": "Closing"
+    }
   }
 }

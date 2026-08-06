@@ -15,35 +15,35 @@ type LearningProfile = {
 const businessContexts = [
   {
     id: "apartment_association",
-    title: "Apartment Association",
-    description: "A residential property manager responsible for stair cleaning.",
+    titleKey: "businessContexts.apartmentAssociation.title",
+    descriptionKey: "businessContexts.apartmentAssociation.description",
     icon: "🏢",
   },
   {
     id: "office_building",
-    title: "Office Building",
-    description: "An office manager looking for reliable cleaning service.",
+    titleKey: "businessContexts.officeBuilding.title",
+    descriptionKey: "businessContexts.officeBuilding.description",
     icon: "🏬",
   },
   {
     id: "hotel",
-    title: "Hotel",
-    description: "A hotel manager focused on cleanliness and guest experience.",
+    titleKey: "businessContexts.hotel.title",
+    descriptionKey: "businessContexts.hotel.description",
     icon: "🏨",
   },
   {
     id: "retail_store",
-    title: "Retail Store",
-    description: "A store owner who wants a clean customer-facing space.",
+    titleKey: "businessContexts.retailStore.title",
+    descriptionKey: "businessContexts.retailStore.description",
     icon: "🛒",
   },
 ];
 
 const focusAreas = [
-  { id: "discovery", title: "Discovery", icon: "🔍" },
-  { id: "handling_objections", title: "Handling Objections", icon: "🛡️" },
-  { id: "value_proposition", title: "Value Proposition", icon: "💡" },
-  { id: "closing", title: "Closing", icon: "🏆" },
+  { id: "discovery", titleKey: "focusAreas.discovery", icon: "🔍" },
+  { id: "handling_objections", titleKey: "focusAreas.handlingObjections", icon: "🛡️" },
+  { id: "value_proposition", titleKey: "focusAreas.valueProposition", icon: "💡" },
+  { id: "closing", titleKey: "focusAreas.closing", icon: "🏆" },
 ];
 
 function mapWeakestDimensionToFocusArea(value: string) {
@@ -59,10 +59,6 @@ function mapWeakestDimensionToFocusArea(value: string) {
     default:
       return "handling_objections";
   }
-}
-
-function getFocusTitle(focusId: string) {
-  return focusAreas.find((item) => item.id === focusId)?.title || "-";
 }
 
 export default function PracticeSetupPage() {
@@ -117,12 +113,17 @@ export default function PracticeSetupPage() {
     ? mapWeakestDimensionToFocusArea(learningProfile.weakest_dimension)
     : null;
 
-  const recommendedFocusTitle = recommendedFocus
-    ? getFocusTitle(recommendedFocus)
+    const recommendedFocusTitle = recommendedFocus
+    ? getTranslatedFocusTitle(recommendedFocus)
     : null;
 
   const isUsingRecommendedFocus =
     recommendedFocus !== null && focusArea === recommendedFocus;
+
+  function getTranslatedFocusTitle(focusId: string) {
+    const item = focusAreas.find((focus) => focus.id === focusId);
+    return item ? t(item.titleKey) : "-";
+  }
 
   return (
     <AppShell>
@@ -146,8 +147,8 @@ export default function PracticeSetupPage() {
                     key={item.id}
                     active={businessContext === item.id}
                     icon={item.icon}
-                    title={item.title}
-                    description={item.description}
+                    title={t(item.titleKey)}
+                    description={t(item.descriptionKey) }
                     onClick={() => setBusinessContext(item.id)}
                   />
                 ))}
@@ -166,7 +167,7 @@ export default function PracticeSetupPage() {
                   </p>
 
                   <p style={{ margin: "10px 0 0", color: "#344054" }}>
-                    Profile v{learningProfile.version}:{" "}
+                    {t("profileVersion", { version: learningProfile.version })}:{" "}
                     <strong>{recommendedFocusTitle}</strong>
                   </p>
 
@@ -191,7 +192,7 @@ export default function PracticeSetupPage() {
                     }}
                   >
                     <span style={{ fontSize: "22px" }}>{item.icon}</span>
-                    <strong>{item.title}</strong>
+                    <strong>{t(item.titleKey)}</strong>
                   </button>
                 ))}
               </div>
@@ -205,13 +206,16 @@ export default function PracticeSetupPage() {
               {formatScenario(scenario)}
             </h2>
 
-            <SummaryRow label={t("businessContextLabel")} value={selectedBusiness?.title || "-"} />
+            <SummaryRow
+              label={t("businessContextLabel")}
+              value={selectedBusiness ? t(selectedBusiness.titleKey) : "-"}
+            />
             <SummaryRow
               label={t("focusAreaLabel")}
               value={
                 isUsingRecommendedFocus && learningProfile
-                  ? `${selectedFocus?.title || "-"} · AI recommended · Profile v${learningProfile.version}`
-                  : selectedFocus?.title || "-"
+                  ? `${selectedFocus ? t(selectedFocus.titleKey) : "-"} · ${t("aiRecommendedInline")} · ${t("profileVersion", { version: learningProfile.version })}`
+                  : selectedFocus ? t(selectedFocus.titleKey) : "-"
               }
             />
             <SummaryRow label={t("difficulty")} value={t("medium")} />

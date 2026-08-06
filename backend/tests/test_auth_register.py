@@ -63,7 +63,7 @@ class _LoginAdmin:
 class _LoginSupabase:
     auth = SimpleNamespace(admin=_LoginAdmin())
 
-    class _Table:
+    class _AccountsTable:
         def select(self, _columns):
             return self
 
@@ -88,11 +88,33 @@ class _LoginSupabase:
                 ]
             )
 
-    def table(self, name):
-        if name != "salesperson_accounts":
-            raise AssertionError(f"Unexpected table: {name}")
+    class _BusinessProfileTable:
+        def select(self, _columns):
+            return self
 
-        return self._Table()
+        def eq(self, _column, _value):
+            return self
+
+        def limit(self, _count):
+            return self
+
+        def execute(self):
+            return SimpleNamespace(
+                data=[
+                    {
+                        "language": "en",
+                    }
+                ]
+            )
+
+    def table(self, name):
+        if name == "salesperson_accounts":
+            return self._AccountsTable()
+
+        if name == "business_profiles":
+            return self._BusinessProfileTable()
+
+        raise AssertionError(f"Unexpected table: {name}")
 
 
 class _RegisterSupabase(FakeSupabase):

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import AppShell from "../../../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../../../lib/api";
 
@@ -34,6 +35,8 @@ type Transcript = {
 };
 
 export default function TeamRepDetailsPage() {
+  const t = useTranslations("TeamRep");
+  const locale = useLocale();
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -50,7 +53,7 @@ export default function TeamRepDetailsPage() {
     async function loadRepDetails() {
       try {
         if (!businessId) {
-          setError("Missing business information. Please go back to the team page.");
+          setError(t("errors.missingBusiness"));
           setLoading(false);
           return;
         }
@@ -62,15 +65,15 @@ export default function TeamRepDetailsPage() {
         ]);
 
         if (!sessionsRes.ok) {
-          throw new Error(`Failed to load sessions (${sessionsRes.status})`);
+          throw new Error(t("errors.sessions", { status: sessionsRes.status }));
         }
 
         if (!scorecardsRes.ok) {
-          throw new Error(`Failed to load scorecards (${scorecardsRes.status})`);
+          throw new Error(t("errors.scorecards", { status: scorecardsRes.status }));
         }
 
         if (!transcriptsRes.ok) {
-          throw new Error(`Failed to load transcripts (${transcriptsRes.status})`);
+          throw new Error(t("errors.transcripts", { status: transcriptsRes.status }));
         }
 
         const sessionsData = await sessionsRes.json();
@@ -90,7 +93,7 @@ export default function TeamRepDetailsPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Unable to load representative details."
+            : t("errors.load")
         );
       } finally {
         setLoading(false);
@@ -100,7 +103,7 @@ export default function TeamRepDetailsPage() {
     if (repId) {
       loadRepDetails();
     }
-  }, [repId, businessId]);
+  }, [repId, businessId, t]);
 
   const latestScorecard = scorecards[0];
 
@@ -124,7 +127,7 @@ export default function TeamRepDetailsPage() {
     return (
       <AppShell>
         <div style={containerStyle}>
-          <p style={mutedStyle}>Loading rep details...</p>
+          <p style={mutedStyle}>{t("loading")}</p>
         </div>
       </AppShell>
     );
@@ -135,10 +138,10 @@ export default function TeamRepDetailsPage() {
       <AppShell>
         <div style={containerStyle}>
           <Link href="/team" style={backLinkStyle}>
-            ← Back to Team
+            {t("backToTeam")}
           </Link>
 
-          <h1 style={titleStyle}>Rep Details</h1>
+          <h1 style={titleStyle}>{t("title")}</h1>
 
           <div style={errorBoxStyle}>{error}</div>
         </div>
@@ -151,29 +154,34 @@ export default function TeamRepDetailsPage() {
       <div style={containerStyle}>
         <div style={topBarStyle}>
           <Link href="/team" style={backLinkStyle}>
-            ← Back to Team
+            {t("backToTeam")}
           </Link>
 
-          <p style={eyebrowStyle}>Manager View</p>
-          <h1 style={titleStyle}>Rep Details</h1>
+          <p style={eyebrowStyle}>{t("eyebrow")}</p>
+          <h1 style={titleStyle}>{t("title")}</h1>
           <p style={subtitleStyle}>
-            Review this rep&apos;s practice history, scorecards, and transcripts.
+            {t("subtitle")}
           </p>
         </div>
 
         <section style={summaryGridStyle}>
-          <SummaryCard title="Sessions" value={sessions.length.toString()} />
-          <SummaryCard title="Scorecards" value={scorecards.length.toString()} />
+          <SummaryCard title={t("summary.sessions")} value={sessions.length.toString()} />
           <SummaryCard
-            title="Latest Score"
-            value={latestScorecard ? `${getAverageScore(latestScorecard)}/10` : "N/A"}
+            title={t("summary.scorecards")}
+            value={scorecards.length.toString()}
           />
           <SummaryCard
-            title="Last Practice"
+            title={t("summary.latestScore")}
             value={
-              sessions[0]?.started_at
-                ? new Date(sessions[0].started_at).toLocaleDateString()
-                : "N/A"
+              latestScorecard
+                ? `${getAverageScore(latestScorecard)}/10`
+                : t("fallbacks.notAvailable")
+            }
+          />
+          <SummaryCard
+            title={t("summary.lastPractice")}
+            value={
+              formatDate(sessions[0]?.started_at, locale, t("fallbacks.notAvailable"))
             }
           />
         </section>
@@ -181,10 +189,10 @@ export default function TeamRepDetailsPage() {
         <section style={layoutStyle}>
           <div style={mainColumnStyle}>
             <section style={cardStyle}>
-              <h2 style={cardTitleStyle}>Practice Sessions</h2>
+              <h2 style={cardTitleStyle}>{t("practiceSessions.title")}</h2>
 
               {sessions.length === 0 ? (
-                <p style={mutedStyle}>No sessions found for this rep.</p>
+                <p style={mutedStyle}>{t("practiceSessions.empty")}</p>
               ) : (
                 <div style={listStyle}>
                   {sessions.map((session) => (
@@ -194,6 +202,7 @@ export default function TeamRepDetailsPage() {
                       scorecard={scorecards.find(
                         (scorecard) => scorecard.session_id === session.id
                       )}
+                      locale={locale}
                     />
                   ))}
                 </div>
@@ -201,10 +210,10 @@ export default function TeamRepDetailsPage() {
             </section>
 
             <section style={cardStyle}>
-              <h2 style={cardTitleStyle}>Transcript Preview</h2>
+              <h2 style={cardTitleStyle}>{t("transcripts.title")}</h2>
 
               {sessions.length === 0 ? (
-                <p style={mutedStyle}>No transcripts available.</p>
+                <p style={mutedStyle}>{t("transcripts.empty")}</p>
               ) : (
                 <div style={listStyle}>
                   {sessions.slice(0, 3).map((session) => {
@@ -213,12 +222,12 @@ export default function TeamRepDetailsPage() {
                     return (
                       <div key={session.id} style={transcriptBlockStyle}>
                         <h3 style={smallTitleStyle}>
-                          {formatScenario(session.scenario ?? "Practice Session")}
+                          {formatScenario(session.scenario, t)}
                         </h3>
 
                         {lines.length === 0 ? (
                           <p style={mutedStyle}>
-                            No transcript saved for this session.
+                            {t("transcripts.noneForSession")}
                           </p>
                         ) : (
                           lines.slice(0, 6).map((line, index) => (
@@ -226,7 +235,7 @@ export default function TeamRepDetailsPage() {
                               key={`${line.id ?? index}`}
                               style={transcriptLineStyle}
                             >
-                              <strong>{line.speaker ?? "Speaker"}:</strong>{" "}
+                              <strong>{formatSpeaker(line.speaker, t)}:</strong>{" "}
                               <span>{line.text ?? ""}</span>
                             </div>
                           ))
@@ -241,31 +250,30 @@ export default function TeamRepDetailsPage() {
 
           <aside style={sideColumnStyle}>
             <section style={cardStyle}>
-              <h2 style={cardTitleStyle}>Latest Scorecard</h2>
+              <h2 style={cardTitleStyle}>{t("scorecard.title")}</h2>
 
               {latestScorecard ? (
                 <>
-                  <ScoreRow label="Rapport" value={latestScorecard.rapport_score} />
+                  <ScoreRow label={t("dimensions.rapport")} value={latestScorecard.rapport_score} />
                   <ScoreRow
-                    label="Discovery"
+                    label={t("dimensions.discovery")}
                     value={latestScorecard.needs_discovery_score}
                   />
                   <ScoreRow
-                    label="Objection Handling"
+                    label={t("dimensions.objectionHandling")}
                     value={latestScorecard.objection_handling_score}
                   />
-                  <ScoreRow label="Closing" value={latestScorecard.closing_score} />
+                  <ScoreRow label={t("dimensions.closing")} value={latestScorecard.closing_score} />
                 </>
               ) : (
-                <p style={mutedStyle}>No scorecard available yet.</p>
+                <p style={mutedStyle}>{t("scorecard.empty")}</p>
               )}
             </section>
 
             <section style={cardStyle}>
-              <h2 style={cardTitleStyle}>Manager Coaching Notes</h2>
+              <h2 style={cardTitleStyle}>{t("coachingNotes.title")}</h2>
               <p style={mutedStyle}>
-                Use this view to identify patterns, review objections, and prepare
-                targeted feedback for the rep.
+                {t("coachingNotes.body")}
               </p>
             </section>
           </aside>
@@ -278,20 +286,24 @@ export default function TeamRepDetailsPage() {
 function SessionCard({
   session,
   scorecard,
+  locale,
 }: {
   session: Session;
   scorecard?: Scorecard;
+  locale: string;
 }) {
+  const t = useTranslations("TeamRep");
+
   return (
     <div style={sessionCardStyle}>
       <div>
-        <strong>{formatScenario(session.scenario ?? "Practice Session")}</strong>
+        <strong>{formatScenario(session.scenario, t)}</strong>
         <p style={mutedStyle}>
-          {session.started_at
-            ? new Date(session.started_at).toLocaleString()
-            : "No start date"}
+          {formatDateTime(session.started_at, locale, t("fallbacks.noStartDate"))}
         </p>
-        <p style={mutedStyle}>Status: {session.status ?? "Unknown"}</p>
+        <p style={mutedStyle}>
+          {t("session.statusLabel")}: {formatStatus(session.status, t)}
+        </p>
       </div>
 
       <ScoreBadge score={scorecard ? getAverageScore(scorecard) : null} />
@@ -309,6 +321,7 @@ function SummaryCard({ title, value }: { title: string; value: string }) {
 }
 
 function ScoreRow({ label, value }: { label: string; value?: number | null }) {
+  const t = useTranslations("TeamRep");
   const safeValue = value ?? 0;
   const percentage = Math.min(safeValue * 10, 100);
 
@@ -316,7 +329,7 @@ function ScoreRow({ label, value }: { label: string; value?: number | null }) {
     <div style={scoreRowStyle}>
       <div style={scoreTopStyle}>
         <span>{label}</span>
-        <strong>{value == null ? "N/A" : `${safeValue}/10`}</strong>
+        <strong>{value == null ? t("fallbacks.notAvailable") : `${safeValue}/10`}</strong>
       </div>
 
       <div style={trackStyle}>
@@ -327,8 +340,10 @@ function ScoreRow({ label, value }: { label: string; value?: number | null }) {
 }
 
 function ScoreBadge({ score }: { score: number | null }) {
+  const t = useTranslations("TeamRep");
+
   if (score == null) {
-    return <span style={neutralBadgeStyle}>N/A</span>;
+    return <span style={neutralBadgeStyle}>{t("fallbacks.notAvailable")}</span>;
   }
 
   return <span style={scoreBadgeStyle}>{score}/10</span>;
@@ -347,11 +362,70 @@ function getAverageScore(scorecard: Scorecard) {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-function formatScenario(value: string) {
+function formatDate(value: string | null | undefined, locale: string, fallback: string) {
+  if (!value) return fallback;
+
+  return new Date(value).toLocaleDateString(locale === "sv" ? "sv-SE" : "en-US");
+}
+
+function formatDateTime(value: string | null | undefined, locale: string, fallback: string) {
+  if (!value) return fallback;
+
+  return new Date(value).toLocaleString(locale === "sv" ? "sv-SE" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatScenario(value: string | null | undefined, t: ReturnType<typeof useTranslations>) {
+  if (!value) return t("fallbacks.practiceSession");
+
+  const key = scenarioTranslationKeys[value.toLowerCase()];
+
+  if (key) {
+    return t(`scenarios.${key}`);
+  }
+
   return value
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
+
+function formatSpeaker(value: string | null | undefined, t: ReturnType<typeof useTranslations>) {
+  if (value === "rep") return t("speakers.rep");
+  if (value === "ai_customer") return t("speakers.aiCustomer");
+
+  return t("speakers.unknown");
+}
+
+function formatStatus(value: string | null | undefined, t: ReturnType<typeof useTranslations>) {
+  const key = value?.toLowerCase();
+
+  if (key && key in statusTranslationKeys) {
+    return t(`status.${statusTranslationKeys[key]}`);
+  }
+
+  return t("status.unknown");
+}
+
+const scenarioTranslationKeys: Record<string, string> = {
+  cold_call: "coldCall",
+  direct_sales: "directSales",
+  objection_handling: "objectionHandling",
+  value_proposition: "valueProposition",
+  closing: "closing",
+};
+
+const statusTranslationKeys: Record<string, string> = {
+  completed: "completed",
+  processing: "processing",
+  active: "active",
+  draft: "draft",
+  failed: "failed",
+};
 
 const containerStyle = {
   maxWidth: "1280px",

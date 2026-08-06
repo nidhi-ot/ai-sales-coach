@@ -200,6 +200,32 @@ export default function ScorecardsClients() {
     ...metric,
     icon: frameworkIcon(metric.key),
   }));
+  const scoreMetricLabels: Record<string, string> = {
+    overall: t("scoreMetrics.overall"),
+    rapport: t("scoreMetrics.rapport"),
+    needs: t("scoreMetrics.needs"),
+    objections: t("scoreMetrics.objections"),
+    closing: t("scoreMetrics.closing"),
+  };
+
+  const frameworkMetricLabels: Record<string, string> = {
+    budget: t("frameworkMetrics.budget"),
+    authority: t("frameworkMetrics.authority"),
+    need: t("frameworkMetrics.need"),
+    timeline: t("frameworkMetrics.timeline"),
+    metrics: t("frameworkMetrics.metrics"),
+    economic_buyer: t("frameworkMetrics.economic_buyer"),
+    decision_criteria: t("frameworkMetrics.decision_criteria"),
+    decision_process: t("frameworkMetrics.decision_process"),
+    identify_pain: t("frameworkMetrics.identify_pain"),
+    champion: t("frameworkMetrics.champion"),
+    situation: t("frameworkMetrics.situation"),
+    problem: t("frameworkMetrics.problem"),
+    implication: t("frameworkMetrics.implication"),
+    need_payoff: t("frameworkMetrics.need_payoff"),
+  };
+
+  const notScoredLabel = t("scoreStates.notScored");
 
   return (
     <AppShell>
@@ -329,7 +355,7 @@ export default function ScorecardsClients() {
               {scoreMetrics(scorecard).map((metric) => (
                 <ScoreCard
                   key={metric.key}
-                  title={metric.label}
+                  title={scoreMetricLabels[metric.key] ?? metric.label}
                   value={metric.value}
                   icon={metric.icon}
                   warning={metric.warning}
@@ -339,40 +365,41 @@ export default function ScorecardsClients() {
 
             <div style={twoColumnStyle}>
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>Call Metrics</h2>
+                <h2 style={sectionTitleStyle}>{t("sections.callMetrics")}</h2>
 
                 <div style={metricGridStyle}>
                   <Metric
-                    title="Duration"
-                    value={formatDuration(scorecard.call_duration_seconds)}
+                    title={t("callMetrics.duration")}
+                    value={formatDuration(scorecard.call_duration_seconds, notScoredLabel)}
                     icon="⏱️"
                   />
                   <Metric
-                    title="Rep Talk"
-                    value={formatPercentage(scorecard.rep_talk_percentage)}
+                    title={t("callMetrics.repTalk")}
+                    value={formatPercentage(scorecard.rep_talk_percentage, notScoredLabel)}
                     icon="🎤"
                   />
                   <Metric
-                    title="Interruptions"
-                    value={formatCount(scorecard.interruptions_count)}
+                    title={t("callMetrics.interruptions")}
+                    value={formatCount(scorecard.interruptions_count, notScoredLabel)}
                     icon="⚡"
                   />
                   <Metric
-                    title="Filler Words"
-                    value={formatCount(scorecard.filler_words_count)}
+                    title={t("callMetrics.fillerWords")}
+                    value={formatCount(scorecard.filler_words_count, notScoredLabel)}
                     icon="💬"
                   />
                 </div>
               </section>
 
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>{frameworkScoreGroup.framework} Framework</h2>
-
+                <h2 style={sectionTitleStyle}>
+                  {t("sections.framework", { framework: frameworkScoreGroup.framework })}
+                </h2>
                 <div style={frameworkGridStyle}>
                   {frameworkScoreMetrics.map((metric) => (
                     <FrameworkItem
                       key={metric.key}
-                      label={metric.label}
+                      label={frameworkMetricLabels[metric.key] ?? metric.label}
                       value={metric.value}
                       icon={metric.icon}
                     />
@@ -383,7 +410,7 @@ export default function ScorecardsClients() {
 
             <div style={twoColumnStyle}>
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>Strengths</h2>
+                <h2 style={sectionTitleStyle}>{t("sections.strengths")}</h2>
 
                 {scorecard.strengths?.length ? (
                   <div style={chipWrapStyle}>
@@ -394,12 +421,12 @@ export default function ScorecardsClients() {
                     ))}
                   </div>
                 ) : (
-                  <p style={emptyTextStyle}>No strengths provided yet.</p>
+                  <p style={emptyTextStyle}>{t("empty.strengths")}</p>
                 )}
               </section>
 
               <section style={panelStyle}>
-                <h2 style={sectionTitleStyle}>Improvement Areas</h2>
+                <h2 style={sectionTitleStyle}>{t("sections.improvementAreas")}</h2>
 
                 {scorecard.improvement_areas?.length ? (
                   <div style={chipWrapStyle}>
@@ -411,7 +438,7 @@ export default function ScorecardsClients() {
                   </div>
                 ) : (
                   <p style={emptyTextStyle}>
-                    No improvement areas provided yet.
+                    {t("empty.improvements")}
                   </p>
                 )}
               </section>
@@ -419,7 +446,7 @@ export default function ScorecardsClients() {
 
             <section style={recommendationStyle}>
               <div>
-                <h2 style={sectionTitleStyle}>AI Coach Recommendation</h2>
+                <h2 style={sectionTitleStyle}>{t("sections.recommendation")}</h2>
 
                 <p
                   style={{
@@ -428,9 +455,7 @@ export default function ScorecardsClients() {
                     maxWidth: "740px",
                   }}
                 >
-                  Continue practicing the area with the lowest score. Focus on
-                  asking better discovery questions, handling objections calmly,
-                  and clearly connecting product value to the customer need.
+                  {t("recommendationText")}
                 </p>
               </div>
 
@@ -438,22 +463,22 @@ export default function ScorecardsClients() {
                 onClick={() => router.push("/scenarios")}
                 style={primaryButtonStyle}
               >
-                Start Another Practice →
+                {t("startAnotherPractice")}
               </button>
             </section>
 
             <section style={panelStyle}>
-              <h2 style={sectionTitleStyle}>Feedback Summary</h2>
+              <h2 style={sectionTitleStyle}>{t("sections.feedbackSummary")}</h2>
 
               <p style={{ color: "#344054", lineHeight: "1.8", marginBottom: 0 }}>
                 {scorecard.feedback_summary ||
-                  "Feedback summary is not available yet."}
+                  t("empty.feedback")}
               </p>
             </section>
 
             {sessionId && (
               <p style={{ color: "#98a2b3", fontSize: "12px", marginTop: "18px" }}>
-                Internal session reference available.
+                {t("internalSessionReference")}
               </p>
             )}
           </>
@@ -474,6 +499,7 @@ function ScoreCard({
   icon: string;
   warning?: boolean;
 }) {
+  const t = useTranslations("Scorecard");
   const hasScore = value != null;
   const showWarning = Boolean(warning && hasScore);
 
@@ -513,7 +539,7 @@ function ScoreCard({
               fontWeight: 800,
             }}
           >
-            {hasScore ? "Scored" : "Not scored"}
+            {hasScore ? t("scoreStates.scored") : t("scoreStates.notScored")}
           </span>
         </div>
 
@@ -533,7 +559,11 @@ function ScoreCard({
               fontWeight: 800,
             }}
           >
-            {value >= 8 ? "Strong" : value >= 6 ? "Good" : "Needs practice"}
+            {value >= 8
+              ? t("scoreStates.strong")
+              : value >= 6
+                ? t("scoreStates.good")
+                : t("scoreStates.needsPractice")}
           </p>
         </>
       ) : (
@@ -579,6 +609,8 @@ function FrameworkItem({
   value: number | null | undefined;
   icon: string;
 }) {
+  const t = useTranslations("Scorecard");
+
   return (
     <div style={frameworkItemStyle}>
       <span style={{ fontSize: "22px" }}>{icon}</span>
@@ -587,14 +619,14 @@ function FrameworkItem({
         <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
           {label}
         </p>
-        <strong>{value != null ? `${value}/10` : "Not scored"}</strong>
+        <strong>{value != null ? `${value}/10` : t("scoreStates.notScored")}</strong>
       </div>
     </div>
   );
 }
 
-function formatDuration(seconds?: number | null) {
-  if (seconds == null) return "Not scored";
+function formatDuration(seconds: number | null | undefined, notScoredLabel: string) {
+  if (seconds == null) return notScoredLabel;
   if (!seconds) return "0s";
 
   const minutes = Math.floor(seconds / 60);
@@ -605,14 +637,14 @@ function formatDuration(seconds?: number | null) {
   return `${minutes}m ${remainingSeconds}s`;
 }
 
-function formatPercentage(value?: number | null) {
-  if (value == null) return "Not scored";
+function formatPercentage(value: number | null | undefined, notScoredLabel: string) {
+  if (value == null) return notScoredLabel;
 
   return `${value}%`;
 }
 
-function formatCount(value?: number | null) {
-  if (value == null) return "Not scored";
+function formatCount(value: number | null | undefined, notScoredLabel: string) {
+  if (value == null) return notScoredLabel;
 
   return `${value}`;
 }

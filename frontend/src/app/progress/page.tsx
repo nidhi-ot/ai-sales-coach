@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLocale, useTranslations } from "next-intl";
 
 import AppShell from "../../components/AppShell";
 import { API_BASE_URL, authFetch } from "../../lib/api";
@@ -44,10 +45,19 @@ type ChartPoint = {
 type DimensionKey = "rapport" | "discovery" | "objection_handling" | "closing";
 
 export default function ProgressPage() {
+  const t = useTranslations("Progress");
+  const locale = useLocale();
   const [profiles, setProfiles] = useState<ProfileVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAllHistory, setShowAllHistory] = useState(false);
+
+  const dimensionLabels: Record<DimensionKey, string> = {
+    rapport: t("dimensions.rapport"),
+    discovery: t("dimensions.discovery"),
+    objection_handling: t("dimensions.objectionHandling"),
+    closing: t("dimensions.closing"),
+  };
 
   useEffect(() => {
     async function loadProfileHistory() {
@@ -55,7 +65,7 @@ export default function ProgressPage() {
         const response = await authFetch(`${API_BASE_URL}/profile/me/history`);
 
         if (!response.ok) {
-          throw new Error(`Failed to load progress history (${response.status})`);
+          throw new Error(t("error"));
         }
 
         const data = (await response.json()) as ProfileHistoryResponse;
@@ -65,7 +75,7 @@ export default function ProgressPage() {
         setError(
           progressError instanceof Error
             ? progressError.message
-            : "Could not load progress history"
+            : t("error")
         );
       } finally {
         setLoading(false);
@@ -73,7 +83,7 @@ export default function ProgressPage() {
     }
 
     loadProfileHistory();
-  }, []);
+  }, [t]);
 
   const chartData = useMemo<ChartPoint[]>(() => {
     return profiles.map((profile) => ({
@@ -91,48 +101,51 @@ export default function ProgressPage() {
     <AppShell>
       <div style={pageStyle}>
         <section style={heroStyle}>
-  <div>
-    <p style={eyebrowStyle}>Learning Progress</p>
-    <h1 style={titleStyle}>Your Progress</h1>
-    <p style={subtitleStyle}>
-      Track how your sales skills evolve across profile versions.
-    </p>
-  </div>
+          <div>
+            <p style={eyebrowStyle}>{t("eyebrow")}</p>
+            <h1 style={titleStyle}>{t("title")}</h1>
+            <p style={subtitleStyle}>{t("subtitle")}</p>
+          </div>
 
-  {!loading && !error && profiles.length > 0 && (
-    <div style={heroStatsStyle}>
-      <div style={heroStatStyle}>
-        <span>Current Focus</span>
-        <strong>{formatDimension(latestProfile?.weakest_dimension)}</strong>
-      </div>
+          {!loading && !error && profiles.length > 0 && (
+            <div style={heroStatsStyle}>
+              <div style={heroStatStyle}>
+                <span>{t("stats.currentFocus")}</span>
+                <strong>
+                  {formatDimension(
+                    latestProfile?.weakest_dimension,
+                    dimensionLabels,
+                    t("notAvailable")
+                  )}
+                </strong>
+              </div>
 
-      <div style={heroStatStyle}>
-        <span>Best Skill</span>
-        <strong>{getBestSkill(latestProfile)}</strong>
-      </div>
+              <div style={heroStatStyle}>
+                <span>{t("stats.bestSkill")}</span>
+                <strong>
+                  {getBestSkill(latestProfile, dimensionLabels, t("notAvailable"))}
+                </strong>
+              </div>
 
-      <div style={heroStatStyle}>
-        <span>Versions</span>
-        <strong>{profiles.length}</strong>
-      </div>
-    </div>
-  )}
-</section>
+              <div style={heroStatStyle}>
+                <span>{t("stats.versions")}</span>
+                <strong>{profiles.length}</strong>
+              </div>
+            </div>
+          )}
+        </section>
 
         {loading ? (
           <section style={panelStyle}>
-            <p style={mutedTextStyle}>Loading progress history...</p>
+            <p style={mutedTextStyle}>{t("loading")}</p>
           </section>
         ) : error ? (
           <section style={errorPanelStyle}>{error}</section>
         ) : profiles.length === 0 ? (
           <section style={panelStyle}>
             <div style={{ fontSize: "46px", marginBottom: "14px" }}>📈</div>
-            <h2 style={sectionTitleStyle}>No progress data yet</h2>
-            <p style={mutedTextStyle}>
-              Complete a practice call and generate a scorecard to create your
-              first learning profile.
-            </p>
+            <h2 style={sectionTitleStyle}>{t("empty.title")}</h2>
+            <p style={mutedTextStyle}>{t("empty.description")}</p>
           </section>
         ) : (
           <>
@@ -141,10 +154,8 @@ export default function ProgressPage() {
             <section style={panelStyle}>
               <div style={sectionHeaderStyle}>
                 <div>
-                  <h2 style={sectionTitleStyle}>Profile Evolution</h2>
-                  <p style={mutedTextStyle}>
-                    Compare your skill scores from profile v1 to your latest profile.
-                  </p>
+                  <h2 style={sectionTitleStyle}>{t("chart.title")}</h2>
+                  <p style={mutedTextStyle}>{t("chart.subtitle")}</p>
                 </div>
               </div>
 
@@ -161,15 +172,21 @@ export default function ProgressPage() {
                     <Tooltip
                       formatter={(value, name) => [
                         `${value}/10`,
-                        formatDimension(String(name)),
+                        formatDimension(
+                          String(name),
+                          dimensionLabels,
+                          t("notAvailable")
+                        ),
                       ]}
-                      labelFormatter={(value) => `Profile v${value}`}
+                      labelFormatter={(value) =>
+                        t("history.profileVersion", { version: String(value) })
+                      }
                     />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="rapport"
-                      name="Rapport"
+                      name={dimensionLabels.rapport}
                       stroke="#00704f"
                       strokeWidth={3}
                       dot={{ r: 3 }}
@@ -179,7 +196,7 @@ export default function ProgressPage() {
                     <Line
                       type="monotone"
                       dataKey="discovery"
-                      name="Discovery"
+                      name={dimensionLabels.discovery}
                       stroke="#2563eb"
                       strokeWidth={3}
                       dot={{ r: 3 }}
@@ -189,7 +206,7 @@ export default function ProgressPage() {
                     <Line
                       type="monotone"
                       dataKey="objection_handling"
-                      name="Objection Handling"
+                      name={dimensionLabels.objection_handling}
                       stroke="#9333ea"
                       strokeWidth={3}
                       dot={{ r: 3 }}
@@ -199,7 +216,7 @@ export default function ProgressPage() {
                     <Line
                       type="monotone"
                       dataKey="closing"
-                      name="Closing"
+                      name={dimensionLabels.closing}
                       stroke="#ea580c"
                       strokeWidth={3}
                       dot={{ r: 3 }}
@@ -214,43 +231,51 @@ export default function ProgressPage() {
             <section style={panelStyle}>
               <div style={sectionHeaderStyle}>
                 <div>
-                  <h2 style={sectionTitleStyle}>Recent Profile History</h2>
-                  <p style={mutedTextStyle}>
-                    Latest profile versions and their focus areas.
-                  </p>
+                  <h2 style={sectionTitleStyle}>{t("history.title")}</h2>
+                  <p style={mutedTextStyle}>{t("history.subtitle")}</p>
                 </div>
               </div>
 
               <div style={historyListStyle}>
                 {[...profiles]
-  .reverse()
-  .slice(0, showAllHistory ? profiles.length : 5)
-  .map((profile) => (
+                  .reverse()
+                  .slice(0, showAllHistory ? profiles.length : 5)
+                  .map((profile) => (
                     <div key={profile.version} style={historyRowStyle}>
                       <div>
-                        <strong>Profile v{profile.version}</strong>
+                        <strong>
+                          {t("history.profileVersion", {
+                            version: profile.version,
+                          })}
+                        </strong>
                         <p style={mutedTextStyle}>
                           {profile.created_at
-                            ? formatDate(profile.created_at)
-                            : "No date"}
+                            ? formatDate(profile.created_at, locale)
+                            : t("history.noDate")}
                         </p>
                       </div>
 
                       <span style={focusBadgeStyle}>
-                        Focus: {formatDimension(profile.weakest_dimension)}
+                        {t("history.focus", {
+                          dimension: formatDimension(
+                            profile.weakest_dimension,
+                            dimensionLabels,
+                            t("notAvailable")
+                          ),
+                        })}
                       </span>
                     </div>
                   ))}
               </div>
               {profiles.length > 5 && (
-  <button
-    type="button"
-    onClick={() => setShowAllHistory((current) => !current)}
-    style={viewAllButtonStyle}
-  >
-    {showAllHistory ? "Show Less" : "View All"}
-  </button>
-)}
+                <button
+                  type="button"
+                  onClick={() => setShowAllHistory((current) => !current)}
+                  style={viewAllButtonStyle}
+                >
+                  {showAllHistory ? t("history.showLess") : t("history.viewAll")}
+                </button>
+              )}
             </section>
           </>
         )}
@@ -276,36 +301,45 @@ function getMetric(scores: MetricScores, key: DimensionKey) {
   return scores[key] ?? null;
 }
 
-function getBestSkill(profile?: ProfileVersion) {
-  if (!profile) return "N/A";
+function getBestSkill(
+  profile: ProfileVersion | undefined,
+  dimensionLabels: Record<DimensionKey, string>,
+  fallback: string
+) {
+  if (!profile) return fallback;
 
-  const scores = {
-    Rapport: getMetric(profile.metric_scores, "rapport"),
-    Discovery: getMetric(profile.metric_scores, "discovery"),
-    "Objection Handling": getMetric(profile.metric_scores, "objection_handling"),
-    Closing: getMetric(profile.metric_scores, "closing"),
-  };
+  const scores: [DimensionKey, number | null][] = [
+    ["rapport", getMetric(profile.metric_scores, "rapport")],
+    ["discovery", getMetric(profile.metric_scores, "discovery")],
+    ["objection_handling", getMetric(profile.metric_scores, "objection_handling")],
+    ["closing", getMetric(profile.metric_scores, "closing")],
+  ];
 
-  const valid = Object.entries(scores).filter(
+  const valid = scores.filter(
     ([, value]) => typeof value === "number"
-  ) as [string, number][];
+  ) as [DimensionKey, number][];
 
-  if (valid.length === 0) return "N/A";
+  if (valid.length === 0) return fallback;
 
-  return valid.sort((a, b) => b[1] - a[1])[0][0];
+  return dimensionLabels[valid.sort((a, b) => b[1] - a[1])[0][0]];
 }
 
-function formatDimension(value?: string | null) {
-  if (!value) return "N/A";
+function formatDimension(
+  value: string | null | undefined,
+  dimensionLabels: Record<DimensionKey, string>,
+  fallback: string
+) {
+  const normalized = value
+    ?.replace("_score", "")
+    .replace("needs_discovery", "discovery") as DimensionKey | undefined;
 
-  return value
-    .replace("needs_discovery", "discovery")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  if (!normalized) return fallback;
+
+  return dimensionLabels[normalized] ?? fallback;
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", {
+function formatDate(value: string, locale: string) {
+  return new Date(value).toLocaleDateString(locale === "sv" ? "sv-SE" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

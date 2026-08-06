@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import AppShell from "../../components/AppShell";
 import StatCard from "../../components/dashboard/StatCard";
@@ -38,13 +39,24 @@ type DimensionsResponse = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useTranslations("Dashboard");
 
-  const [fullName, setFullName] = useState("Sales Rep");
+  const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
   const [dimensions, setDimensions] = useState<DimensionsResponse["dimensions"]>({});
   const [loading, setLoading] = useState(true);
+  const displayName = fullName || t("defaultName");
+  const scenarioLabels: Record<string, string> = {
+    cold_call: t("scenarios.coldCall"),
+    hot_call: t("scenarios.hotCall"),
+    directsales: t("scenarios.directSales"),
+    meeting: t("scenarios.meeting"),
+    objection_handling: t("scenarios.objectionHandling"),
+    value_proposition: t("scenarios.valueProposition"),
+    closing: t("scenarios.closing"),
+  };
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
@@ -101,84 +113,81 @@ export default function DashboardPage() {
   }, []);
 
   if (role === "admin") {
-  return (
-    <AppShell>
-      <div style={adminPageStyle}>
-        <section style={adminHeaderStyle}>
-          <div>
-            <h1 style={adminTitleStyle}>Admin Workspace</h1>
-            <p style={adminSubtitleStyle}>
-              Configure how the AI Sales Coach behaves for your organization.
-            </p>
-          </div>
-        </section>
+    return (
+      <AppShell>
+        <div style={adminPageStyle}>
+          <section style={adminHeaderStyle}>
+            <div>
+              <h1 style={adminTitleStyle}>{t("admin.title")}</h1>
+              <p style={adminSubtitleStyle}>{t("admin.subtitle")}</p>
+            </div>
+          </section>
 
-        <section style={adminCardsGridStyle}>
-          <AdminOverviewCard
-            icon="🏢"
-            title="Business Profile"
-            rows={[
-              ["Status", "Configured"],
-              ["Framework", "BANT"],
-              ["Language", "Swedish"],
-            ]}
-            buttonLabel="Edit"
-            onClick={() => router.push("/admin?tab=business")}
-          />
-
-          <AdminOverviewCard
-            icon="🎛️"
-            title="Scenario Overrides"
-            rows={[
-              ["Default Scenarios", "4"],
-              ["Customized Scenarios", "1"],
-            ]}
-            buttonLabel="Configure"
-            onClick={() => router.push("/admin?tab=scenarios")}
-          />
-
-          <AdminOverviewCard
-            icon="👥"
-            title="Team Management"
-            rows={[
-              ["Users", "12"],
-              ["Managers", "2"],
-              ["Admins", "1"],
-            ]}
-            buttonLabel="Manage"
-            onClick={() => router.push("/admin?tab=invites")}
-          />
-        </section>
-
-
-        <section style={adminPanelStyle}>
-          <h2 style={adminSectionTitleStyle}>Recent Changes</h2>
-
-          <div style={timelineStyle}>
-            <RecentChange
-              title="Business profile updated"
-              time="Today"
-              description="Updated company description, target ICP, and sales objectives."
+          <section style={adminCardsGridStyle}>
+            <AdminOverviewCard
+              icon="🏢"
+              title={t("admin.cards.businessProfile.title")}
+              rows={[
+                [t("admin.rows.status"), t("admin.values.configured")],
+                [t("admin.rows.framework"), "BANT"],
+                [t("admin.rows.language"), t("admin.values.swedish")],
+              ]}
+              buttonLabel={t("admin.actions.edit")}
+              onClick={() => router.push("/admin?tab=business")}
             />
-            <RecentChange
-              title="Cold Call objective modified"
-              time="Recently"
-              description="Adjusted conversation goals and success criteria."
+
+            <AdminOverviewCard
+              icon="🎛️"
+              title={t("admin.cards.scenarioOverrides.title")}
+              rows={[
+                [t("admin.rows.defaultScenarios"), "4"],
+                [t("admin.rows.customizedScenarios"), "1"],
+              ]}
+              buttonLabel={t("admin.actions.configure")}
+              onClick={() => router.push("/admin?tab=scenarios")}
             />
-            <RecentChange
-              title="New manager invited"
-              time="Recently"
-              description="A manager invite link was created."
+
+            <AdminOverviewCard
+              icon="👥"
+              title={t("admin.cards.teamManagement.title")}
+              rows={[
+                [t("admin.rows.users"), "12"],
+                [t("admin.rows.managers"), "2"],
+                [t("admin.rows.admins"), "1"],
+              ]}
+              buttonLabel={t("admin.actions.manage")}
+              onClick={() => router.push("/admin?tab=invites")}
             />
-          </div>
-        </section>
-      </div>
-    </AppShell>
-  );
-}
+          </section>
+
+          <section style={adminPanelStyle}>
+            <h2 style={adminSectionTitleStyle}>{t("admin.recent.title")}</h2>
+
+            <div style={timelineStyle}>
+              <RecentChange
+                title={t("admin.recent.businessProfile.title")}
+                time={t("admin.recent.today")}
+                description={t("admin.recent.businessProfile.description")}
+              />
+              <RecentChange
+                title={t("admin.recent.coldCall.title")}
+                time={t("admin.recent.recently")}
+                description={t("admin.recent.coldCall.description")}
+              />
+              <RecentChange
+                title={t("admin.recent.managerInvited.title")}
+                time={t("admin.recent.recently")}
+                description={t("admin.recent.managerInvited.description")}
+              />
+            </div>
+          </section>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (role === "manager") {
-    return <ManagerDashboard fullName={fullName} onViewTeam={() => router.push("/team")} />;
+    return <ManagerDashboard fullName={displayName} onViewTeam={() => router.push("/team")} />;
   }
 
   return (
@@ -187,9 +196,11 @@ export default function DashboardPage() {
         <section style={heroStyle}>
           <div style={heroInnerStyle}>
             <div>
-              <p style={eyebrowStyle}>AI Sales Coach Dashboard</p>
-              <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
-              <p style={heroSubtitleStyle}>Ready to level up your sales game today?</p>
+              <p style={eyebrowStyle}>{t("eyebrow")}</p>
+              <h1 style={heroTitleStyle}>
+                {t("hero.greeting", { name: displayName })}
+              </h1>
+              <p style={heroSubtitleStyle}>{t("hero.subtitle")}</p>
             </div>
 
             <button
@@ -197,21 +208,21 @@ export default function DashboardPage() {
               onClick={() => router.push("/scenarios")}
               style={primaryButtonStyle}
             >
-              Start Practice →
+              {t("hero.startPractice")}
             </button>
           </div>
         </section>
 
         <div style={statsGridStyle}>
           <StatCard
-            title="Practice Calls"
+            title={t("stats.practiceCalls.title")}
             value={loading ? "..." : stats?.total_calls ?? 0}
-            subtitle="Total completed calls"
+            subtitle={t("stats.practiceCalls.subtitle")}
             icon="☎️"
           />
 
           <StatCard
-            title="Average Score"
+            title={t("stats.averageScore.title")}
             value={
               loading
                 ? "..."
@@ -219,12 +230,12 @@ export default function DashboardPage() {
                   ? stats.avg_score.toFixed(1)
                   : "--"
             }
-            subtitle="Based on scorecards"
+            subtitle={t("stats.averageScore.subtitle")}
             icon="📊"
           />
 
           <StatCard
-            title="Best Score"
+            title={t("stats.bestScore.title")}
             value={
               loading
                 ? "..."
@@ -232,12 +243,12 @@ export default function DashboardPage() {
                   ? stats.best_score.toFixed(1)
                   : "--"
             }
-            subtitle="Personal best"
+            subtitle={t("stats.bestScore.subtitle")}
             icon="🏆"
           />
 
           <StatCard
-            title="Last Practice"
+            title={t("stats.lastPractice.title")}
             value={
               loading
                 ? "..."
@@ -248,8 +259,10 @@ export default function DashboardPage() {
             subtitle={
               stats?.improvement_rate !== null &&
               stats?.improvement_rate !== undefined
-                ? `${stats.improvement_rate}% improvement`
-                : "No trend yet"
+                ? t("stats.lastPractice.improvement", {
+                    value: stats.improvement_rate,
+                  })
+                : t("stats.lastPractice.noTrend")
             }
             icon="🎯"
           />
@@ -259,8 +272,8 @@ export default function DashboardPage() {
           <section style={panelStyle}>
             <div style={headerStyle}>
               <div>
-                <h2 style={titleStyle}>Recent Practice</h2>
-                <p style={subtitleStyle}>Your latest training sessions</p>
+                <h2 style={titleStyle}>{t("recent.title")}</h2>
+                <p style={subtitleStyle}>{t("recent.subtitle")}</p>
               </div>
 
               <button
@@ -268,14 +281,14 @@ export default function DashboardPage() {
                 onClick={() => router.push("/history")}
                 style={linkButtonStyle}
               >
-                View all
+                {t("recent.viewAll")}
               </button>
             </div>
 
             {loading ? (
-              <p style={emptyTextStyle}>Loading recent sessions...</p>
+              <p style={emptyTextStyle}>{t("recent.loading")}</p>
             ) : recentSessions.length === 0 ? (
-              <p style={emptyTextStyle}>No practice sessions yet.</p>
+              <p style={emptyTextStyle}>{t("recent.empty")}</p>
             ) : (
               <div style={{ display: "grid", gap: "14px", marginTop: "20px" }}>
                 {recentSessions.map((session) => (
@@ -284,7 +297,7 @@ export default function DashboardPage() {
 
                     <div style={{ flex: 1 }}>
                       <strong style={{ color: "#101828" }}>
-                        {formatScenario(session.scenario)}
+                        {formatScenario(session.scenario, scenarioLabels)}
                       </strong>
 
                       <p style={sessionDateStyle}>
@@ -306,16 +319,22 @@ export default function DashboardPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Your Progress</h2>
-            <p style={subtitleStyle}>Skill growth overview</p>
+            <h2 style={titleStyle}>{t("progress.title")}</h2>
+            <p style={subtitleStyle}>{t("progress.subtitle")}</p>
 
             <div style={{ marginTop: "22px", display: "grid", gap: "18px" }}>
-              <ProgressRow label="Discovery" score={dimensions?.discovery?.latest} />
               <ProgressRow
-                label="Objection Handling"
+                label={t("progress.skills.discovery")}
+                score={dimensions?.discovery?.latest}
+              />
+              <ProgressRow
+                label={t("progress.skills.objectionHandling")}
                 score={dimensions?.objection_handling?.latest}
               />
-              <ProgressRow label="Closing" score={dimensions?.closing?.latest} />
+              <ProgressRow
+                label={t("progress.skills.closing")}
+                score={dimensions?.closing?.latest}
+              />
             </div>
           </section>
         </div>
@@ -416,27 +435,29 @@ function ManagerDashboard({
   fullName: string;
   onViewTeam: () => void;
 }) {
+  const t = useTranslations("Dashboard");
+
   const sessionsTrend = [
-    { day: "Mon", sessions: 8 },
-    { day: "Tue", sessions: 12 },
-    { day: "Wed", sessions: 15 },
-    { day: "Thu", sessions: 10 },
-    { day: "Fri", sessions: 18 },
-    { day: "Sat", sessions: 6 },
-    { day: "Sun", sessions: 8 },
+    { day: t("manager.days.mon"), sessions: 8 },
+    { day: t("manager.days.tue"), sessions: 12 },
+    { day: t("manager.days.wed"), sessions: 15 },
+    { day: t("manager.days.thu"), sessions: 10 },
+    { day: t("manager.days.fri"), sessions: 18 },
+    { day: t("manager.days.sat"), sessions: 6 },
+    { day: t("manager.days.sun"), sessions: 8 },
   ];
 
   const skillData = [
-    { name: "Rapport", value: 72 },
-    { name: "Discovery", value: 68 },
-    { name: "Objections", value: 61 },
-    { name: "Closing", value: 55 },
+    { name: t("manager.skills.rapport"), value: 72 },
+    { name: t("manager.skills.discovery"), value: 68 },
+    { name: t("manager.skills.objections"), value: 61 },
+    { name: t("manager.skills.closing"), value: 55 },
   ];
 
   const coachingData = [
-    { name: "ABC", skill: "Closing", score: 48 },
-    { name: "Nidhi", skill: "Discovery", score: 58 },
-    { name: "Fortuna", skill: "Objections", score: 64 },
+    { name: "ABC", skill: t("manager.skills.closing"), score: 48 },
+    { name: "Nidhi", skill: t("manager.skills.discovery"), score: 58 },
+    { name: "Fortuna", skill: t("manager.skills.objections"), score: 64 },
   ];
   const chartPalette = ["#006b4f", "#00a36c", "#f59e0b", "#ef4444"];
   const maxSessions = Math.max(...sessionsTrend.map((item) => item.sessions));
@@ -447,30 +468,45 @@ function ManagerDashboard({
         <section style={heroStyle}>
           <div style={heroInnerStyle}>
             <div>
-              <p style={eyebrowStyle}>AI Manager Dashboard</p>
-              <h1 style={heroTitleStyle}>Good Morning, {fullName} 👋</h1>
-              <p style={heroSubtitleStyle}>
-                Track team performance, coaching priorities, and sales practice progress.
-              </p>
+              <p style={eyebrowStyle}>{t("manager.eyebrow")}</p>
+              <h1 style={heroTitleStyle}>
+                {t("manager.greeting", { name: fullName })}
+              </h1>
+              <p style={heroSubtitleStyle}>{t("manager.subtitle")}</p>
             </div>
 
             <button type="button" onClick={onViewTeam} style={primaryButtonStyle}>
-              View Team →
+              {t("manager.viewTeam")}
             </button>
           </div>
         </section>
 
         <div style={statsGridStyle}>
-          <ManagerKpi title="Team Score" value="72%" trend="+6%" icon="⭐" />
-          <ManagerKpi title="Sessions" value="77" trend="+14 this week" icon="🎙️" />
-          <ManagerKpi title="Active Reps" value="9" trend="90% active" icon="👥" />
-          <ManagerKpi title="Need Coaching" value="3" trend="Priority reps" icon="🚩" />
+          <ManagerKpi title={t("manager.kpis.teamScore")} value="72%" trend="+6%" icon="⭐" />
+          <ManagerKpi
+            title={t("manager.kpis.sessions")}
+            value="77"
+            trend={t("manager.kpis.sessionsTrend")}
+            icon="🎙️"
+          />
+          <ManagerKpi
+            title={t("manager.kpis.activeReps")}
+            value="9"
+            trend={t("manager.kpis.activeTrend")}
+            icon="👥"
+          />
+          <ManagerKpi
+            title={t("manager.kpis.needCoaching")}
+            value="3"
+            trend={t("manager.kpis.priorityReps")}
+            icon="🚩"
+          />
         </div>
 
         <div style={managerChartGridStyle}>
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Sessions Trend</h2>
-            <p style={subtitleStyle}>Practice activity this week</p>
+            <h2 style={titleStyle}>{t("manager.sections.sessionsTrend")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.sessionsTrendSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={barChartStyle}>
@@ -492,8 +528,8 @@ function ManagerDashboard({
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Skill Distribution</h2>
-            <p style={subtitleStyle}>Average score by skill area</p>
+            <h2 style={titleStyle}>{t("manager.sections.skillDistribution")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.skillDistributionSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
@@ -521,8 +557,8 @@ function ManagerDashboard({
 
         <div style={managerChartGridStyle}>
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Team Performance</h2>
-            <p style={subtitleStyle}>Skill strengths and weak areas</p>
+            <h2 style={titleStyle}>{t("manager.sections.teamPerformance")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.teamPerformanceSubtitle")}</p>
 
             <div style={chartBoxStyle}>
               <div style={{ display: "grid", gap: "14px", marginTop: "10px" }}>
@@ -547,15 +583,17 @@ function ManagerDashboard({
           </section>
 
           <section style={panelStyle}>
-            <h2 style={titleStyle}>Coaching Priority</h2>
-            <p style={subtitleStyle}>Reps who need manager attention</p>
+            <h2 style={titleStyle}>{t("manager.sections.coachingPriority")}</h2>
+            <p style={subtitleStyle}>{t("manager.sections.coachingPrioritySubtitle")}</p>
 
             <div style={{ display: "grid", gap: "14px", marginTop: "22px" }}>
               {coachingData.map((rep) => (
                 <div key={rep.name} style={priorityCardStyle}>
                   <div>
                     <strong>{rep.name}</strong>
-                    <p style={subtitleStyle}>Weakest skill: {rep.skill}</p>
+                    <p style={subtitleStyle}>
+                      {t("manager.priority.weakestSkill", { skill: rep.skill })}
+                    </p>
                   </div>
 
                   <span style={priorityBadgeStyle}>{rep.score}%</span>
@@ -631,7 +669,11 @@ function ProgressRow({
   );
 }
 
-function formatScenario(value: string) {
+function formatScenario(value: string, labels: Record<string, string>) {
+  if (labels[value]) {
+    return labels[value];
+  }
+
   return value
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());

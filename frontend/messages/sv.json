@@ -2,6 +2,7 @@
   "PracticeSetup": {
     "eyebrow": "Övningsinställning",
     "title": "Låt oss förbereda samtalet",
+    "loading": "Laddar övningsinställning...",
     "subtitle": "Välj kundkontext och fokusområde innan AI-samtalet startar.",
     "businessContext": "Kundkontext",
     "businessContextDescription": "Välj vilken typ av kund AI:n ska spela.",
@@ -20,16 +21,278 @@
     "microphonePermission": "Mikrofonbehörighet kommer att efterfrågas.",
     "aiCustomerJoins": "AI-kunden ansluter till samtalet.",
     "endAnytime": "Du kan avsluta samtalet när som helst.",
-    "startCall": "Starta övningssamtal →"
+    "startCall": "Starta övningssamtal →",
+    "profileVersion": "Profil v{version}",
+    "aiRecommendedInline": "AI-rekommenderat",
+    "businessContexts": {
+      "apartmentAssociation": {
+        "title": "Bostadsrättsförening",
+        "description": "En fastighetsansvarig som ansvarar för trappstädning."
+      },
+      "officeBuilding": {
+        "title": "Kontorsbyggnad",
+        "description": "En kontorschef som söker en pålitlig städtjänst."
+      },
+      "hotel": {
+        "title": "Hotell",
+        "description": "En hotellchef med fokus på renlighet och gästupplevelse."
+      },
+      "retailStore": {
+        "title": "Butik",
+        "description": "En butiksägare som vill ha en ren kundmiljö."
+      }
+    },
+    "focusAreas": {
+      "discovery": "Behovsanalys",
+      "handlingObjections": "Hantera invändningar",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    }
   },
   "Call": {
+    "eyebrow": "Liveövning",
     "title": "Live övningssamtal",
-    "connecting": "Ansluter...",
-    "inCall": "I samtal...",
-    "endingCall": "Avslutar samtal...",
+    "loading": "Laddar samtal...",
+    "scenario": "Scenario",
+    "status": "Status",
+    "timeLeft": "Tid kvar",
+    "callTime": "Samtalstid",
+    "ready": "Redo",
+    "connectingStatus": "Ansluter",
+    "connected": "Ansluten",
+    "onHold": "Pausat",
+    "ending": "Avslutar",
+    "ended": "Avslutat",
+    "failed": "Misslyckades",
+    "readyTitle": "Redo att starta",
+    "connectingTitle": "Ansluter...",
+    "activeTitle": "AI-kunden lyssnar",
+    "holdingTitle": "Samtalet är pausat",
+    "endingTitle": "Avslutar samtal...",
+    "endedTitle": "Samtalet är avslutat",
+    "failedTitle": "Anslutningen misslyckades",
+    "readyDescription": "Klicka på Starta samtal när du är redo. Mikrofonbehörighet kommer att efterfrågas.",
+    "connectingDescription": "Skapar realtidssession och ansluter ljud.",
+    "activeDescription": "Prata naturligt med AI-kunden. Samtalet sparas för scorecardet.",
+    "holdingDescription": "Din mikrofon är avstängd. Fortsätt när du är redo.",
+    "endingDescription": "Sparar transkriptet och stänger samtalsanslutningen.",
+    "endedDescription": "Ditt övningssamtal har avslutats.",
+    "savedSuccess": "Ditt övningssamtal har sparats.",
+    "startCall": "Starta samtal",
+    "hold": "Pausa",
+    "resume": "Fortsätt",
     "endCall": "Avsluta samtal",
     "mute": "Stäng av mikrofon",
-    "unmute": "Slå på mikrofon"
+    "unmute": "Slå på mikrofon",
+    "viewScorecard": "Visa scorecard",
+    "goToHistory": "Gå till historik",
+    "startAnother": "Starta ny övning",
+    "backToScenarios": "Tillbaka till scenarier",
+    "errors": {
+      "missingIdentity": "Rep- eller företagsinformation saknas. Logga in igen.",
+      "createRealtimeSession": "Det gick inte att skapa realtidssessionen.",
+      "missingClientSecret": "Realtidssessionen returnerade ingen client_secret.",
+      "webrtcFailed": "OpenAI WebRTC-anslutningen misslyckades.",
+      "connectionFailed": "Mikrofonen eller realtidsanslutningen misslyckades.",
+      "backendEndFailed": "Samtalet avslutades lokalt, men backend-sessionen kunde inte avslutas."
+    }
+  },
+  "AppShell": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "practice": "Öva",
+      "history": "Historik",
+      "scorecards": "Scorecards",
+      "profile": "Profil",
+      "progress": "Framsteg",
+      "settings": "Inställningar",
+      "team": "Team",
+      "admin": "Admin"
+    },
+    "logout": "Logga ut"
+  },
+  "Scenarios": {
+    "eyebrow": "Övningsupplägg",
+    "title": "Välj övningsscenario",
+    "subtitle": "Välj samtalstyp och starta ett realistiskt AI-säljövningssamtal. AI-kunden svarar utifrån det valda scenariot.",
+    "selectedScenario": "Valt scenario",
+    "whatHappensNext": "Vad händer sedan?",
+    "preparingCall": "Förbereder samtal...",
+    "startPracticeCall": "Starta övningssamtal →",
+    "steps": {
+      "microphone": "Mikrofonbehörighet kommer att begäras.",
+      "aiCustomer": "AI-kunden ansluter till samtalet.",
+      "endAnytime": "Du kan avsluta samtalet när som helst."
+    },
+    "items": {
+      "coldCall": {
+        "title": "Kallsamtal",
+        "label": "Prospektering",
+        "description": "Presentera AI Sales Coach för en potentiell kund som inte känner dig."
+      },
+      "hotCall": {
+        "title": "Varmt samtal",
+        "label": "Uppföljning",
+        "description": "Följ upp med en potentiell kund som redan är intresserad av AI Sales Coach."
+      },
+      "directSales": {
+        "title": "Direktförsäljning",
+        "label": "Avslut",
+        "description": "Försök sälja in AI Sales Coach direkt under samtalet."
+      },
+      "meeting": {
+        "title": "Möte",
+        "label": "Beslutsfattare",
+        "description": "Genomför ett säljmöte om AI Sales Coach med en beslutsfattare."
+      }
+    }
+  },
+  "Dashboard": {
+    "defaultName": "Säljare",
+    "eyebrow": "AI Sales Coach-dashboard",
+    "hero": {
+      "greeting": "God morgon, {name} 👋",
+      "subtitle": "Redo att vässa dina säljfärdigheter i dag?",
+      "startPractice": "Starta övning →"
+    },
+    "stats": {
+      "practiceCalls": {
+        "title": "Övningssamtal",
+        "subtitle": "Totalt antal slutförda samtal"
+      },
+      "averageScore": {
+        "title": "Snittpoäng",
+        "subtitle": "Baserat på scorecards"
+      },
+      "bestScore": {
+        "title": "Bästa poäng",
+        "subtitle": "Personbästa"
+      },
+      "lastPractice": {
+        "title": "Senaste övning",
+        "improvement": "{value}% förbättring",
+        "noTrend": "Ingen trend ännu"
+      }
+    },
+    "recent": {
+      "title": "Senaste övningar",
+      "subtitle": "Dina senaste träningssessioner",
+      "viewAll": "Visa alla",
+      "loading": "Laddar senaste sessioner...",
+      "empty": "Inga övningssessioner ännu."
+    },
+    "progress": {
+      "title": "Dina framsteg",
+      "subtitle": "Översikt över färdighetsutveckling",
+      "skills": {
+        "discovery": "Behovsanalys",
+        "objectionHandling": "Invändningshantering",
+        "closing": "Avslut"
+      }
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "hotCall": "Varmt samtal",
+      "directSales": "Direktförsäljning",
+      "meeting": "Möte",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    },
+    "manager": {
+      "eyebrow": "AI Manager-dashboard",
+      "greeting": "God morgon, {name} 👋",
+      "subtitle": "Följ teamets prestation, coachningsprioriteringar och säljövningsframsteg.",
+      "viewTeam": "Visa team →",
+      "days": {
+        "mon": "Mån",
+        "tue": "Tis",
+        "wed": "Ons",
+        "thu": "Tor",
+        "fri": "Fre",
+        "sat": "Lör",
+        "sun": "Sön"
+      },
+      "skills": {
+        "rapport": "Kontakt",
+        "discovery": "Behovsanalys",
+        "objections": "Invändningar",
+        "closing": "Avslut"
+      },
+      "kpis": {
+        "teamScore": "Teamets poäng",
+        "sessions": "Sessioner",
+        "sessionsTrend": "+14 denna vecka",
+        "activeReps": "Aktiva säljare",
+        "activeTrend": "90% aktiva",
+        "needCoaching": "Behöver coachning",
+        "priorityReps": "Prioriterade säljare"
+      },
+      "sections": {
+        "sessionsTrend": "Sessionstrend",
+        "sessionsTrendSubtitle": "Övningsaktivitet denna vecka",
+        "skillDistribution": "Färdighetsfördelning",
+        "skillDistributionSubtitle": "Genomsnittspoäng per färdighetsområde",
+        "teamPerformance": "Teamets prestation",
+        "teamPerformanceSubtitle": "Styrkor och svagare områden",
+        "coachingPriority": "Coachningsprioritet",
+        "coachingPrioritySubtitle": "Säljare som behöver managerstöd"
+      },
+      "priority": {
+        "weakestSkill": "Svagaste färdighet: {skill}"
+      }
+    },
+    "admin": {
+      "title": "Adminyta",
+      "subtitle": "Konfigurera hur AI Sales Coach fungerar för din organisation.",
+      "cards": {
+        "businessProfile": {
+          "title": "Företagsprofil"
+        },
+        "scenarioOverrides": {
+          "title": "Scenarioanpassningar"
+        },
+        "teamManagement": {
+          "title": "Teamhantering"
+        }
+      },
+      "rows": {
+        "status": "Status",
+        "framework": "Ramverk",
+        "language": "Språk",
+        "defaultScenarios": "Standardscenarier",
+        "customizedScenarios": "Anpassade scenarier",
+        "users": "Användare",
+        "managers": "Managers",
+        "admins": "Admins"
+      },
+      "values": {
+        "configured": "Konfigurerad",
+        "swedish": "Svenska"
+      },
+      "actions": {
+        "edit": "Redigera",
+        "configure": "Konfigurera",
+        "manage": "Hantera"
+      },
+      "recent": {
+        "title": "Senaste ändringar",
+        "today": "I dag",
+        "recently": "Nyligen",
+        "businessProfile": {
+          "title": "Företagsprofil uppdaterad",
+          "description": "Uppdaterade företagsbeskrivning, mål-ICP och säljmål."
+        },
+        "coldCall": {
+          "title": "Målet för kallsamtal ändrades",
+          "description": "Justerade samtalsmål och framgångskriterier."
+        },
+        "managerInvited": {
+          "title": "Ny manager inbjuden",
+          "description": "En inbjudningslänk för manager skapades."
+        }
+      }
+    }
   },
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
@@ -48,7 +311,520 @@
     "connectionError": "Kunde inte ansluta till backend.",
     "analysisFailedTitle": "Scorecard-analysen misslyckades",
     "analysisFailedDescription": "Analysen kunde inte slutföras. Försök generera scorecard igen.",
+    "analysisPending": "Scorecard-analysen väntar fortfarande för detta samtal.",
     "retry": "Försök analysera igen",
-    "retryFailed": "Det gick inte att försöka analysera igen."
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "scoreMetrics": {
+      "overall": "Totalpoäng",
+      "rapport": "Kontakt",
+      "needs": "Behovsanalys",
+      "objections": "Invändningshantering",
+      "closing": "Avslut"
+    },
+    "sections": {
+      "callMetrics": "Samtalsmätvärden",
+      "framework": "{framework}-ramverk",
+      "strengths": "Styrkor",
+      "improvementAreas": "Förbättringsområden",
+      "recommendation": "AI-coachens rekommendation",
+      "feedbackSummary": "Feedbacksammanfattning"
+    },
+    "callMetrics": {
+      "duration": "Varaktighet",
+      "repTalk": "Säljarens taltid",
+      "interruptions": "Avbrott",
+      "fillerWords": "Fyllnadsord"
+    },
+    "frameworkMetrics": {
+      "budget": "Budget",
+      "authority": "Beslutsmandat",
+      "need": "Behov",
+      "timeline": "Tidsplan",
+      "metrics": "Mätvärden",
+      "economic_buyer": "Ekonomisk beslutsfattare",
+      "decision_criteria": "Beslutskriterier",
+      "decision_process": "Beslutsprocess",
+      "identify_pain": "Identifierad smärta",
+      "champion": "Intern förespråkare",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Konsekvens",
+      "need_payoff": "Värde av behov"
+    },
+    "scoreStates": {
+      "scored": "Poängsatt",
+      "notScored": "Ej poängsatt",
+      "strong": "Starkt",
+      "good": "Bra",
+      "needsPractice": "Behöver övas"
+    },
+    "empty": {
+      "strengths": "Inga styrkor har angetts ännu.",
+      "improvements": "Inga förbättringsområden har angetts ännu.",
+      "feedback": "Feedbacksammanfattning är inte tillgänglig ännu."
+    },
+    "recommendationText": "Fortsätt öva på området med lägst poäng. Fokusera på bättre behovsfrågor, lugn invändningshantering och att tydligt koppla värdet till kundens behov.",
+    "startAnotherPractice": "Starta ny övning →",
+    "internalSessionReference": "Intern sessionsreferens finns tillgänglig."
+  },
+  "History": {
+    "eyebrow": "Övningshistorik",
+    "title": "Sessionshistorik",
+    "subtitle": "Granska din övningshistorik, dina resultat och AI-coachens feedback.",
+    "startNewPractice": "Starta ny övning →",
+    "sessionsTitle": "Övningssessioner",
+    "sessionsSubtitle": "Välj en session för att visa dess scorecard.",
+    "loading": "Laddar sessioner...",
+    "emptyTitle": "Inga övningssessioner ännu",
+    "emptyDescription": "Starta ditt första övningssamtal för att se historik här.",
+    "startPractice": "Starta övning",
+    "duration": "Varaktighet",
+    "retry": "Försök analysera igen",
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "viewDetails": "Visa detaljer",
+    "viewScorecard": "Visa scorecard",
+    "stats": {
+      "total": "Totalt antal sessioner",
+      "completed": "Slutförda",
+      "activeDraft": "Aktiva / utkast",
+      "latest": "Senaste övning"
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades"
+    },
+    "scorecardStatus": {
+      "processing": "Bearbetas...",
+      "notScored": "Ej poängsatt"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    }
+  },
+  "Progress": {
+    "eyebrow": "Lärandeframsteg",
+    "title": "Dina framsteg",
+    "subtitle": "Följ hur dina säljfärdigheter utvecklas över olika profilversioner.",
+    "loading": "Laddar framstegshistorik...",
+    "error": "Kunde inte ladda framstegshistorik.",
+    "notAvailable": "Ej tillgängligt",
+    "empty": {
+      "title": "Ingen framstegsdata ännu",
+      "description": "Slutför ett övningssamtal och skapa ett scorecard för att få din första lärandeprofil."
+    },
+    "stats": {
+      "currentFocus": "Aktuellt fokus",
+      "bestSkill": "Starkaste färdighet",
+      "versions": "Versioner"
+    },
+    "chart": {
+      "title": "Profilutveckling",
+      "subtitle": "Jämför dina färdighetspoäng från profil v1 till din senaste profil."
+    },
+    "history": {
+      "title": "Senaste profilhistorik",
+      "subtitle": "De senaste profilversionerna och deras fokusområden.",
+      "profileVersion": "Profil v{version}",
+      "focus": "Fokus: {dimension}",
+      "noDate": "Inget datum",
+      "showLess": "Visa mindre",
+      "viewAll": "Visa alla"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
+  },
+  "Settings": {
+    "fallbackUser": "Användare",
+    "eyebrow": "Inställningar",
+    "managerEyebrow": "Managerinställningar",
+    "title": "Hantera inställningar",
+    "subtitle": "Hantera ditt konto, AI-coachens inställningar, notiser och utseende.",
+    "managerSubtitle": "Hantera dashboardinställningar, coachningsvarningar och teamnotiser.",
+    "saveChanges": "Spara ändringar",
+    "saved": "Inställningarna har sparats.",
+    "currentSetup": "Aktuell inställning",
+    "securityDescription": "Uppdatera ditt lösenord och hantera kontosäkerhet.",
+    "changePassword": "Ändra lösenord",
+    "adminWorkspaceDescription": "Admininställningar hanteras i adminkonsolen, inklusive företagsprofil, scenarioanpassningar och teaminbjudningar.",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Säljare"
+    },
+    "sections": {
+      "account": "Konto",
+      "appearance": "Utseende",
+      "security": "Säkerhet",
+      "adminWorkspace": "Adminarbetsyta",
+      "aiCoachPreferences": "AI-coachens inställningar",
+      "notifications": "Notiser",
+      "managerNotifications": "Managernotiser",
+      "dashboardPreferences": "Dashboardinställningar"
+    },
+    "fields": {
+      "fullName": "Fullständigt namn",
+      "email": "E-post",
+      "role": "Roll",
+      "organization": "Organisation",
+      "theme": "Tema",
+      "accentColor": "Accentfärg",
+      "fontSize": "Textstorlek",
+      "layoutDensity": "Layouttäthet",
+      "preferredLanguage": "Föredraget språk",
+      "defaultDifficulty": "Standardnivå",
+      "coachingStyle": "Coachningsstil",
+      "feedbackTiming": "Feedbacktidpunkt",
+      "defaultDashboard": "Standarddashboard",
+      "reportFrequency": "Rapportfrekvens",
+      "coachingAlertLevel": "Coachningsvarningsnivå",
+      "defaultTeamFilter": "Standardfilter för team",
+      "language": "Språk",
+      "notifications": "Notiser",
+      "dashboard": "Dashboard"
+    },
+    "toggles": {
+      "practiceReminders": "Övningspåminnelser",
+      "scorecardNotifications": "Scorecardnotiser",
+      "weeklyProgressSummary": "Veckovis framstegssammanfattning",
+      "achievementAlerts": "Prestationsnotiser",
+      "weeklyTeamReport": "Veckovis teamrapport",
+      "coachingAlerts": "Coachningsvarningar",
+      "inactiveRepReminders": "Påminnelser för inaktiva säljare",
+      "newScorecardNotifications": "Notiser om nya scorecards"
+    },
+    "summary": {
+      "teamAlerts": "Teamvarningar",
+      "practiceAlerts": "Övningsvarningar",
+      "repView": "Säljarvy"
+    },
+    "options": {
+      "english": "Engelska",
+      "swedish": "Svenska",
+      "beginner": "Nybörjare",
+      "intermediate": "Medel",
+      "advanced": "Avancerad",
+      "balanced": "Balanserad",
+      "detailed": "Detaljerad",
+      "strict": "Strikt",
+      "afterCall": "Efter samtal",
+      "realTime": "I realtid",
+      "both": "Båda",
+      "light": "Ljust",
+      "system": "System",
+      "dark": "Mörkt",
+      "emeraldGreen": "Smaragdgrön",
+      "blue": "Blå",
+      "purple": "Lila",
+      "small": "Liten",
+      "medium": "Medel",
+      "large": "Stor",
+      "comfortable": "Bekväm",
+      "compact": "Kompakt",
+      "managerDashboard": "Managerdashboard",
+      "teamDashboard": "Teamdashboard",
+      "daily": "Dagligen",
+      "weekly": "Veckovis",
+      "monthly": "Månadsvis",
+      "low": "Låg",
+      "high": "Hög",
+      "allReps": "Alla säljare",
+      "needsCoaching": "Behöver coachning",
+      "activeThisWeek": "Aktiva denna vecka"
+    }
+  },
+  "Profile": {
+    "fallbackName": "Säljare",
+    "eyebrow": "Säljarprofil",
+    "title": "Din profil",
+    "subtitle": "Hantera dina kontouppgifter för AI Sales Coach.",
+    "fields": {
+      "email": "E-post",
+      "phoneNumber": "Telefonnummer",
+      "employeeId": "Anställnings-ID",
+      "role": "Roll",
+      "business": "Verksamhet"
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "rep": "Säljare"
+    },
+    "localSessionNote": "Den här profilen visar värdena som sparats i din lokala appsession."
+  },
+  "SessionDetail": {
+    "eyebrow": "Sessionsdetaljer",
+    "fallbackTitle": "Övningssession",
+    "subtitle": "Granska hela transkriptet, statusen och tiden för detta övningssamtal.",
+    "retry": "Försök analysera igen",
+    "retryFailed": "Det gick inte att försöka analysera igen.",
+    "processingScorecard": "Bearbetar scorecard...",
+    "viewScorecard": "Visa scorecard",
+    "backToHistory": "Tillbaka till historik",
+    "sessionStatus": "Sessionsstatus",
+    "unknown": "Okänd",
+    "loading": "Laddar sessionsdetaljer...",
+    "notFound": "Inga sessionsdetaljer hittades för detta samtal.",
+    "summaryTitle": "Sessionssammanfattning",
+    "transcriptTitle": "Transkript",
+    "transcriptCount": "{count, plural, one {# transkriptrad sparades för denna session.} other {# transkriptrader sparades för denna session.}}",
+    "emptyTranscript": "Inga transkriptrader sparades för denna session.",
+    "coachNote": "Coachnotering",
+    "summary": {
+      "scenario": "Scenario",
+      "started": "Startade",
+      "ended": "Avslutades",
+      "duration": "Varaktighet"
+    },
+    "speakers": {
+      "rep": "Säljare",
+      "aiCustomer": "AI-kund"
+    },
+    "errors": {
+      "notFound": "Sessionen hittades inte.",
+      "connection": "Kunde inte ansluta till backend.",
+      "noSessionId": "Inget sessions-ID hittades."
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    },
+    "dimensions": {
+      "rapport": "Kontaktpoäng",
+      "needsDiscovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslutspoäng",
+      "budget": "Budget",
+      "authority": "Beslutsmandat",
+      "need": "Behov",
+      "timeline": "Tidsplan",
+      "metrics": "Mätvärden",
+      "economicBuyer": "Ekonomisk beslutsfattare",
+      "decisionCriteria": "Beslutskriterier",
+      "decisionProcess": "Beslutsprocess",
+      "identifyPain": "Identifierad smärta",
+      "champion": "Intern förespråkare",
+      "situation": "Situation",
+      "problem": "Problem",
+      "implication": "Konsekvens",
+      "needPayoff": "Värde av behov"
+    }
+  },
+  "Team": {
+    "managerDashboard": "Managerdashboard",
+    "loading": "Laddar teamets prestation...",
+    "title": "Teamdashboard",
+    "eyebrow": "Managervy",
+    "subtitle": "Följ teamets övningar, scorecards, utveckling och coachningsmöjligheter.",
+    "updatedNote": "Uppdaterat från de senaste scorecardsen och övningssessionerna.",
+    "errors": {
+      "load": "Det gick inte att ladda teaminformationen."
+    },
+    "summary": {
+      "totalReps": "Totalt antal säljare",
+      "totalSessions": "Totalt antal sessioner",
+      "averageScore": "Genomsnittspoäng",
+      "activeThisWeek": "Aktiva denna vecka"
+    },
+    "highlights": {
+      "topPerformer": "🏆 Bäst just nu",
+      "topPerformerMeta": "{sessions, plural, one {# session} other {# sessioner}} • {score}/10 i snitt",
+      "needsAttention": "⚠ Behöver uppmärksamhet",
+      "needsAttentionMeta": "Fokusera på {dimension}"
+    },
+    "performance": {
+      "title": "Teamprestation",
+      "subtitle": "Se varje säljares användning, genomsnittspoäng och svagaste färdighet."
+    },
+    "table": {
+      "rep": "Säljare",
+      "sessions": "Sessioner",
+      "lastPractice": "Senaste övning",
+      "avgScore": "Snittpoäng",
+      "weakestSkill": "Svagaste färdighet",
+      "status": "Status",
+      "action": "Åtgärd",
+      "viewDetails": "Visa detaljer"
+    },
+    "skillHealth": {
+      "title": "Färdighetshälsa"
+    },
+    "coachingPriority": {
+      "title": "Coachningsprioritet",
+      "empty": "Inga akuta coachningsbehov just nu.",
+      "weakSkill": "Svag färdighet",
+      "averageScore": "Genomsnittspoäng",
+      "practiceSessions": "{sessions, plural, one {# övningssession} other {# övningssessioner}}"
+    },
+    "fallbacks": {
+      "noData": "Ingen data ännu",
+      "noScorecards": "Inga scorecards finns ännu",
+      "noUrgentIssue": "Inget akut problem",
+      "everyoneOkay": "Alla ligger bra till",
+      "recentSessions": "senaste sessionerna",
+      "notEnoughData": "Inte tillräckligt med data",
+      "reviewSessions": "Granska sessioner",
+      "notAvailable": "Ej tillgängligt",
+      "noSessions": "Inga sessioner"
+    },
+    "status": {
+      "newRep": "Ny säljare",
+      "performingWell": "Presterar bra",
+      "improving": "Förbättras",
+      "needsCoaching": "Behöver coachning"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
+  },
+  "Login": {
+    "logoAlt": "AI Sales Coach",
+    "imageAlt": "Byggnad",
+    "badge": "AI Sales Coach",
+    "title": "Välkommen tillbaka!",
+    "identifierLabel": "E-post eller telefon",
+    "identifierPlaceholder": "Ange e-post eller telefonnummer",
+    "passwordLabel": "Lösenord",
+    "passwordPlaceholder": "Ange ditt lösenord",
+    "rememberMe": "Kom ihåg mig",
+    "forgotPassword": "Glömt lösenord?",
+    "signIn": "Logga in",
+    "newHere": "Ny här?",
+    "createAccount": "Skapa ett konto",
+    "legal": "Genom att fortsätta godkänner du våra användarvillkor och vår integritetspolicy.",
+    "promoTitle": "Öva samtal. Få feedback. Bli bättre snabbare.",
+    "promoBody": "Träna med realistiska AI-kundsamtal och få fokuserad coachning efter varje session.",
+    "errors": {
+      "identifierRequired": "Ange din e-post eller ditt telefonnummer",
+      "passwordRequired": "Ange ditt lösenord",
+      "loginFailed": "Inloggningen misslyckades",
+      "backendConnection": "Kunde inte ansluta till backend"
+    }
+  },
+  "Register": {
+    "logoAlt": "AI Sales Coach",
+    "title": "Skapa konto",
+    "subtitle": "Gå med i AI Sales Coach och starta din övningsresa.",
+    "fullNameLabel": "Fullständigt namn",
+    "fullNamePlaceholder": "Ange ditt fullständiga namn",
+    "emailLabel": "E-post",
+    "emailPlaceholder": "Ange din e-post",
+    "phoneLabel": "Telefonnummer",
+    "phonePlaceholder": "Ange ditt telefonnummer",
+    "employeeIdLabel": "Medarbetar-ID",
+    "employeeIdPlaceholder": "Valfritt medarbetar-ID",
+    "inviteMissing": "Inbjudningstoken saknas. Registreringen fungerar bara om öppen registrering är aktiverad.",
+    "passwordLabel": "Lösenord",
+    "passwordPlaceholder": "Skapa lösenord",
+    "confirmPasswordLabel": "Bekräfta lösenord",
+    "confirmPasswordPlaceholder": "Bekräfta lösenord",
+    "createAccount": "Skapa konto",
+    "creating": "Skapar...",
+    "alreadyHaveAccount": "Har du redan ett konto?",
+    "signIn": "Logga in",
+    "success": "Kontot har skapats. Du skickas vidare till inloggningen...",
+    "errors": {
+      "fullNameRequired": "Ange ditt fullständiga namn",
+      "emailRequired": "Ange din e-post",
+      "phoneRequired": "Ange ditt telefonnummer",
+      "passwordRequired": "Ange ett lösenord",
+      "passwordMismatch": "Lösenorden matchar inte",
+      "accountCreationFailed": "Det gick inte att skapa kontot",
+      "backendConnection": "Kunde inte ansluta till backend"
+    }
+  },
+  "TeamRep": {
+    "loading": "Laddar säljarens detaljer...",
+    "backToTeam": "← Tillbaka till teamet",
+    "eyebrow": "Managervy",
+    "title": "Säljardetaljer",
+    "subtitle": "Granska säljarens övningshistorik, scorecards och transkript.",
+    "errors": {
+      "missingBusiness": "Verksamhetsinformation saknas. Gå tillbaka till teamsidan.",
+      "sessions": "Det gick inte att ladda sessioner ({status})",
+      "scorecards": "Det gick inte att ladda scorecards ({status})",
+      "transcripts": "Det gick inte att ladda transkript ({status})",
+      "load": "Det gick inte att ladda säljarens detaljer."
+    },
+    "summary": {
+      "sessions": "Sessioner",
+      "scorecards": "Scorecards",
+      "latestScore": "Senaste poäng",
+      "lastPractice": "Senaste övning"
+    },
+    "practiceSessions": {
+      "title": "Övningssessioner",
+      "empty": "Inga sessioner hittades för den här säljaren."
+    },
+    "transcripts": {
+      "title": "Transkriptförhandsvisning",
+      "empty": "Inga transkript finns tillgängliga.",
+      "noneForSession": "Inget transkript sparades för den här sessionen."
+    },
+    "scorecard": {
+      "title": "Senaste scorecard",
+      "empty": "Inget scorecard finns ännu."
+    },
+    "coachingNotes": {
+      "title": "Managercoachning",
+      "body": "Använd den här vyn för att hitta mönster, granska invändningar och förbereda riktad feedback till säljaren."
+    },
+    "session": {
+      "statusLabel": "Status"
+    },
+    "fallbacks": {
+      "notAvailable": "Ej tillgängligt",
+      "noStartDate": "Inget startdatum",
+      "practiceSession": "Övningssession"
+    },
+    "speakers": {
+      "rep": "Säljare",
+      "aiCustomer": "AI-kund",
+      "unknown": "Talare"
+    },
+    "status": {
+      "completed": "Slutförd",
+      "processing": "Bearbetas",
+      "active": "Aktiv",
+      "draft": "Utkast",
+      "failed": "Misslyckades",
+      "unknown": "Okänd"
+    },
+    "scenarios": {
+      "coldCall": "Kallsamtal",
+      "directSales": "Direktförsäljning",
+      "objectionHandling": "Invändningshantering",
+      "valueProposition": "Värdeerbjudande",
+      "closing": "Avslut"
+    },
+    "dimensions": {
+      "rapport": "Kontakt",
+      "discovery": "Behovsanalys",
+      "objectionHandling": "Invändningshantering",
+      "closing": "Avslut"
+    }
   }
 }

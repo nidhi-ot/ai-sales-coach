@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import AppShell from "../../components/AppShell";
 
 type UserSettings = {
@@ -26,6 +27,11 @@ type UserSettings = {
   defaultTeamFilter: string;
 };
 
+type SelectOption = {
+  value: string;
+  label: string;
+};
+
 const defaultSettings: UserSettings = {
   language: "English",
   difficulty: "Intermediate",
@@ -49,40 +55,95 @@ const defaultSettings: UserSettings = {
   defaultTeamFilter: "All reps",
 };
 
+const optionTranslationKeys: Record<string, string> = {
+  English: "english",
+  Swedish: "swedish",
+  Beginner: "beginner",
+  Intermediate: "intermediate",
+  Advanced: "advanced",
+  Balanced: "balanced",
+  Detailed: "detailed",
+  Strict: "strict",
+  "After call": "afterCall",
+  "Real-time": "realTime",
+  Both: "both",
+  Light: "light",
+  System: "system",
+  Dark: "dark",
+  "Emerald Green": "emeraldGreen",
+  Blue: "blue",
+  Purple: "purple",
+  Small: "small",
+  Medium: "medium",
+  Large: "large",
+  Comfortable: "comfortable",
+  Compact: "compact",
+  "Manager Dashboard": "managerDashboard",
+  "Team Dashboard": "teamDashboard",
+  Daily: "daily",
+  Weekly: "weekly",
+  Monthly: "monthly",
+  Low: "low",
+  High: "high",
+  "All reps": "allReps",
+  "Needs coaching": "needsCoaching",
+  "Active this week": "activeThisWeek",
+};
+
+function getOptionLabel(
+  t: ReturnType<typeof useTranslations>,
+  value: string
+) {
+  const optionKey = optionTranslationKeys[value];
+
+  return optionKey ? t(`options.${optionKey}`) : value;
+}
+
+function buildOptions(
+  t: ReturnType<typeof useTranslations>,
+  values: string[]
+): SelectOption[] {
+  return values.map((value) => ({
+    value,
+    label: getOptionLabel(t, value),
+  }));
+}
+
 export default function SettingsPage() {
+  const t = useTranslations("Settings");
   const [role, setRole] = useState<string | null>(null);
-  const [fullName, setFullName] = useState("User");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("user@example.com");
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
 
   function getSettingsStorageKey() {
-  const userId = localStorage.getItem("user_id");
-  const email = localStorage.getItem("email");
+    const userId = localStorage.getItem("user_id");
+    const email = localStorage.getItem("email");
 
-  return `user_settings:${userId ?? email ?? "anonymous"}`;
-}
+    return `user_settings:${userId ?? email ?? "anonymous"}`;
+  }
 
   useEffect(() => {
     setRole(localStorage.getItem("role"));
-    setFullName(localStorage.getItem("full_name") || "User");
+    setFullName(localStorage.getItem("full_name") || t("fallbackUser"));
     setEmail(localStorage.getItem("email") || "user@example.com");
 
     const settingsKey = getSettingsStorageKey();
-const savedSettings = localStorage.getItem(settingsKey);
+    const savedSettings = localStorage.getItem(settingsKey);
 
-if (savedSettings) {
-  try {
-    setSettings({
-      ...defaultSettings,
-      ...JSON.parse(savedSettings),
-    });
-  } catch {
-    localStorage.removeItem(settingsKey);
-    setSettings(defaultSettings);
-  }
-}
-  }, []);
+    if (savedSettings) {
+      try {
+        setSettings({
+          ...defaultSettings,
+          ...JSON.parse(savedSettings),
+        });
+      } catch {
+        localStorage.removeItem(settingsKey);
+        setSettings(defaultSettings);
+      }
+    }
+  }, [t]);
 
   function updateSetting<K extends keyof UserSettings>(
     key: K,
@@ -103,48 +164,50 @@ if (savedSettings) {
     }, 2500);
   }
 
+  const displayName = fullName || t("fallbackUser");
+  const displayRole =
+    role === "admin"
+      ? t("roles.admin")
+      : role === "manager"
+        ? t("roles.manager")
+        : t("roles.rep");
+
   return (
     <AppShell>
       <main style={pageStyle}>
         <section style={headerStyle}>
           <div>
             <p style={eyebrowStyle}>
-              {role === "manager" ? "Manager Settings" : "Settings"}
+              {role === "manager" ? t("managerEyebrow") : t("eyebrow")}
             </p>
 
-            <h1 style={titleStyle}>Manage Preferences</h1>
+            <h1 style={titleStyle}>{t("title")}</h1>
 
             <p style={subtitleStyle}>
               {role === "manager"
-                ? "Manage dashboard preferences, coaching alerts, and team notifications."
-                : "Manage your account, AI coach preferences, notifications, and appearance."}
+                ? t("managerSubtitle")
+                : t("subtitle")}
             </p>
           </div>
 
           <button type="button" onClick={handleSave} style={saveButtonStyle}>
-            Save Changes
+            {t("saveChanges")}
           </button>
         </section>
 
-        {saved && <div style={successStyle}>Settings saved successfully.</div>}
+        {saved && <div style={successStyle}>{t("saved")}</div>}
 
         <section style={layoutStyle}>
           <div style={mainColumnStyle}>
-            <SettingsCard title="Account" icon="👤">
+            <SettingsCard title={t("sections.account")} icon="👤">
               <div style={formGridStyle}>
-                <Field label="Full Name" value={fullName} />
-                <Field label="Email" value={email} />
+                <Field label={t("fields.fullName")} value={displayName} />
+                <Field label={t("fields.email")} value={email} />
+                <Field label={t("fields.role")} value={displayRole} />
                 <Field
-                  label="Role"
-                  value={
-                    role === "admin"
-                    ? "Admin"
-                    : role === "manager"
-                    ? "Manager"
-                    : "Sales Representative"
-}
+                  label={t("fields.organization")}
+                  value="Optimal Trappstädning"
                 />
-                <Field label="Organization" value="Optimal Trappstädning" />
               </div>
             </SettingsCard>
 
@@ -156,73 +219,81 @@ if (savedSettings) {
                <RepSettings settings={settings} updateSetting={updateSetting} />
             )}
 
-            <SettingsCard title="Appearance" icon="🎨">
+            <SettingsCard title={t("sections.appearance")} icon="🎨">
               <div style={formGridStyle}>
                 <SelectField
-                  label="Theme"
-                  options={["Light", "System", "Dark"]}
+                  label={t("fields.theme")}
+                  options={buildOptions(t, ["Light", "System", "Dark"])}
                   value={settings.theme}
                   onChange={(value) => updateSetting("theme", value)}
                 />
 
                 <SelectField
-                  label="Accent Color"
-                  options={["Emerald Green", "Blue", "Purple"]}
+                  label={t("fields.accentColor")}
+                  options={buildOptions(t, ["Emerald Green", "Blue", "Purple"])}
                   value={settings.accentColor}
                   onChange={(value) => updateSetting("accentColor", value)}
                 />
 
                 <SelectField
-                  label="Font Size"
-                  options={["Small", "Medium", "Large"]}
+                  label={t("fields.fontSize")}
+                  options={buildOptions(t, ["Small", "Medium", "Large"])}
                   value={settings.fontSize}
                   onChange={(value) => updateSetting("fontSize", value)}
                 />
 
                 <SelectField
-                  label="Layout Density"
-                  options={["Comfortable", "Compact"]}
+                  label={t("fields.layoutDensity")}
+                  options={buildOptions(t, ["Comfortable", "Compact"])}
                   value={settings.layoutDensity}
                   onChange={(value) => updateSetting("layoutDensity", value)}
                 />
               </div>
             </SettingsCard>
 
-            <SettingsCard title="Security" icon="🔐">
+            <SettingsCard title={t("sections.security")} icon="🔐">
               <p style={mutedTextStyle}>
-                Update your password and manage account security.
+                {t("securityDescription")}
               </p>
 
               <button type="button" style={secondaryButtonStyle}>
-                Change Password
+                {t("changePassword")}
               </button>
             </SettingsCard>
           </div>
 
           <aside style={sidePanelStyle}>
             <div style={profileCardStyle}>
-              <div style={avatarStyle}>{getInitials(fullName)}</div>
-              <h2 style={profileNameStyle}>{fullName}</h2>
-              <p style={profileRoleStyle}>
-                {role === "admin"
-                  ? "Admin"
-                  : role === "manager"
-                  ? "Manager"
-                   : "Sales Representative"}
-              </p>
+              <div style={avatarStyle}>{getInitials(displayName)}</div>
+              <h2 style={profileNameStyle}>{displayName}</h2>
+              <p style={profileRoleStyle}>{displayRole}</p>
             </div>
 
             <div style={summaryCardStyle}>
-              <h3 style={sideTitleStyle}>Current Setup</h3>
-              <SummaryRow label="Language" value={settings.language} />
-              <SummaryRow label="Theme" value={settings.theme} />
+              <h3 style={sideTitleStyle}>{t("currentSetup")}</h3>
               <SummaryRow
-                label="Notifications"
-                value={role === "manager" ? "Team alerts" : "Practice alerts"}
+                label={t("fields.language")}
+                value={getOptionLabel(t, settings.language)}
               />
               <SummaryRow
-                label="Dashboard"
-                value={role === "manager" ? settings.defaultDashboard : "Rep view"}
+                label={t("fields.theme")}
+                value={getOptionLabel(t, settings.theme)}
+              />
+              <SummaryRow
+                label={t("fields.notifications")}
+                value={
+                  role === "manager"
+                    ? t("summary.teamAlerts")
+                    : t("summary.practiceAlerts")
+                }
+              />
+              <SummaryRow
+                label={t("fields.dashboard")}
+                value={
+                  role === "manager"
+                    ? getOptionLabel(t, settings.defaultDashboard)
+                    : t("summary.repView")
+                }
               />
             </div>
           </aside>
@@ -232,11 +303,12 @@ if (savedSettings) {
   );
 }
 function AdminSettings() {
+  const t = useTranslations("Settings");
+
   return (
-    <SettingsCard title="Admin Workspace" icon="🛠️">
+    <SettingsCard title={t("sections.adminWorkspace")} icon="🛠️">
       <p style={mutedTextStyle}>
-        Admin settings are managed from the Admin Console, including business profile,
-        scenario overrides, and team invitations.
+        {t("adminWorkspaceDescription")}
       </p>
     </SettingsCard>
   );
@@ -252,58 +324,60 @@ function RepSettings({
     value: UserSettings[K]
   ) => void;
 }) {
+  const t = useTranslations("Settings");
+
   return (
     <>
-      <SettingsCard title="AI Coach Preferences" icon="🤖">
+      <SettingsCard title={t("sections.aiCoachPreferences")} icon="🤖">
         <div style={formGridStyle}>
           <SelectField
-            label="Preferred Language"
-            options={["English", "Swedish"]}
+            label={t("fields.preferredLanguage")}
+            options={buildOptions(t, ["English", "Swedish"])}
             value={settings.language}
             onChange={(value) => updateSetting("language", value)}
           />
 
           <SelectField
-            label="Default Difficulty"
-            options={["Beginner", "Intermediate", "Advanced"]}
+            label={t("fields.defaultDifficulty")}
+            options={buildOptions(t, ["Beginner", "Intermediate", "Advanced"])}
             value={settings.difficulty}
             onChange={(value) => updateSetting("difficulty", value)}
           />
 
           <SelectField
-            label="Coaching Style"
-            options={["Balanced", "Detailed", "Strict"]}
+            label={t("fields.coachingStyle")}
+            options={buildOptions(t, ["Balanced", "Detailed", "Strict"])}
             value={settings.coachingStyle}
             onChange={(value) => updateSetting("coachingStyle", value)}
           />
 
           <SelectField
-            label="Feedback Timing"
-            options={["After call", "Real-time", "Both"]}
+            label={t("fields.feedbackTiming")}
+            options={buildOptions(t, ["After call", "Real-time", "Both"])}
             value={settings.feedbackTiming}
             onChange={(value) => updateSetting("feedbackTiming", value)}
           />
         </div>
       </SettingsCard>
 
-      <SettingsCard title="Notifications" icon="🔔">
+      <SettingsCard title={t("sections.notifications")} icon="🔔">
         <ToggleRow
-          label="Practice reminders"
+          label={t("toggles.practiceReminders")}
           checked={settings.practiceReminders}
           onChange={(value) => updateSetting("practiceReminders", value)}
         />
         <ToggleRow
-          label="Scorecard notifications"
+          label={t("toggles.scorecardNotifications")}
           checked={settings.scorecardNotifications}
           onChange={(value) => updateSetting("scorecardNotifications", value)}
         />
         <ToggleRow
-          label="Weekly progress summary"
+          label={t("toggles.weeklyProgressSummary")}
           checked={settings.weeklyProgressSummary}
           onChange={(value) => updateSetting("weeklyProgressSummary", value)}
         />
         <ToggleRow
-          label="Achievement alerts"
+          label={t("toggles.achievementAlerts")}
           checked={settings.achievementAlerts}
           onChange={(value) => updateSetting("achievementAlerts", value)}
         />
@@ -322,57 +396,63 @@ function ManagerSettings({
     value: UserSettings[K]
   ) => void;
 }) {
+  const t = useTranslations("Settings");
+
   return (
     <>
-      <SettingsCard title="Manager Notifications" icon="🔔">
+      <SettingsCard title={t("sections.managerNotifications")} icon="🔔">
         <ToggleRow
-          label="Weekly team report"
+          label={t("toggles.weeklyTeamReport")}
           checked={settings.weeklyTeamReport}
           onChange={(value) => updateSetting("weeklyTeamReport", value)}
         />
         <ToggleRow
-          label="Coaching alerts"
+          label={t("toggles.coachingAlerts")}
           checked={settings.coachingAlerts}
           onChange={(value) => updateSetting("coachingAlerts", value)}
         />
         <ToggleRow
-          label="Inactive rep reminders"
+          label={t("toggles.inactiveRepReminders")}
           checked={settings.inactiveRepReminders}
           onChange={(value) => updateSetting("inactiveRepReminders", value)}
         />
         <ToggleRow
-          label="New scorecard notifications"
+          label={t("toggles.newScorecardNotifications")}
           checked={settings.newScorecardNotifications}
           onChange={(value) => updateSetting("newScorecardNotifications", value)}
         />
       </SettingsCard>
 
-      <SettingsCard title="Dashboard Preferences" icon="📊">
+      <SettingsCard title={t("sections.dashboardPreferences")} icon="📊">
         <div style={formGridStyle}>
           <SelectField
-            label="Default Dashboard"
-            options={["Manager Dashboard", "Team Dashboard"]}
+            label={t("fields.defaultDashboard")}
+            options={buildOptions(t, ["Manager Dashboard", "Team Dashboard"])}
             value={settings.defaultDashboard}
             onChange={(value) => updateSetting("defaultDashboard", value)}
           />
 
           <SelectField
-            label="Report Frequency"
-            options={["Daily", "Weekly", "Monthly"]}
+            label={t("fields.reportFrequency")}
+            options={buildOptions(t, ["Daily", "Weekly", "Monthly"])}
             value={settings.reportFrequency}
             onChange={(value) => updateSetting("reportFrequency", value)}
           />
 
           <SelectField
-            label="Coaching Alert Level"
-            options={["Low", "Medium", "High"]}
+            label={t("fields.coachingAlertLevel")}
+            options={buildOptions(t, ["Low", "Medium", "High"])}
             value={settings.coachingAlertLevel}
             onChange={(value) => updateSetting("coachingAlertLevel", value)}
           />
 
           <SelectField
-            label="Default Team Filter"
-            options={["All reps", "Needs coaching", "Active this week"]}
+            label={t("fields.defaultTeamFilter")}
+            options={buildOptions(t, [
+              "All reps",
+              "Needs coaching",
+              "Active this week",
+            ])}
             value={settings.defaultTeamFilter}
             onChange={(value) => updateSetting("defaultTeamFilter", value)}
           />
@@ -418,7 +498,7 @@ function SelectField({
   onChange,
 }: {
   label: string;
-  options: string[];
+  options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -431,7 +511,9 @@ function SelectField({
         style={inputStyle}
       >
         {options.map((option) => (
-          <option key={option}>{option}</option>
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
     </label>
