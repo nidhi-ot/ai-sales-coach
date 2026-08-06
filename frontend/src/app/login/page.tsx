@@ -122,6 +122,7 @@ export default function LoginPage() {
 
           <label style={labelStyle}>Email or Phone</label>
           <input
+            data-testid="login-identifier"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             placeholder="Enter email or phone number"
@@ -130,6 +131,7 @@ export default function LoginPage() {
 
           <label style={labelStyle}>Password</label>
           <input
+            data-testid="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -175,8 +177,12 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button onClick={handleSignIn} style={buttonStyle}>
-            Sign In
+          <button
+            data-testid="login-submit"
+            onClick={handleSignIn}
+            style={buttonStyle}
+            >
+             Sign In
           </button>
 
           <p style={{ textAlign: "center", marginTop: "24px", color: "#667085" }}>

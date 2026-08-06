@@ -129,9 +129,10 @@ export default function ScenariosPage() {
 
                 return (
                   <button
-                    key={scenario.id}
-                    onClick={() => setSelectedScenario(scenario.id)}
-                    style={{
+  data-testid={`scenario-${scenario.id}`}
+  key={scenario.id}
+  onClick={() => setSelectedScenario(scenario.id)}
+  style={{
                       minHeight: "190px",
                       padding: "22px",
                       borderRadius: "22px",
@@ -291,9 +292,10 @@ export default function ScenariosPage() {
             )}
 
             <button
-              onClick={startSession}
-              disabled={loading}
-              style={{
+  data-testid="continue-to-setup"
+  onClick={startSession}
+  disabled={loading}
+  style={{
                 width: "100%",
                 marginTop: "24px",
                 padding: "16px",

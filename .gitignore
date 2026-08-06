@@ -26,3 +26,7 @@ pnpm-debug.log*
 frontend/.env.local
 backend/.env.local
 backend/.coverage
+frontend/playwright-report/
+frontend/test-results/
+frontend/playwright-report/
+frontend/test-results/
