@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AppShell from "../../components/AppShell";
@@ -35,22 +36,23 @@ type ScenarioConfig = {
   persona_notes: string | null;
 };
 
-const scenarios = [
-  { slug: "cold_call", label: "Cold Call" },
-  { slug: "hot_call", label: "Hot Call" },
-  { slug: "directsales", label: "Direct Sales" },
-  { slug: "meeting", label: "Meeting" },
-];
+const scenarios = ["cold_call", "hot_call", "directsales", "meeting"] as const;
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<div>Loading admin page...</div>}>
+    <Suspense fallback={<AdminLoadingFallback />}>
       <AdminPageContent />
     </Suspense>
   );
 }
 
+function AdminLoadingFallback() {
+  const t = useTranslations("Admin");
+  return <div>{t("loading")}</div>;
+}
+
 function AdminPageContent()  {
+  const t = useTranslations("Admin");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -138,7 +140,7 @@ function AdminPageContent()  {
       const response = await authFetch(`${API_BASE_URL}/admin/business`);
 
       if (!response.ok) {
-        throw new Error(`Failed to load business profile (${response.status})`);
+        throw new Error(t("errors.loadBusiness", { status: response.status }));
       }
 
       const data = (await response.json()) as BusinessProfile;
@@ -153,7 +155,7 @@ function AdminPageContent()  {
     } catch (error) {
       console.error(error);
       setProfileError(
-        error instanceof Error ? error.message : "Could not load business profile"
+        error instanceof Error ? error.message : t("errors.loadBusinessFallback")
       );
     } finally {
       setProfileLoading(false);
@@ -183,7 +185,7 @@ function AdminPageContent()  {
       const data = (await response.json()) as BusinessProfile & { detail?: string };
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to save business profile");
+        throw new Error(data.detail || t("errors.saveBusiness"));
       }
 
       setBusinessName(data.name ?? "");
@@ -193,11 +195,11 @@ function AdminPageContent()  {
       setLanguage(data.language ?? "en");
       setFramework(data.framework ?? "");
       setFrameworkWarning(data.framework_warning ?? "");
-      setProfileSuccess("Business profile saved successfully.");
+      setProfileSuccess(t("success.businessSaved"));
     } catch (error) {
       console.error(error);
       setProfileError(
-        error instanceof Error ? error.message : "Could not save business profile"
+        error instanceof Error ? error.message : t("errors.saveBusinessFallback")
       );
     } finally {
       setSavingProfile(false);
@@ -212,7 +214,7 @@ function AdminPageContent()  {
       const response = await authFetch(`${API_BASE_URL}/admin/scenario-configs`);
 
       if (!response.ok) {
-        throw new Error(`Failed to load scenario configs (${response.status})`);
+        throw new Error(t("errors.loadScenarios", { status: response.status }));
       }
 
       const data = (await response.json()) as ScenarioConfig[];
@@ -220,7 +222,7 @@ function AdminPageContent()  {
     } catch (error) {
       console.error(error);
       setScenarioError(
-        error instanceof Error ? error.message : "Could not load scenario configs"
+        error instanceof Error ? error.message : t("errors.loadScenariosFallback")
       );
     } finally {
       setScenarioLoading(false);
@@ -251,7 +253,7 @@ function AdminPageContent()  {
       const data = (await response.json()) as ScenarioConfig & { detail?: string };
 
       if (!response.ok) {
-        throw new Error(data.detail || "Failed to save scenario config");
+        throw new Error(data.detail || t("errors.saveScenario"));
       }
 
       setScenarioConfigs((current) => {
@@ -268,11 +270,11 @@ function AdminPageContent()  {
         return [...current, data];
       });
 
-      setScenarioSuccess("Scenario override saved successfully.");
+      setScenarioSuccess(t("success.scenarioSaved"));
     } catch (error) {
       console.error(error);
       setScenarioError(
-        error instanceof Error ? error.message : "Could not save scenario config"
+        error instanceof Error ? error.message : t("errors.saveScenarioFallback")
       );
     } finally {
       setSavingScenario(false);
@@ -285,14 +287,14 @@ function AdminPageContent()  {
     setInviteResult(null);
 
     if (!email.trim()) {
-      setInviteError("Please enter an email address");
+      setInviteError(t("errors.emailRequired"));
       return;
     }
 
     const parsedDays = Number.parseInt(expiresInDays, 10);
 
     if (!Number.isFinite(parsedDays) || parsedDays <= 0) {
-      setInviteError("Expiry must be a positive number of days");
+      setInviteError(t("errors.expiryPositive"));
       return;
     }
 
@@ -317,7 +319,7 @@ function AdminPageContent()  {
         : ({} as Partial<InviteResponse> & { detail?: string });
 
       if (!response.ok) {
-        setInviteError(data.detail || "Invite creation failed");
+        setInviteError(data.detail || t("errors.inviteFailed"));
         return;
       }
 
@@ -327,7 +329,7 @@ function AdminPageContent()  {
       setInviteError(
         inviteError instanceof Error
           ? inviteError.message
-          : "Could not connect to backend"
+          : t("errors.backendConnection")
       );
     } finally {
       setInviteLoading(false);
@@ -338,17 +340,17 @@ function AdminPageContent()  {
     <AppShell>
       <div style={{ maxWidth: "1180px", margin: "0 auto" }}>
         <section style={heroStyle}>
-          <p style={eyebrowStyle}>Admin Console</p>
-          <h1 style={titleStyle}>Business AI Configuration</h1>
+          <p style={eyebrowStyle}>{t("eyebrow")}</p>
+          <h1 style={titleStyle}>{t("title")}</h1>
           <p style={subtitleStyle}>
-            Manage your business profile, scenario overrides, and team invitations.
+            {t("subtitle")}
           </p>
           <button
             type="button"
             onClick={() => router.push("/admin/members")}
             style={memberButtonStyle}
           >
-            Manage Members
+            {t("manageMembers")}
           </button>
         </section>
 
@@ -366,8 +368,8 @@ function AdminPageContent()  {
           >
             <span style={tabIconBoxStyle}>🏢</span>
             <span style={tabTextStyle}>
-              <strong>Business Profile</strong>
-              <small style={tabSmallTextStyle}>Company context</small>
+              <strong>{t("tabs.businessProfile")}</strong>
+              <small style={tabSmallTextStyle}>{t("tabDescriptions.businessProfile")}</small>
             </span>
           </button>
 
@@ -384,8 +386,8 @@ function AdminPageContent()  {
           >
             <span style={tabIconBoxStyle}>🎭</span>
             <span style={tabTextStyle}>
-              <strong>Scenario Overrides</strong>
-              <small style={tabSmallTextStyle}>AI persona behavior</small>
+              <strong>{t("tabs.scenarioOverrides")}</strong>
+              <small style={tabSmallTextStyle}>{t("tabDescriptions.scenarioOverrides")}</small>
             </span>
           </button>
 
@@ -402,8 +404,8 @@ function AdminPageContent()  {
           >
             <span style={tabIconBoxStyle}>👥</span>
             <span style={tabTextStyle}>
-              <strong>Invites</strong>
-              <small style={tabSmallTextStyle}>Team access</small>
+              <strong>{t("tabs.invites")}</strong>
+              <small style={tabSmallTextStyle}>{t("tabDescriptions.invites")}</small>
             </span>
           </button>
         </div>
@@ -412,9 +414,9 @@ function AdminPageContent()  {
             <section style={businessPanelStyle}>
               <div style={sectionHeaderStyle}>
                 <div>
-                  <h2 style={sectionTitleStyle}>Business Profile</h2>
+                  <h2 style={sectionTitleStyle}>{t("businessProfile.title")}</h2>
                   <p style={sectionSubtitleStyle}>
-                    Configure the company context used by future AI practice calls.
+                    {t("businessProfile.description")}
                   </p>
                 </div>
 
@@ -424,7 +426,7 @@ function AdminPageContent()  {
                   disabled={savingProfile || profileLoading}
                   style={saveButtonStyle}
                 >
-                  💾 {savingProfile ? "Saving..." : "Save"}
+                  💾 {savingProfile ? t("common.saving") : t("common.save")}
                 </button>
               </div>
 
@@ -432,10 +434,10 @@ function AdminPageContent()  {
               {profileSuccess && <p style={successStyle}>{profileSuccess}</p>}
 
               {profileLoading ? (
-                <p style={mutedStyle}>Loading business profile...</p>
+                <p style={mutedStyle}>{t("businessProfile.loading")}</p>
               ) : (
                 <div style={businessFormStackStyle}>
-                  <FormField label="Business Name">
+                  <FormField label={t("businessProfile.businessName")}>
                     <input
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
@@ -443,33 +445,33 @@ function AdminPageContent()  {
                     />
                   </FormField>
 
-                  <FormField label="Products / Services">
+                  <FormField label={t("businessProfile.productsServices")}>
                     <textarea
                       value={products}
                       onChange={(e) => setProducts(e.target.value)}
                       rows={4}
                       style={modernTextareaStyle}
-                      placeholder="Describe what your business sells..."
+                      placeholder={t("businessProfile.productsPlaceholder")}
                     />
                   </FormField>
 
-                  <FormField label="Ideal Customer Profile">
+                  <FormField label={t("businessProfile.idealCustomerProfile")}>
                     <textarea
                       value={icp}
                       onChange={(e) => setIcp(e.target.value)}
                       rows={4}
                       style={modernTextareaStyle}
-                      placeholder="Describe your target customers..."
+                      placeholder={t("businessProfile.icpPlaceholder")}
                     />
                   </FormField>
 
-                  <FormField label="Common Objections">
+                  <FormField label={t("businessProfile.commonObjections")}>
                     <textarea
                       value={objections}
                       onChange={(e) => setObjections(e.target.value)}
                       rows={4}
                       style={modernTextareaStyle}
-                      placeholder="Example: too expensive, no time, already have a tool..."
+                      placeholder={t("businessProfile.objectionsPlaceholder")}
                     />
                   </FormField>
                 </div>
@@ -481,29 +483,28 @@ function AdminPageContent()  {
                 <div style={aiIconStyle}>🤖</div>
 
                 <div>
-                  <h2 style={aiTitleStyle}>AI Configuration</h2>
+                  <h2 style={aiTitleStyle}>{t("configuration.title")}</h2>
                   <p style={aiSubtitleStyle}>
-                    These settings control how the AI customer behaves in future
-                    practice sessions.
+                    {t("configuration.description")}
                   </p>
                 </div>
               </div>
 
               <div style={aiSummaryStyle}>
                 <ConfigRow
-                  label="Language"
-                  value={language === "sv" ? "Swedish" : "English"}
+                  label={t("configuration.language")}
+                  value={language === "sv" ? t("common.swedish") : t("common.english")}
                 />
-                <ConfigRow label="Framework" value={framework || "Not configured"} />
-                <ConfigRow label="Products" value={products ? "Configured" : "Missing"} />
+                <ConfigRow label={t("configuration.framework")} value={framework || t("common.notConfigured")} />
+                <ConfigRow label={t("configuration.products")} value={products ? t("common.configured") : t("common.missing")} />
                 <ConfigRow
-                  label="ICP"
-                  value={icp ? "Configured" : "Missing"}
+                  label={t("configuration.icp")}
+                  value={icp ? t("common.configured") : t("common.missing")}
                   danger={!icp}
                 />
                 <ConfigRow
-                  label="Objections"
-                  value={objections ? "Configured" : "Missing"}
+                  label={t("configuration.objections")}
+                  value={objections ? t("common.configured") : t("common.missing")}
                   danger={!objections}
                 />
               </div>
@@ -511,21 +512,21 @@ function AdminPageContent()  {
               <div style={frameworkWarningCardStyle}>
                 <div style={{ fontSize: "28px" }}>⚠️</div>
                 <div>
-                  <strong>Framework Warning</strong>
+                  <strong>{t("configuration.warningTitle")}</strong>
                   <p style={{ margin: "6px 0 0", lineHeight: 1.5 }}>
-                    {frameworkWarning}
+                    {t("configuration.warningText")}
                   </p>
                 </div>
               </div>
 
-              <FormField label="Language">
+              <FormField label={t("configuration.language")}>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
                   style={modernInputStyle}
                 >
-                  <option value="en">English</option>
-                  <option value="sv">Swedish</option>
+                  <option value="en">{t("common.english")}</option>
+                  <option value="sv">{t("common.swedish")}</option>
                 </select>
               </FormField>
             </aside>
@@ -536,10 +537,9 @@ function AdminPageContent()  {
           <section style={scenarioPanelStyle}>
             <div style={sectionHeaderStyle}>
               <div>
-                <h2 style={sectionTitleStyle}>Scenario Overrides</h2>
+                <h2 style={sectionTitleStyle}>{t("scenarioOverrides.title")}</h2>
                 <p style={sectionSubtitleStyle}>
-                  Override the default scenario title, objective, and persona notes
-                  for your business.
+                  {t("scenarioOverrides.description")}
                 </p>
               </div>
 
@@ -549,7 +549,7 @@ function AdminPageContent()  {
                 disabled={savingScenario || scenarioLoading}
                 style={smallButtonStyle}
               >
-                💾 {savingScenario ? "Saving..." : "Save Scenario"}
+                💾 {savingScenario ? t("common.saving") : t("scenarioOverrides.save")}
               </button>
             </div>
 
@@ -557,34 +557,34 @@ function AdminPageContent()  {
             {scenarioSuccess && <p style={successStyle}>{scenarioSuccess}</p>}
 
             {scenarioLoading ? (
-              <p style={mutedStyle}>Loading scenario configs...</p>
+              <p style={mutedStyle}>{t("scenarioOverrides.loading")}</p>
             ) : (
               <>
                 <div style={formGridStyle}>
-                  <FormField label="Scenario">
+                  <FormField label={t("scenarioOverrides.scenario")}>
                     <select
                       value={selectedScenario}
                       onChange={(e) => setSelectedScenario(e.target.value)}
                       style={inputStyle}
                     >
                       {scenarios.map((scenario) => (
-                        <option key={scenario.slug} value={scenario.slug}>
-                          {scenario.label}
+                        <option key={scenario} value={scenario}>
+                          {t(`scenarioOverrides.scenarios.${scenario}`)}
                         </option>
                       ))}
                     </select>
                   </FormField>
 
-                  <FormField label="Scenario Title">
+                  <FormField label={t("scenarioOverrides.scenarioTitle")}>
                     <input
                       value={scenarioTitle}
                       onChange={(e) => setScenarioTitle(e.target.value)}
                       style={inputStyle}
-                      placeholder="Example: Cold Call Practice"
+                      placeholder={t("scenarioOverrides.titlePlaceholder")}
                     />
                   </FormField>
 
-                  <FormField label="Objective">
+                  <FormField label={t("scenarioOverrides.objective")}>
                     <div style={textareaWrapStyle}>
                       <textarea
                         value={scenarioObjective}
@@ -592,7 +592,7 @@ function AdminPageContent()  {
                         rows={6}
                         maxLength={1000}
                         style={textareaStyle}
-                        placeholder="What should the rep achieve in this scenario?"
+                        placeholder={t("scenarioOverrides.objectivePlaceholder")}
                       />
                       <span style={charCountStyle}>
                         {scenarioObjective.length} / 1000
@@ -600,7 +600,7 @@ function AdminPageContent()  {
                     </div>
                   </FormField>
 
-                  <FormField label="Persona Notes">
+                  <FormField label={t("scenarioOverrides.personaNotes")}>
                     <div style={textareaWrapStyle}>
                       <textarea
                         value={personaNotes}
@@ -608,7 +608,7 @@ function AdminPageContent()  {
                         rows={6}
                         maxLength={1000}
                         style={textareaStyle}
-                        placeholder="How should the AI customer behave?"
+                        placeholder={t("scenarioOverrides.personaPlaceholder")}
                       />
                       <span style={charCountStyle}>
                         {personaNotes.length} / 1000
@@ -620,10 +620,9 @@ function AdminPageContent()  {
                 <div style={helperBannerStyle}>
                   <div style={helperIconStyle}>💡</div>
                   <div>
-                    <strong>Why override scenarios?</strong>
+                    <strong>{t("scenarioOverrides.whyTitle")}</strong>
                     <p style={helperTextStyle}>
-                      Overrides help tailor the AI customer&apos;s behavior to match
-                      your sales motion and common real-world objections.
+                      {t("scenarioOverrides.whyText")}
                     </p>
                   </div>
                 </div>
@@ -635,21 +634,21 @@ function AdminPageContent()  {
         {activeTab === "invites" && (
           <div style={gridStyle}>
             <section style={panelStyle}>
-              <h2 style={sectionTitleStyle}>Create Invite</h2>
+              <h2 style={sectionTitleStyle}>{t("invites.createTitle")}</h2>
               <p style={sectionSubtitleStyle}>
-                Create invite links for reps, managers, and admins in your business.
+                {t("invites.createDescription")}
               </p>
 
-              <label style={labelStyle}>Email</label>
+              <label style={labelStyle}>{t("invites.email")}</label>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="person@company.com"
+                placeholder={t("invites.emailPlaceholder")}
                 type="email"
                 style={inputStyle}
               />
 
-              <label style={labelStyle}>Role</label>
+              <label style={labelStyle}>{t("invites.role")}</label>
               <select
                 value={inviteRole}
                 onChange={(e) =>
@@ -657,12 +656,12 @@ function AdminPageContent()  {
                 }
                 style={inputStyle}
               >
-                <option value="rep">Rep</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                <option value="rep">{t("roles.rep")}</option>
+                <option value="manager">{t("roles.manager")}</option>
+                <option value="admin">{t("roles.admin")}</option>
               </select>
 
-              <label style={labelStyle}>Invite expires in days</label>
+              <label style={labelStyle}>{t("invites.expiresInDays")}</label>
               <input
                 value={expiresInDays}
                 onChange={(e) => setExpiresInDays(e.target.value)}
@@ -679,23 +678,23 @@ function AdminPageContent()  {
                 disabled={inviteLoading}
                 style={buttonStyle}
               >
-                {inviteLoading ? "Creating..." : "Create Invite"}
+                {inviteLoading ? t("invites.creating") : t("invites.createButton")}
               </button>
             </section>
 
             <section style={panelStyle}>
-              <h2 style={sectionTitleStyle}>Invite Details</h2>
+              <h2 style={sectionTitleStyle}>{t("invites.detailsTitle")}</h2>
 
               {!inviteResult ? (
                 <p style={mutedStyle}>
-                  Create an invite to generate a registration link.
+                  {t("invites.empty")}
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: "14px", marginTop: "16px" }}>
-                  <InfoRow label="Email" value={inviteResult.email} />
-                  <InfoRow label="Role" value={inviteResult.role} />
-                  <InfoRow label="Expires" value={inviteResult.expires_at} />
-                  <InfoRow label="Invite ID" value={inviteResult.invite_id || "-"} />
+                  <InfoRow label={t("invites.email")} value={inviteResult.email} />
+                  <InfoRow label={t("invites.role")} value={t(`roles.${inviteResult.role}`)} />
+                  <InfoRow label={t("invites.expires")} value={inviteResult.expires_at} />
+                  <InfoRow label={t("invites.inviteId")} value={inviteResult.invite_id || "-"} />
 
                   <div style={linkCardStyle}>
                     <div style={{ overflowWrap: "anywhere" }}>{inviteLink}</div>

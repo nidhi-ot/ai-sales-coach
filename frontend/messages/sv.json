@@ -294,6 +294,98 @@
       }
     }
   },
+
+  "Admin": {
+  "loading": "Laddar adminsidan...",
+  "eyebrow": "Adminkonsol",
+  "title": "Konfiguration av företagets AI",
+  "subtitle": "Hantera företagsprofil, scenarioanpassningar och teaminbjudningar.",
+  "manageMembers": "Hantera medlemmar",
+
+  "tabs": {
+    "businessProfile": "Företagsprofil",
+    "scenarioOverrides": "Scenarioanpassningar",
+    "invites": "Inbjudningar"
+  },
+
+  "tabDescriptions": {
+    "businessProfile": "Företagskontext",
+    "scenarioOverrides": "AI-personans beteende",
+    "invites": "Teamåtkomst"
+  },
+
+  "common": {
+    "save": "Spara",
+    "saving": "Sparar...",
+    "configured": "Konfigurerad",
+    "missing": "Saknas",
+    "notConfigured": "Inte konfigurerad",
+    "english": "Engelska",
+    "swedish": "Svenska"
+  },
+
+  "businessProfile": {
+    "title": "Företagsprofil",
+    "description": "Konfigurera företagskontexten som används i framtida AI-övningssamtal.",
+    "loading": "Laddar företagsprofil...",
+    "businessName": "Företagsnamn",
+    "productsServices": "Produkter / Tjänster",
+    "productsPlaceholder": "Beskriv vad företaget säljer...",
+    "idealCustomerProfile": "Ideal kundprofil",
+    "icpPlaceholder": "Beskriv era målkunder...",
+    "commonObjections": "Vanliga invändningar",
+    "objectionsPlaceholder": "Exempel: för dyrt, ingen tid, har redan ett verktyg..."
+  },
+
+  "configuration": {
+    "title": "AI-konfiguration",
+    "description": "Dessa inställningar styr hur AI-kunden beter sig i framtida övningssessioner.",
+    "language": "Språk",
+    "framework": "Ramverk",
+    "products": "Produkter",
+    "icp": "Ideal kundprofil",
+    "objections": "Invändningar",
+    "warningTitle": "Varning om ramverk",
+    "warningText": "Ändring av ramverket påverkar endast framtida sessioner och bör inte göras ofta."
+  },
+
+  "scenarioOverrides": {
+    "title": "Scenarioanpassningar",
+    "description": "Anpassa standardscenariots titel, mål och personanoteringar för ditt företag.",
+    "loading": "Laddar scenariokonfigurationer...",
+    "save": "Spara scenario",
+    "scenario": "Scenario",
+    "scenarioTitle": "Scenariotitel",
+    "titlePlaceholder": "Exempel: Övning för kallsamtal",
+    "objective": "Mål",
+    "objectivePlaceholder": "Vad ska säljaren uppnå i detta scenario?",
+    "personaNotes": "Personanoteringar",
+    "personaPlaceholder": "Hur ska AI-kunden bete sig?",
+    "whyTitle": "Varför anpassa scenarier?",
+    "whyText": "Anpassningar hjälper AI-kundens beteende att bättre matcha er säljprocess och vanliga verkliga invändningar."
+  },
+
+  "invites": {
+    "createTitle": "Skapa inbjudan",
+    "createDescription": "Skapa inbjudningslänkar för säljare, managers och administratörer i företaget.",
+    "email": "E-post",
+    "emailPlaceholder": "person@foretag.se",
+    "role": "Roll",
+    "expiresInDays": "Inbjudan upphör om antal dagar",
+    "creating": "Skapar...",
+    "createButton": "Skapa inbjudan",
+    "detailsTitle": "Inbjudningsdetaljer",
+    "empty": "Skapa en inbjudan för att generera en registreringslänk.",
+    "expires": "Upphör",
+    "inviteId": "Inbjudnings-ID"
+  },
+
+  "roles": {
+    "rep": "Säljare",
+    "manager": "Manager",
+    "admin": "Admin"
+  }
+},
   "Scorecard": {
     "eyebrow": "Övningsscorecard",
     "title": "AI Sales Coach-utvärdering 🎉",
@@ -825,6 +917,166 @@
       "discovery": "Behovsanalys",
       "objectionHandling": "Invändningshantering",
       "closing": "Avslut"
+    }
+  },
+  "Home": {
+    "brandTagline": "Öva samtal. Få coachning. Bli bättre snabbare.",
+    "common": {
+      "login": "Logga in",
+      "createAccount": "Skapa konto",
+      "startPracticing": "Börja öva →",
+      "startPractice": "Starta övning →"
+    },
+    "header": {
+      "ariaLabel": "Åtgärder på startsidan",
+      "contactSupport": "Kontakta support",
+      "openMenu": "Öppna meny"
+    },
+    "hero": {
+      "pill": "AI-driven säljträning för verkliga kundsamtal",
+      "titleBefore": "Öva säljsamtal innan de",
+      "titleAccent": "räknas",
+      "description": "Träna med realistiska AI-köparpersonor, hantera invändningar högt och granska direkta scorecards som visar vad du kan förbättra härnäst.",
+      "trusted": "Används av säljare och team"
+    },
+    "phonePreview": {
+      "ariaLabel": "Mobil förhandsvisning av AI Sales Coach",
+      "dashboard": {
+        "greeting": "God morgon, Alex",
+        "ready": "Redo för dagens övning?",
+        "continue": "Fortsätt ▶",
+        "recommended": "Rekommenderad övning",
+        "forYou": "För dig",
+        "practiceTitle": "Invändningshantering — Pris",
+        "practiceDescription": "Öva på att svara när kunder säger att tjänsten är för dyr."
+      },
+      "call": {
+        "title": "Övning på prisinvändning",
+        "subtitle": "Behovsanalys",
+        "live": "Live",
+        "persona": "Fastighetsköpare",
+        "quote": "“Er tjänst verkar användbar, men priset känns högt jämfört med vad vi betalar i dag.”",
+        "endCall": "Avsluta samtal"
+      }
+    },
+    "proof": {
+      "live": {
+        "title": "Liveövning",
+        "description": "Ha realistiska röstsamtal med AI-köpare baserade på verkliga kundscenarier."
+      },
+      "scorecards": {
+        "title": "Direkta scorecards",
+        "description": "Få AI-feedback på samtalspunkter, invändningar och avslut direkt efter varje samtal."
+      },
+      "progress": {
+        "title": "Följ dina framsteg",
+        "description": "Följ din utveckling över tid och fokusera på de färdigheter som ger bättre resultat."
+      }
+    },
+    "overview": {
+      "kicker": "Produktöversikt",
+      "title": "En fokuserad övningsloop för bättre säljsamtal.",
+      "description": "AI Sales Coach hjälper säljare att förbereda sig inför kundsamtal genom ett repeterbart arbetsflöde: välj ett scenario, prata med en realistisk AI-köpare, granska scorecardet och använd nästa session för att förbättra den svagaste färdigheten."
+    },
+    "workflow": {
+      "kicker": "Så fungerar det",
+      "title": "Arbetsflödet håller fokus från start till mål."
+    },
+    "steps": {
+      "choose": {
+        "title": "Välj upplägg",
+        "description": "Välj scenario, köparpersona, säljramverk och fokusområde."
+      },
+      "speak": {
+        "title": "Prata med AI-köparen",
+        "description": "Genomför ett live-röstsamtal med en realistisk köpare och öva på att hantera verkliga invändningar."
+      },
+      "review": {
+        "title": "Granska ditt scorecard",
+        "description": "Få direkt feedback på dina styrkor, förbättringsområden och nästa bästa steg."
+      },
+      "improve": {
+        "title": "Förbättra och upprepa",
+        "description": "Använd dina insikter, följ utvecklingen och kom tillbaka starkare nästa gång."
+      }
+    },
+    "benefits": {
+      "kicker": "Fördelar för säljteam",
+      "title": "Övningen blir repeterbar, mätbar och enklare att coacha.",
+      "safer": {
+        "title": "Tryggare övning före riktiga samtal",
+        "description": "Säljare kan repetera svåra samtal innan de pratar med verkliga prospekt eller kunder."
+      },
+      "consistent": {
+        "title": "Gemensamt coachningsspråk",
+        "description": "Managers och säljare använder samma scorecard-kategorier och säljramverk för att utvecklas tillsammans."
+      },
+      "service": {
+        "title": "Byggd för verkliga tjänstesamtal",
+        "description": "Övningsscenarierna speglar samtal inom städning, fastighetsunderhåll, BRF och facility services."
+      }
+    },
+    "faq": {
+      "kicker": "Vanliga frågor",
+      "titleLine1": "Vanliga frågor",
+      "titleLine2": "före det första övningssamtalet.",
+      "items": {
+        "audience": {
+          "question": "Vem är AI Sales Coach för?",
+          "answer": "Den är för säljare, managers och team som vill ha ett återkommande sätt att öva samtal och förbättras över tid."
+        },
+        "afterCall": {
+          "question": "Vad händer efter ett övningssamtal?",
+          "answer": "Sessionen sparas, transkript samlas in och ett scorecard visar styrkor, förbättringsområden och nästa fokusområde."
+        },
+        "context": {
+          "question": "Kan AI-kunden anpassas till vårt företags sammanhang?",
+          "answer": "Ja. Övningsupplägget kan använda företagskontext, scenario, säljramverk och fokusområde för att forma AI-köparen."
+        },
+        "data": {
+          "question": "Hur används mina data?",
+          "answer": "Övningssessioner används för att skapa transkript, scorecards och utvecklingsinsikter för säljaren och teamet."
+        },
+        "training": {
+          "question": "Behöver jag utbildning för att komma igång?",
+          "answer": "Nej. Säljare kan välja ett scenario, starta ett övningssamtal och granska feedback direkt efter sessionen."
+        }
+      }
+    },
+    "contact": {
+      "kicker": "Kontakta support",
+      "title": "Behöver du hjälp med AI Sales Coach?",
+      "description": "Vårt team hjälper gärna till med tekniska problem, kontofrågor, övningssessioner, scorecards och allmän produktsupport. Skicka ett meddelande så återkommer vi så snart som möjligt.",
+      "fields": {
+        "name": "Ditt namn",
+        "email": "Arbetsmejl",
+        "company": "Företag",
+        "message": "Vad kan vi hjälpa dig med?"
+      },
+      "mailtoNote": "När du skickar formuläret öppnas din e-postklient.",
+      "send": "Skicka",
+      "existingUser": "Har du redan ett konto? Logga in"
+    },
+    "footer": {
+      "description": "AI-driven säljträning som hjälper säljare att öva realistiska kundsamtal, granska scorecards och förbättras ett samtal i taget.",
+      "copyright": "© 2026 AI Sales Coach. Alla rättigheter förbehållna.",
+      "product": {
+        "title": "Produkt",
+        "howItWorks": "Så fungerar det",
+        "features": "Funktioner",
+        "forTeams": "För team"
+      },
+      "resources": {
+        "title": "Resurser",
+        "helpCenter": "Hjälpcenter",
+        "guides": "Guider",
+        "faq": "Vanliga frågor",
+        "contactSupport": "Kontakta support"
+      },
+      "company": {
+        "title": "Företag",
+        "about": "Om oss"
+      }
     }
   }
 }

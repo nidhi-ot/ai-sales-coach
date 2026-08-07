@@ -294,6 +294,98 @@
       }
     }
   },
+
+  "Admin": {
+  "loading": "Loading admin page...",
+  "eyebrow": "Admin Console",
+  "title": "Business AI Configuration",
+  "subtitle": "Manage your business profile, scenario overrides, and team invitations.",
+  "manageMembers": "Manage Members",
+
+  "tabs": {
+    "businessProfile": "Business Profile",
+    "scenarioOverrides": "Scenario Overrides",
+    "invites": "Invites"
+  },
+
+  "tabDescriptions": {
+    "businessProfile": "Company context",
+    "scenarioOverrides": "AI persona behavior",
+    "invites": "Team access"
+  },
+
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "configured": "Configured",
+    "missing": "Missing",
+    "notConfigured": "Not configured",
+    "english": "English",
+    "swedish": "Swedish"
+  },
+
+  "businessProfile": {
+    "title": "Business Profile",
+    "description": "Configure the company context used by future AI practice calls.",
+    "loading": "Loading business profile...",
+    "businessName": "Business Name",
+    "productsServices": "Products / Services",
+    "productsPlaceholder": "Describe what your business sells...",
+    "idealCustomerProfile": "Ideal Customer Profile",
+    "icpPlaceholder": "Describe your target customers...",
+    "commonObjections": "Common Objections",
+    "objectionsPlaceholder": "Example: too expensive, no time, already have a tool..."
+  },
+
+  "configuration": {
+    "title": "AI Configuration",
+    "description": "These settings control how the AI customer behaves in future practice sessions.",
+    "language": "Language",
+    "framework": "Framework",
+    "products": "Products",
+    "icp": "ICP",
+    "objections": "Objections",
+    "warningTitle": "Framework Warning",
+    "warningText": "Changing the framework only affects future sessions and should not be done often."
+  },
+
+  "scenarioOverrides": {
+    "title": "Scenario Overrides",
+    "description": "Override the default scenario title, objective, and persona notes for your business.",
+    "loading": "Loading scenario configs...",
+    "save": "Save Scenario",
+    "scenario": "Scenario",
+    "scenarioTitle": "Scenario Title",
+    "titlePlaceholder": "Example: Cold Call Practice",
+    "objective": "Objective",
+    "objectivePlaceholder": "What should the rep achieve in this scenario?",
+    "personaNotes": "Persona Notes",
+    "personaPlaceholder": "How should the AI customer behave?",
+    "whyTitle": "Why override scenarios?",
+    "whyText": "Overrides help tailor the AI customer's behavior to match your sales motion and common real-world objections."
+  },
+
+  "invites": {
+    "createTitle": "Create Invite",
+    "createDescription": "Create invite links for reps, managers, and admins in your business.",
+    "email": "Email",
+    "emailPlaceholder": "person@company.com",
+    "role": "Role",
+    "expiresInDays": "Invite expires in days",
+    "creating": "Creating...",
+    "createButton": "Create Invite",
+    "detailsTitle": "Invite Details",
+    "empty": "Create an invite to generate a registration link.",
+    "expires": "Expires",
+    "inviteId": "Invite ID"
+  },
+
+  "roles": {
+    "rep": "Rep",
+    "manager": "Manager",
+    "admin": "Admin"
+  }
+},
   "Scorecard": {
     "eyebrow": "Practice Scorecard",
     "title": "AI Sales Coach Evaluation 🎉",
@@ -825,6 +917,166 @@
       "discovery": "Discovery",
       "objectionHandling": "Objection Handling",
       "closing": "Closing"
+    }
+  },
+  "Home": {
+    "brandTagline": "Practice calls. Get coaching. Improve faster.",
+    "common": {
+      "login": "Log in",
+      "createAccount": "Create account",
+      "startPracticing": "Start practicing →",
+      "startPractice": "Start practice →"
+    },
+    "header": {
+      "ariaLabel": "Homepage actions",
+      "contactSupport": "Contact Support",
+      "openMenu": "Open menu"
+    },
+    "hero": {
+      "pill": "AI-powered sales practice for real buyer conversations",
+      "titleBefore": "Practice sales calls before they",
+      "titleAccent": "count",
+      "description": "Train with realistic AI buyer personas, handle objections out loud, and review instant scorecards that show what to improve next.",
+      "trusted": "Trusted by sales reps and teams"
+    },
+    "phonePreview": {
+      "ariaLabel": "AI Sales Coach mobile product preview",
+      "dashboard": {
+        "greeting": "Good morning, Alex",
+        "ready": "Ready for today's practice?",
+        "continue": "Continue ▶",
+        "recommended": "Recommended practice",
+        "forYou": "For you",
+        "practiceTitle": "Objection handling — Price",
+        "practiceDescription": "Practice responding when customers say the service is too expensive."
+      },
+      "call": {
+        "title": "Price objection practice",
+        "subtitle": "Discovery call",
+        "live": "Live",
+        "persona": "Facilities buyer",
+        "quote": "“Your service sounds useful, but the price seems high compared to what we pay now.”",
+        "endCall": "End Call"
+      }
+    },
+    "proof": {
+      "live": {
+        "title": "Live practice",
+        "description": "Have realistic voice conversations with AI buyers based on real customer scenarios."
+      },
+      "scorecards": {
+        "title": "Instant scorecards",
+        "description": "Get AI feedback on talking points, objections, and closing right after every call."
+      },
+      "progress": {
+        "title": "Progress tracking",
+        "description": "Track your performance over time and focus on the skills that drive better results."
+      }
+    },
+    "overview": {
+      "kicker": "Product overview",
+      "title": "A focused practice loop for better sales conversations.",
+      "description": "AI Sales Coach helps reps prepare for customer conversations by turning practice into a repeatable workflow: choose a scenario, speak with a realistic AI buyer, review the scorecard, and use the next session to improve the weakest skill."
+    },
+    "workflow": {
+      "kicker": "How it works",
+      "title": "The workflow stays focused from start to finish."
+    },
+    "steps": {
+      "choose": {
+        "title": "Choose the setup",
+        "description": "Select the scenario, buyer persona, sales framework, and focus area."
+      },
+      "speak": {
+        "title": "Speak with the AI buyer",
+        "description": "Run a live voice call with a realistic buyer and practice handling real objections."
+      },
+      "review": {
+        "title": "Review your scorecard",
+        "description": "Get instant feedback on your strengths, improvement areas, and next best actions."
+      },
+      "improve": {
+        "title": "Improve and repeat",
+        "description": "Use your insights, track progress, and come back stronger next time."
+      }
+    },
+    "benefits": {
+      "kicker": "Benefits for sales teams",
+      "title": "Practice becomes repeatable, measurable, and easier to coach.",
+      "safer": {
+        "title": "Safer practice before real calls",
+        "description": "Reps can rehearse difficult conversations before speaking with live prospects or customers."
+      },
+      "consistent": {
+        "title": "Consistent coaching language",
+        "description": "Managers and reps use the same scorecard categories and sales framework to align and improve together."
+      },
+      "service": {
+        "title": "Built for real service conversations",
+        "description": "Practice scenarios reflect cleaning, property maintenance, BRF, and facility service buyer conversations."
+      }
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "titleLine1": "Common questions",
+      "titleLine2": "before the first practice call.",
+      "items": {
+        "audience": {
+          "question": "Who is AI Sales Coach for?",
+          "answer": "It is for sales reps, managers, and teams who want a repeatable way to practice calls and improve over time."
+        },
+        "afterCall": {
+          "question": "What happens after a practice call?",
+          "answer": "The session is saved, transcripts are captured, and a scorecard shows strengths, improvement areas, and next focus areas."
+        },
+        "context": {
+          "question": "Can the AI customer match our business context?",
+          "answer": "Yes. The practice setup can use business context, scenario, sales framework, and focus area to shape the AI buyer."
+        },
+        "data": {
+          "question": "How is my data used?",
+          "answer": "Practice sessions are used to generate transcripts, scorecards, and progress insights for the rep and team."
+        },
+        "training": {
+          "question": "Do I need training to get started?",
+          "answer": "No. Reps can choose a scenario, start a practice call, and review feedback immediately after the session."
+        }
+      }
+    },
+    "contact": {
+      "kicker": "Contact Support",
+      "title": "Need assistance with AI Sales Coach?",
+      "description": "Our team is ready to help with technical issues, account questions, practice sessions, scorecards, and general product support. Send us a message and we'll respond as soon as possible.",
+      "fields": {
+        "name": "Your name",
+        "email": "Work email",
+        "company": "Company",
+        "message": "What can we help with?"
+      },
+      "mailtoNote": "Sending this form opens your email client.",
+      "send": "Send",
+      "existingUser": "Existing user? Log in"
+    },
+    "footer": {
+      "description": "AI-powered sales practice that helps reps rehearse realistic buyer conversations, review scorecards, and improve one call at a time.",
+      "copyright": "© 2026 AI Sales Coach. All rights reserved.",
+      "product": {
+        "title": "Product",
+        "howItWorks": "How it works",
+        "features": "Features",
+        "forTeams": "For teams"
+      },
+      "resources": {
+        "title": "Resources",
+        "helpCenter": "Help center",
+        "guides": "Guides",
+        "faq": "FAQ",
+        "contactSupport": "Contact support"
+      },
+      "company": {
+        "title": "Company",
+        "about": "About"
+      }
     }
   }
 }
