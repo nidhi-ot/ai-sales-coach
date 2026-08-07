@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   Mic,
   Zap,
@@ -8,128 +9,38 @@ import {
   Building2,
   Phone,
 } from "lucide-react";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
+export default async function HomePage() {
+  const t = await getTranslations("Home");
 
-const highlights = [
-  {
-    title: "Realistic AI buyer personas",
-    description:
-      "Practice with customers who ask practical questions, raise objections, and respond to what the rep actually says.",
-  },
-  {
-    title: "Instant scorecards",
-    description:
-      "Review rapport, discovery, objection handling, closing, and framework-specific feedback after each practice call.",
-  },
-  {
-    title: "Progress tracking",
-    description:
-      "Use session history and score trends to focus the next practice call on the skill that needs the most work.",
-  },
-];
+  const steps = [
+    { number: "01", icon: "👤", title: t("steps.choose.title"), description: t("steps.choose.description") },
+    { number: "02", icon: "🤖", title: t("steps.speak.title"), description: t("steps.speak.description") },
+    { number: "03", icon: "📈", title: t("steps.review.title"), description: t("steps.review.description") },
+    { number: "04", icon: "🎯", title: t("steps.improve.title"), description: t("steps.improve.description") },
+  ];
 
-const steps = [
-  {
-    number: "01",
-    icon: "👤",
-    title: "Choose the setup",
-    description:
-      "Select the scenario, buyer persona, sales framework, and focus area.",
-  },
-  {
-    number: "02",
-    icon: "🤖",
-    title: "Speak with the AI buyer",
-    description:
-      "Run a live voice call with a realistic buyer and practice handling real objections.",
-  },
-  {
-    number: "03",
-    icon: "📈",
-    title: "Review your scorecard",
-    description:
-      "Get instant feedback on your strengths, improvement areas, and next best actions.",
-  },
-  {
-    number: "04",
-    icon: "🎯",
-    title: "Improve and repeat",
-    description:
-      "Use your insights, track progress, and come back stronger next time.",
-  },
-];
+  const benefits = [
+    { icon: ShieldCheck, title: t("benefits.safer.title"), description: t("benefits.safer.description") },
+    { icon: UsersRound, title: t("benefits.consistent.title"), description: t("benefits.consistent.description") },
+    { icon: Building2, title: t("benefits.service.title"), description: t("benefits.service.description") },
+  ];
 
-const benefits = [
-  {
-    icon: ShieldCheck,
-    title: "Safer practice before real calls",
-    description:
-      "Reps can rehearse difficult conversations before speaking with live prospects or customers.",
-  },
-  {
-    icon: UsersRound,
-    title: "Consistent coaching language",
-    description:
-      "Managers and reps use the same scorecard categories and sales framework to align and improve together.",
-  },
-  {
-    icon: Building2,
-    title: "Built for real service conversations",
-    description:
-      "Practice scenarios reflect cleaning, property maintenance, BRF, and facility service buyer conversations.",
-  },
-];
+  const faqs = [
+    { question: t("faq.items.audience.question"), answer: t("faq.items.audience.answer") },
+    { question: t("faq.items.afterCall.question"), answer: t("faq.items.afterCall.answer") },
+    { question: t("faq.items.context.question"), answer: t("faq.items.context.answer") },
+    { question: t("faq.items.data.question"), answer: t("faq.items.data.answer") },
+    { question: t("faq.items.training.question"), answer: t("faq.items.training.answer") },
+  ];
 
-const faqs = [
-  {
-    question: "Who is AI Sales Coach for?",
-    answer:
-      "It is for sales reps, managers, and teams who want a repeatable way to practice calls and improve over time.",
-  },
-  {
-    question: "What happens after a practice call?",
-    answer:
-      "The session is saved, transcripts are captured, and a scorecard shows strengths, improvement areas, and next focus areas.",
-  },
-  {
-    question: "Can the AI customer match our business context?",
-    answer:
-      "Yes. The practice setup can use business context, scenario, sales framework, and focus area to shape the AI buyer.",
-  },
-  {
-    question: "How is my data used?",
-    answer:
-      "Practice sessions are used to generate transcripts, scorecards, and progress insights for the rep and team.",
-  },
-  {
-    question: "Do I need training to get started?",
-    answer:
-      "No. Reps can choose a scenario, start a practice call, and review feedback immediately after the session.",
-  },
-];
+  const proofCards = [
+    { icon: Mic, title: t("proof.live.title"), description: t("proof.live.description") },
+    { icon: Zap, title: t("proof.scorecards.title"), description: t("proof.scorecards.description") },
+    { icon: ChartNoAxesCombined, title: t("proof.progress.title"), description: t("proof.progress.description") },
+  ];
 
-const proofCards = [
-  {
-    icon: Mic,
-    title: "Live practice",
-    description:
-      "Have realistic voice conversations with AI buyers based on real customer scenarios.",
-  },
-  {
-    icon: Zap,
-    title: "Instant scorecards",
-    description:
-      "Get AI feedback on talking points, objections, and closing right after every call.",
-  },
-  {
-    icon: ChartNoAxesCombined,
-    title: "Progress tracking",
-    description:
-      "Track your performance over time and focus on the skills that drive better results.",
-  },
-];
-
-export default function HomePage() {
   return (
     <main style={pageStyle}>
       <div style={backgroundGlowLeft} />
@@ -148,6 +59,7 @@ export default function HomePage() {
           * {
             box-sizing: border-box;
           }
+
           .mobileHeaderMenu {
             display: none;
           }
@@ -237,41 +149,45 @@ export default function HomePage() {
             <img src="/logo.png" alt="AI Sales Coach" style={logoStyle} />
             <div>
               <p style={eyebrowStyle}>AI Sales Coach</p>
-              <p style={brandCopyStyle}>Practice calls. Get coaching. Improve faster.</p>
+              <p style={brandCopyStyle}>{t("brandTagline")}</p>
             </div>
           </div>
 
           <nav
             className="desktopHeaderActions"
             style={headerActionsStyle}
-            aria-label="Homepage actions"
+            aria-label={t("header.ariaLabel")}
           >
+            <LanguageSwitcher />
             <Link href="#contact" style={contactButtonStyle}>
               <Phone size={16} strokeWidth={2.4} />
-              Contact Support
+              {t("header.contactSupport")}
             </Link>
             <Link href="/login" style={ghostButtonStyle}>
-              Log in
+              {t("common.login")}
             </Link>
             <Link href="/register" style={primaryButtonStyle}>
-              Create account
+              {t("common.createAccount")}
             </Link>
           </nav>
 
           <details className="mobileHeaderMenu" style={mobileMenuStyle}>
-            <summary style={mobileMenuButtonStyle} aria-label="Open menu">
+            <summary style={mobileMenuButtonStyle} aria-label={t("header.openMenu")}>
               ☰
             </summary>
 
             <div style={mobileMenuPanelStyle}>
+              <div style={{ padding: "8px 12px" }}>
+                <LanguageSwitcher />
+              </div>
               <Link href="#contact" style={mobileMenuLinkStyle}>
-                Contact Support
+                {t("header.contactSupport")}
               </Link>
               <Link href="/login" style={mobileMenuLinkStyle}>
-                Log in
+                {t("common.login")}
               </Link>
               <Link href="/register" style={mobileMenuPrimaryLinkStyle}>
-                Create account
+                {t("common.createAccount")}
               </Link>
             </div>
           </details>
@@ -279,25 +195,20 @@ export default function HomePage() {
 
         <section className="heroSection" style={heroSectionStyle}>
           <div style={heroCopyStyle}>
-            <span style={pillStyle}>
-              AI-powered sales practice for real buyer conversations
-            </span>
+            <span style={pillStyle}>{t("hero.pill")}</span>
 
             <h1 style={titleStyle}>
-              Practice sales calls before they <span style={titleAccentStyle}>count</span>.
+              {t("hero.titleBefore")} <span style={titleAccentStyle}>{t("hero.titleAccent")}</span>.
             </h1>
 
-            <p style={leadStyle}>
-              Train with realistic AI buyer personas, handle objections out loud,
-              and review instant scorecards that show what to improve next.
-            </p>
+            <p style={leadStyle}>{t("hero.description")}</p>
 
             <div style={heroActionsStyle}>
               <Link href="/register" style={primaryButtonLargeStyle}>
-                Start practicing →
+                {t("common.startPracticing")}
               </Link>
               <Link href="/login" style={secondaryButtonLargeStyle}>
-                Log in
+                {t("common.login")}
               </Link>
             </div>
 
@@ -308,12 +219,11 @@ export default function HomePage() {
                 <span style={{ ...avatarStyle, background: "#e8efe6" }}>S</span>
                 <span style={{ ...avatarStyle, background: "#e6f4ef" }}>J</span>
               </div>
-
-              <span style={trustTextStyle}>Trusted by sales reps and teams</span>
+              <span style={trustTextStyle}>{t("hero.trusted")}</span>
             </div>
           </div>
 
-          <aside className="heroPreview" style={heroPreviewStyle} aria-label="AI Sales Coach mobile product preview">
+          <aside className="heroPreview" style={heroPreviewStyle} aria-label={t("phonePreview.ariaLabel")}>
             <div className="phoneBack" style={{ ...phoneMockupStyle, ...phoneBackStyle }}>
               <div style={phoneStatusBarStyle}>
                 <span>9:41</span>
@@ -323,22 +233,20 @@ export default function HomePage() {
 
               <div style={phoneDashboardHeaderStyle}>
                 <div>
-                  <h2 style={phoneTitleStyle}>Good morning, Alex</h2>
-                  <p style={phoneSubtitleStyle}>Ready for today&apos;s practice?</p>
+                  <h2 style={phoneTitleStyle}>{t("phonePreview.dashboard.greeting")}</h2>
+                  <p style={phoneSubtitleStyle}>{t("phonePreview.dashboard.ready")}</p>
                 </div>
-                <span style={phoneMiniStatusStyle}>Continue ▶</span>
+                <span style={phoneMiniStatusStyle}>{t("phonePreview.dashboard.continue")}</span>
               </div>
 
               <div style={phoneDashboardCardStyle}>
                 <div style={phoneDashboardCardHeaderStyle}>
-                  <p style={phoneSmallLabelStyle}>Recommended practice</p>
-                  <span style={phoneForYouStyle}>For you</span>
+                  <p style={phoneSmallLabelStyle}>{t("phonePreview.dashboard.recommended")}</p>
+                  <span style={phoneForYouStyle}>{t("phonePreview.dashboard.forYou")}</span>
                 </div>
-                <h3 style={phoneCardTitleStyle}>Objection handling — Price</h3>
-                <p style={phoneCardTextStyle}>
-                  Practice responding when customers say the service is too expensive.
-                </p>
-                <button style={phoneButtonCreamStyle}>Start practice →</button>
+                <h3 style={phoneCardTitleStyle}>{t("phonePreview.dashboard.practiceTitle")}</h3>
+                <p style={phoneCardTextStyle}>{t("phonePreview.dashboard.practiceDescription")}</p>
+                <button style={phoneButtonCreamStyle}>{t("common.startPractice")}</button>
               </div>
             </div>
 
@@ -352,23 +260,20 @@ export default function HomePage() {
               <div style={phoneCallHeaderStyle}>
                 <span style={phoneAvatarStyle}>AI</span>
                 <div>
-                  <h2 style={phoneCallTitleStyle}>Price objection practice</h2>
-                  <p style={phoneSubtitleStyle}>Discovery call</p>
+                  <h2 style={phoneCallTitleStyle}>{t("phonePreview.call.title")}</h2>
+                  <p style={phoneSubtitleStyle}>{t("phonePreview.call.subtitle")}</p>
                 </div>
-                <span style={phoneLiveBadgeStyle}>Live</span>
+                <span style={phoneLiveBadgeStyle}>{t("phonePreview.call.live")}</span>
               </div>
 
               <div style={phonePersonaCardStyle}>
                 <span style={phonePersonaIconStyle}>JS</span>
                 <h3 style={phonePersonaNameStyle}>James Wilson</h3>
-                <p style={phoneSubtitleStyle}>Facilities buyer</p>
+                <p style={phoneSubtitleStyle}>{t("phonePreview.call.persona")}</p>
               </div>
 
-              <div style={phoneQuoteStyle}>
-                “Your service sounds useful, but the price seems high compared to what we pay now.”
-              </div>
-
-              <button style={phoneTalkButtonStyle}>End Call</button>
+              <div style={phoneQuoteStyle}>{t("phonePreview.call.quote")}</div>
+              <button style={phoneTalkButtonStyle}>{t("phonePreview.call.endCall")}</button>
             </div>
           </aside>
         </section>
@@ -389,26 +294,16 @@ export default function HomePage() {
 
         <section id="overview" style={overviewBandStyle}>
           <div>
-            <p style={sectionKickerStyle}>Product overview</p>
-            <h2 style={overviewTitleStyle}>
-              A focused practice loop for better sales conversations.
-            </h2>
+            <p style={sectionKickerStyle}>{t("overview.kicker")}</p>
+            <h2 style={overviewTitleStyle}>{t("overview.title")}</h2>
           </div>
-
-          <p style={overviewTextStyle}>
-            AI Sales Coach helps reps prepare for customer conversations by turning
-            practice into a repeatable workflow: choose a scenario, speak with a
-            realistic AI buyer, review the scorecard, and use the next session to
-            improve the weakest skill.
-          </p>
+          <p style={overviewTextStyle}>{t("overview.description")}</p>
         </section>
 
         <section id="how-it-works" style={workflowSectionStyle}>
           <div style={workflowHeaderStyle}>
-            <p style={sectionKickerStyle}>How it works</p>
-            <h2 style={workflowTitleStyle}>
-              The workflow stays focused from start to finish.
-            </h2>
+            <p style={sectionKickerStyle}>{t("workflow.kicker")}</p>
+            <h2 style={workflowTitleStyle}>{t("workflow.title")}</h2>
           </div>
 
           <div style={stepsGridStyle}>
@@ -418,7 +313,6 @@ export default function HomePage() {
                 <span style={stepIconStyle}>{step.icon}</span>
                 <h3 style={stepTitleStyle}>{step.title}</h3>
                 <p style={stepTextStyle}>{step.description}</p>
-
                 {index < steps.length - 1 && <span style={stepArrowStyle}>→</span>}
               </article>
             ))}
@@ -427,10 +321,8 @@ export default function HomePage() {
 
         <section id="benefits" style={benefitsSectionStyle}>
           <div style={benefitsHeaderStyle}>
-            <p style={sectionKickerStyle}>Benefits for sales teams</p>
-            <h2 style={benefitsTitleStyle}>
-              Practice becomes repeatable, measurable, and easier to coach.
-            </h2>
+            <p style={sectionKickerStyle}>{t("benefits.kicker")}</p>
+            <h2 style={benefitsTitleStyle}>{t("benefits.title")}</h2>
           </div>
 
           <div style={benefitsGridStyle}>
@@ -439,7 +331,6 @@ export default function HomePage() {
                 <span style={benefitIconStyle}>
                   <item.icon size={34} strokeWidth={2.1} color="#006b4f" />
                 </span>
-
                 <div>
                   <h3 style={benefitTitleStyle}>{item.title}</h3>
                   <p style={benefitTextStyle}>{item.description}</p>
@@ -449,39 +340,35 @@ export default function HomePage() {
           </div>
         </section>
 
-       <section id="faq" style={faqSectionStyle}>
-        <div style={faqHeaderStyle}>
-          <p style={sectionKickerStyle}>FAQ</p>
-          <h2 style={faqTitleStyle}>
-            Common questions
-            <br />
-            before the first practice call.
-          </h2>
-        </div>
+        <section id="faq" style={faqSectionStyle}>
+          <div style={faqHeaderStyle}>
+            <p style={sectionKickerStyle}>{t("faq.kicker")}</p>
+            <h2 style={faqTitleStyle}>
+              {t("faq.titleLine1")}
+              <br />
+              {t("faq.titleLine2")}
+            </h2>
+          </div>
 
-        <div style={faqListStyle}>
-          {faqs.map((item) => (
-            <details key={item.question} style={faqItemStyle}>
-              <summary style={faqQuestionStyle}>
-                {item.question}
-                <span style={faqChevronStyle}>⌄</span>
-              </summary>
-              <p style={faqAnswerStyle}>{item.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+          <div style={faqListStyle}>
+            {faqs.map((item) => (
+              <details key={item.question} style={faqItemStyle}>
+                <summary style={faqQuestionStyle}>
+                  {item.question}
+                  <span style={faqChevronStyle}>⌄</span>
+                </summary>
+                <p style={faqAnswerStyle}>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
         <section id="contact" style={contactSectionStyle}>
           <div style={contactCardStyle}>
             <div>
-              <p style={sectionKickerStyle}>Contact Support</p>
-              <h2 style={contactTitleStyle}>
-                Need assistance with AI Sales Coach?
-              </h2>
-              <p style={contactTextStyle}>
-                Our team is ready to help with technical issues, account questions, practice sessions, scorecards, and general product support. Send us a message and we&apos;ll respond as soon as possible.
-              </p>
+              <p style={sectionKickerStyle}>{t("contact.kicker")}</p>
+              <h2 style={contactTitleStyle}>{t("contact.title")}</h2>
+              <p style={contactTextStyle}>{t("contact.description")}</p>
             </div>
 
             <form
@@ -492,98 +379,79 @@ export default function HomePage() {
             >
               <div style={contactFormRowStyle}>
                 <label style={contactLabelStyle}>
-                  Your name
+                  {t("contact.fields.name")}
                   <input name="name" style={contactInputStyle} />
                 </label>
 
                 <label style={contactLabelStyle}>
-                  Work email
+                  {t("contact.fields.email")}
                   <input name="email" type="email" style={contactInputStyle} />
                 </label>
               </div>
 
               <label style={contactLabelStyle}>
-                Company
+                {t("contact.fields.company")}
                 <input name="company" style={contactInputStyle} />
               </label>
 
               <label style={contactLabelStyle}>
-                What can we help with?
+                {t("contact.fields.message")}
                 <textarea name="message" rows={5} style={contactTextareaStyle} />
               </label>
+
               <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-              Sending this form opens your email client.
-            </p>
+                {t("contact.mailtoNote")}
+              </p>
 
               <div style={contactActionsStyle}>
                 <button type="submit" style={contactSubmitButtonStyle}>
-                  Send
+                  {t("contact.send")}
                 </button>
                 <Link href="/login" style={secondaryButtonLargeStyle}>
-                  Existing user? Log in
+                  {t("contact.existingUser")}
                 </Link>
               </div>
             </form>
           </div>
         </section>
+
         <footer style={footerStyle}>
           <div className="footerContent" style={footerContentStyle}>
             <div style={footerBrandStyle}>
               <img src="/logo.png" alt="AI Sales Coach" style={footerLogoImageStyle} />
-
               <div>
                 <p style={footerLogoStyle}>AI SALES COACH</p>
-
-                <p style={footerDescriptionStyle}>
-                  AI-powered sales practice that helps reps rehearse realistic buyer
-                  conversations, review scorecards, and improve one call at a time.
-                </p>
+                <p style={footerDescriptionStyle}>{t("footer.description")}</p>
 
                 <div style={footerSocialStyle}>
-                  <a
-                    href="https://www.linkedin.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={footerSocialLinkStyle}
-                  >
-                    in
-                  </a>
-                  <a
-                    href="https://www.instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={footerSocialLinkStyle}
-                  >
-                    ◙
-                  </a>
+                  <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" style={footerSocialLinkStyle}>in</a>
+                  <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" style={footerSocialLinkStyle}>◙</a>
                 </div>
 
-                <p style={footerBottomStyle}>
-                  © 2026 AI Sales Coach. All rights reserved.
-                </p>
+                <p style={footerBottomStyle}>{t("footer.copyright")}</p>
               </div>
             </div>
 
             <div className="footerColumns" style={footerColumnsStyle}>
               <div style={footerColumnStyle}>
-                <p style={footerColumnTitleStyle}>Product</p>
-                <Link href="#how-it-works" style={footerLinkStyle}>How it works</Link>
-                <Link href="#features" style={footerLinkStyle}>Features</Link>
-                <Link href="#benefits" style={footerLinkStyle}>For teams</Link>
-                <Link href="/login" style={footerLinkStyle}>Log In</Link>
+                <p style={footerColumnTitleStyle}>{t("footer.product.title")}</p>
+                <Link href="#how-it-works" style={footerLinkStyle}>{t("footer.product.howItWorks")}</Link>
+                <Link href="#features" style={footerLinkStyle}>{t("footer.product.features")}</Link>
+                <Link href="#benefits" style={footerLinkStyle}>{t("footer.product.forTeams")}</Link>
+                <Link href="/login" style={footerLinkStyle}>{t("common.login")}</Link>
               </div>
 
               <div style={footerColumnStyle}>
-                <p style={footerColumnTitleStyle}>Resources</p>
-                <Link href="#contact" style={footerLinkStyle}>Help center</Link>
-                <Link href="#how-it-works" style={footerLinkStyle}>Guides</Link>
-                <Link href="#faq" style={footerLinkStyle}>FAQ</Link>
-                <Link href="#contact" style={footerLinkStyle}>Contact support</Link>
+                <p style={footerColumnTitleStyle}>{t("footer.resources.title")}</p>
+                <Link href="#contact" style={footerLinkStyle}>{t("footer.resources.helpCenter")}</Link>
+                <Link href="#how-it-works" style={footerLinkStyle}>{t("footer.resources.guides")}</Link>
+                <Link href="#faq" style={footerLinkStyle}>{t("footer.resources.faq")}</Link>
+                <Link href="#contact" style={footerLinkStyle}>{t("footer.resources.contactSupport")}</Link>
               </div>
 
               <div style={footerColumnStyle}>
-                <p style={footerColumnTitleStyle}>Company</p>
-                <Link href="#overview" style={footerLinkStyle}>About</Link>
+                <p style={footerColumnTitleStyle}>{t("footer.company.title")}</p>
+                <Link href="#overview" style={footerLinkStyle}>{t("footer.company.about")}</Link>
               </div>
             </div>
           </div>
