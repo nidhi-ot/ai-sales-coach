@@ -34,3 +34,15 @@ Expected: When UI language is changed to Swedish, all Admin page headings, tabs,
 Actual: Sidebar and other pages switch to Swedish, but the Admin page content remains in English.  
 Severity: High  
 Notes: Business language is set to Swedish, but the Admin interface still contains hardcoded English text.
+
+## Shareing Button
+Sharing button check: Not applicable in the current codebase. The Share button was previously removed from the scorecard, so there is no sharing action available to test. The task description appears to refer to an older implementation.
+
+The current backend still exposes the shared_with_manager field in session/history responses, but there is no active API endpoint for changing it. The frontend Share button was already removed, so the roadmap note about a broken Share button refers to an older implementation.
+
+## Sharing flow check
+
+- No Share button exists in the current scorecard UI.
+- Backend still reads and returns `shared_with_manager`.
+- No API route was found that updates `shared_with_manager`.
+- The roadmap note about a broken Share button appears to refer to an older implementation.
