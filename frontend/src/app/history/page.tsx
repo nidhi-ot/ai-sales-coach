@@ -301,6 +301,30 @@ export default function HistoryPage() {
                       >
                         {t("viewScorecard")}
                       </button>
+
+                      {session.overall_score != null && (
+                        <label style={shareLabelStyle}>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(session.shared_with_manager)}
+                            onChange={(event) => {
+                              const nextValue = event.target.checked;
+                              const confirmed = window.confirm(
+                                nextValue ? t("confirmShare") : t("confirmUnshare")
+                              );
+
+                              if (!confirmed) {
+                                return;
+                              }
+
+                              updateSharing(session.id, nextValue);
+                            }}
+                          />
+                          {session.shared_with_manager
+                            ? t("shared")
+                            : t("shareWithManager")}
+                        </label>
+                      )}
                     </div>
                   </div>
                 );
@@ -517,6 +541,16 @@ const secondaryButtonStyle: React.CSSProperties = {
   cursor: "pointer",
   fontWeight: 800,
   whiteSpace: "nowrap",
+};
+
+const shareLabelStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  fontSize: "13px",
+  color: "#344054",
+  whiteSpace: "nowrap",
+  cursor: "pointer",
 };
 
 const primaryButtonStyle: React.CSSProperties = {

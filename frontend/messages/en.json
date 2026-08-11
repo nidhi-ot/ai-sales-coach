@@ -475,6 +475,10 @@
     "retryFailed": "Failed to retry analysis.",
     "viewDetails": "View Details",
     "viewScorecard": "View Scorecard",
+    "shareWithManager": "Share with manager",
+    "shared": "Shared",
+    "confirmShare": "Share this scorecard with your manager? They will be able to see your scores and feedback for this session.",
+    "confirmUnshare": "Stop sharing this scorecard with your manager?",
     "stats": {
       "total": "Total Sessions",
       "completed": "Completed",

@@ -475,6 +475,10 @@
     "retryFailed": "Det gick inte att försöka analysera igen.",
     "viewDetails": "Visa detaljer",
     "viewScorecard": "Visa scorecard",
+    "shareWithManager": "Dela med chef",
+    "shared": "Delad",
+    "confirmShare": "Dela denna scorecard med din chef? Din chef kommer att kunna se dina poäng och din feedback för denna session.",
+    "confirmUnshare": "Slutar dela denna scorecard med din chef?",
     "stats": {
       "total": "Totalt antal sessioner",
       "completed": "Slutförda",

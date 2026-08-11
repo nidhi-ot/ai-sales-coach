@@ -294,13 +294,16 @@ CREATE TABLE scorecards (
   strengths TEXT[],
   improvement_areas TEXT[],
   feedback_summary TEXT,
-  
+  moments JSONB DEFAULT '[]'::jsonb, -- [{ "offset_ms": 1200, "dimension": "rapport", "note": "..." }]
+
 
   -- Durable background scoring lifecycle
   status TEXT DEFAULT 'processing' CHECK (status IN ('processing', 'generated', 'failed')),
   error_message TEXT,
   processing_started_at TIMESTAMPTZ,
-  
+
+  shared_with_manager BOOLEAN NOT NULL DEFAULT false,
+
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_scorecards_rep ON scorecards(rep_id, created_at DESC);

@@ -157,6 +157,130 @@ class ManagerRouteTests(unittest.TestCase):
         self.assertEqual(len(payload["reps"]), 1)
         self.assertEqual(payload["reps"][0]["id"], "rep-999")
 
+    def test_manager_only_sees_scorecards_shared_by_the_rep(self):
+        fake_supabase = self._make_fake_supabase(["business-789"])
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "manager-123",
+                    "full_name": "Test Manager",
+                    "phone_number": "0700000001",
+                    "business_id": "business-789",
+                    "role": "manager",
+                },
+                {
+                    "id": "rep-123",
+                    "full_name": "Test Rep",
+                    "phone_number": "0700000000",
+                    "business_id": "business-789",
+                    "role": "rep",
+                },
+            ]
+        )
+        fake_supabase.store["scorecards"].extend(
+            [
+                {
+                    "id": "scorecard-shared",
+                    "session_id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
+                },
+                {
+                    "id": "scorecard-private",
+                    "session_id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": False,
+                },
+            ]
+        )
+        self._set_current_user("manager-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.get("/api/v1/manager/reps/rep-123/scorecards")
+
+        self.assertEqual(response.status_code, 200)
+        scorecards = response.json()["scorecards"]
+        self.assertEqual(len(scorecards), 1)
+        self.assertEqual(scorecards[0]["id"], "scorecard-shared")
+
+    def test_manager_only_sees_transcripts_from_shared_sessions(self):
+        fake_supabase = self._make_fake_supabase(["business-789"])
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "manager-123",
+                    "full_name": "Test Manager",
+                    "phone_number": "0700000001",
+                    "business_id": "business-789",
+                    "role": "manager",
+                },
+                {
+                    "id": "rep-123",
+                    "full_name": "Test Rep",
+                    "phone_number": "0700000000",
+                    "business_id": "business-789",
+                    "role": "rep",
+                },
+            ]
+        )
+        fake_supabase.store["scorecards"].extend(
+            [
+                {
+                    "id": "scorecard-shared",
+                    "session_id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
+                },
+                {
+                    "id": "scorecard-private",
+                    "session_id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": False,
+                },
+            ]
+        )
+        fake_supabase.store["transcripts"].extend(
+            [
+                {
+                    "id": "transcript-1",
+                    "session_id": "session-shared",
+                    "speaker": "rep",
+                    "text": "Shared call line",
+                    "timestamp_offset_ms": 1000,
+                },
+                {
+                    "id": "transcript-2",
+                    "session_id": "session-private",
+                    "speaker": "rep",
+                    "text": "Private call line",
+                    "timestamp_offset_ms": 1000,
+                },
+            ]
+        )
+        self._set_current_user("manager-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
+        ):
+            rep_scoped = self.client.get("/api/v1/manager/reps/rep-123/transcripts")
+            business_scoped = self.client.get(
+                "/api/v1/manager/business/business-789/reps/rep-123/transcripts"
+            )
+
+        for response in (rep_scoped, business_scoped):
+            self.assertEqual(response.status_code, 200)
+            transcripts = response.json()["transcripts"]
+            self.assertEqual(len(transcripts), 1)
+            self.assertEqual(transcripts[0]["session_id"], "session-shared")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -324,6 +324,51 @@ class ScorecardRouteTests(unittest.TestCase):
         self.assertEqual(payload["feedback_summary"], "Generated scorecard")
         self.assertEqual(len(fake_supabase.store["scorecards"]), 1)
 
+    def test_share_endpoint_updates_shared_with_manager_and_rejects_other_reps(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["scorecards"].append(
+            {
+                "id": "scorecard-1",
+                "session_id": "session-123",
+                "rep_id": "rep-456",
+                "business_id": "business-789",
+                "shared_with_manager": False,
+            }
+        )
+
+        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase):
+            response = self.client.patch(
+                "/api/v1/scorecards/session/session-123/share",
+                json={"shared_with_manager": True},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"session_id": "session-123", "shared_with_manager": True},
+        )
+        self.assertTrue(fake_supabase.store["scorecards"][0]["shared_with_manager"])
+
+        app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id="rep-999")
+        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase):
+            forbidden_response = self.client.patch(
+                "/api/v1/scorecards/session/session-123/share",
+                json={"shared_with_manager": False},
+            )
+
+        self.assertEqual(forbidden_response.status_code, 403)
+
+    def test_share_endpoint_returns_404_for_missing_scorecard(self):
+        fake_supabase = FakeSupabase()
+
+        with patch("app.api.routes.scorecards.get_supabase", return_value=fake_supabase):
+            response = self.client.patch(
+                "/api/v1/scorecards/session/session-123/share",
+                json={"shared_with_manager": True},
+            )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_reprocess_rejects_scorecard_already_processing(self):
         fake_supabase = FakeSupabase()
         fake_supabase.store["scorecards"].append(
