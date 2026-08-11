@@ -206,6 +206,7 @@ async def get_manager_rep_scorecards(
         .table("scorecards")
         .select("*")
         .eq("rep_id", rep_id)
+        .eq("shared_with_manager", True)
         .order("created_at", desc=True)
         .execute()
         .data
@@ -221,11 +222,17 @@ async def get_manager_rep_transcripts(
 ):
     _ensure_rep_in_business(rep_id, current_account.business_id)
 
-    sessions = _row_dicts(
-        get_supabase().table("sessions").select("id").eq("rep_id", rep_id).execute().data
+    shared_scorecards = _row_dicts(
+        get_supabase()
+        .table("scorecards")
+        .select("session_id")
+        .eq("rep_id", rep_id)
+        .eq("shared_with_manager", True)
+        .execute()
+        .data
     )
 
-    session_ids = [row["id"] for row in sessions if row.get("id")]
+    session_ids = [row["session_id"] for row in shared_scorecards if row.get("session_id")]
 
     if not session_ids:
         return {"transcripts": []}
@@ -337,6 +344,7 @@ async def get_manager_business_rep_scorecards(
         .table("scorecards")
         .select("*")
         .eq("rep_id", rep_id)
+        .eq("shared_with_manager", True)
         .order("created_at", desc=True)
         .execute()
         .data
@@ -356,11 +364,17 @@ async def get_manager_business_rep_transcripts(
 
     _ensure_rep_in_business(rep_id, business_id)
 
-    sessions = _row_dicts(
-        get_supabase().table("sessions").select("id").eq("rep_id", rep_id).execute().data
+    shared_scorecards = _row_dicts(
+        get_supabase()
+        .table("scorecards")
+        .select("session_id")
+        .eq("rep_id", rep_id)
+        .eq("shared_with_manager", True)
+        .execute()
+        .data
     )
 
-    session_ids = [row["id"] for row in sessions if row.get("id")]
+    session_ids = [row["session_id"] for row in shared_scorecards if row.get("session_id")]
 
     if not session_ids:
         return {"transcripts": []}

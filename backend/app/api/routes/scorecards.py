@@ -39,6 +39,10 @@ class ScorecardStub(BaseModel):
     business_id: str
 
 
+class ScorecardShareUpdate(BaseModel):
+    shared_with_manager: bool
+
+
 # Creates an empty scorecard entry
 @router.post("/")
 async def create_scorecard(
@@ -102,6 +106,44 @@ async def get_scorecard(
     ensure_rep_access(str(current_user.id), rep_id)
 
     return scorecard
+
+
+@router.patch("/session/{session_id}/share")
+async def update_scorecard_sharing(
+    session_id: str,
+    data: ScorecardShareUpdate,
+    current_user=Depends(get_current_user),
+):
+    supabase = get_supabase()
+    scorecard_result = (
+        supabase.table("scorecards")
+        .select("id, rep_id")
+        .eq("session_id", session_id)
+        .limit(1)
+        .execute()
+    )
+    scorecard_rows = _row_dicts(scorecard_result.data)
+
+    if not scorecard_rows:
+        raise HTTPException(status_code=404, detail="Scorecard not found")
+
+    scorecard = scorecard_rows[0]
+    rep_id = _require_row_value(scorecard, "rep_id", "Scorecard")
+    ensure_rep_access(str(current_user.id), rep_id)
+
+    result = (
+        supabase.table("scorecards")
+        .update({"shared_with_manager": data.shared_with_manager})
+        .eq("session_id", session_id)
+        .execute()
+    )
+    updated_rows = _row_dicts(result.data)
+    updated = updated_rows[0] if updated_rows else scorecard
+
+    return {
+        "session_id": session_id,
+        "shared_with_manager": bool(updated.get("shared_with_manager", data.shared_with_manager)),
+    }
 
 
 @router.post("/session/{session_id}/reprocess")
