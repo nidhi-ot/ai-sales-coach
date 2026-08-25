@@ -289,23 +289,23 @@ async def login(data: LoginRequest) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Salesperson account not found")
 
     business_context = _get_business_context(
-    supabase,
-    str(account["business_id"]),
-)
+        supabase,
+        str(account["business_id"]),
+    )
 
     return {
-    "message": "Login successful",
-    "user_id": auth_result.user.id,
-    "access_token": auth_result.session.access_token if auth_result.session else None,
-    "rep_id": auth_result.user.id,
-    "email": auth_result.user.email,
-    "full_name": account["full_name"],
-    "phone_number": account["phone_number"],
-    "employee_id": account["employee_id"],
-    "business_id": account["business_id"],
-    "business_name": business_context["name"],
-    "role": account["role"],
-    "business_language": business_context["language"],
+        "message": "Login successful",
+        "user_id": auth_result.user.id,
+        "access_token": auth_result.session.access_token if auth_result.session else None,
+        "rep_id": auth_result.user.id,
+        "email": auth_result.user.email,
+        "full_name": account["full_name"],
+        "phone_number": account["phone_number"],
+        "employee_id": account["employee_id"],
+        "business_id": account["business_id"],
+        "business_name": business_context["name"],
+        "role": account["role"],
+        "business_language": business_context["language"],
     }
 
 

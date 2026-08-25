@@ -66,6 +66,7 @@ async def get_latest_salesperson_profile(
 
     return rows[0]
 
+
 @router.get("/me/scenario-status")
 async def get_scenario_status(
     scenario: str,
@@ -97,11 +98,7 @@ async def get_scenario_status(
             "metric_scores": None,
         }
 
-    session_ids = [
-        str(session["id"])
-        for session in sessions
-        if session.get("id")
-    ]
+    session_ids = [str(session["id"]) for session in sessions if session.get("id")]
 
     if not session_ids:
         return {
