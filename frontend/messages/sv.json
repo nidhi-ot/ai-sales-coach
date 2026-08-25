@@ -1,54 +1,74 @@
 {
   "PracticeSetup": {
-    "eyebrow": "Övningsinställning",
-    "title": "Låt oss förbereda samtalet",
-    "loading": "Laddar övningsinställning...",
-    "subtitle": "Välj kundkontext och fokusområde innan AI-samtalet startar.",
-    "businessContext": "Kundkontext",
-    "businessContextDescription": "Välj vilken typ av kund AI:n ska spela.",
-    "todaysFocus": "Dagens fokus",
-    "todaysFocusDescription": "Välj vad AI-kunden ska utmana dig på.",
-    "recommendedFocus": "AI-rekommenderat fokus",
-    "recommendationDescription": "Rekommendationen baseras på din senaste övningsprofil. Du kan fortfarande välja ett annat fokus manuellt.",
-    "practiceSummary": "Övningssammanfattning",
-    "businessContextLabel": "Kundkontext",
-    "focusAreaLabel": "Fokusområde",
-    "difficulty": "Svårighetsgrad",
-    "estimatedTime": "Uppskattad tid",
-    "medium": "Medel",
-    "threeMinutes": "3 min",
-    "whatHappensNext": "Vad händer sedan?",
-    "microphonePermission": "Mikrofonbehörighet kommer att efterfrågas.",
-    "aiCustomerJoins": "AI-kunden ansluter till samtalet.",
-    "endAnytime": "Du kan avsluta samtalet när som helst.",
-    "startCall": "Starta övningssamtal →",
-    "profileVersion": "Profil v{version}",
-    "aiRecommendedInline": "AI-rekommenderat",
-    "businessContexts": {
-      "apartmentAssociation": {
-        "title": "Bostadsrättsförening",
-        "description": "En fastighetsansvarig som ansvarar för trappstädning."
-      },
-      "officeBuilding": {
-        "title": "Kontorsbyggnad",
-        "description": "En kontorschef som söker en pålitlig städtjänst."
-      },
-      "hotel": {
-        "title": "Hotell",
-        "description": "En hotellchef med fokus på renlighet och gästupplevelse."
-      },
-      "retailStore": {
-        "title": "Butik",
-        "description": "En butiksägare som vill ha en ren kundmiljö."
-      }
-    },
-    "focusAreas": {
-      "discovery": "Behovsanalys",
-      "handlingObjections": "Hantera invändningar",
-      "valueProposition": "Värdeerbjudande",
-      "closing": "Avslut"
-    }
+  "greeting": "Hej {name}",
+  "eyebrow": "Övningsinställning",
+  "title": "Låt oss förbereda samtalet",
+  "loading": "Laddar övningsinställning...",
+  "subtitle": "Välj fokusområde innan du startar ditt AI-övningssamtal.",
+
+  "scenarioReadyTitle": "Låt oss göra dig redo för ditt {scenario}",
+  "scenarioReadyWithHistory": "Se din tidigare prestation och fokusera på att förbättra ditt svagaste område.",
+  "scenarioReadyWithoutHistory": "Låt oss göra dig redo för din första övning i det här scenariot.",
+
+  "loadingPreviousPerformance": "Laddar din tidigare prestation...",
+  "basedOnPrevious": "Baserat på ditt tidigare {scenario}",
+  "weakestArea": "Svagaste område",
+  "thisCallTargets": "Den här övningen fokuserar på att förbättra {area}.",
+
+  "noScenarioHistory": "Ingen tidigare historik för {scenario}",
+  "firstScenarioDescription": "Genomför övningen för att skapa din första personliga rekommendation.",
+
+  "todaysFocus": "Dagens fokus",
+  "todaysFocusDescription": "Välj vad AI-kunden ska utmana dig på.",
+  "focusDescriptionWithHistory": "Du kan behålla det rekommenderade fokuset eller välja ett annat.",
+  "focusDescriptionNoHistory": "Välj ett fokusområde för att komma igång.",
+
+  "recommendedFocus": "AI-rekommenderat fokus",
+  "recommendationDescription": "Rekommendationen baseras på din tidigare prestation i det här scenariot.",
+  "recommendedTip": "{area} rekommenderas just nu baserat på din tidigare prestation.",
+  "aiRecommended": "AI-rekommenderat",
+  "aiRecommendedInline": "AI-rekommenderat",
+
+  "practiceSummary": "Övningssammanfattning",
+  "scenarioLabel": "Scenario",
+  "focusAreaLabel": "Fokusområde",
+  "difficulty": "Svårighetsgrad",
+  "estimatedTime": "Uppskattad tid",
+  "medium": "Medel",
+  "threeMinutes": "3 min",
+
+  "whatHappensNext": "Vad händer sedan?",
+  "microphonePermission": "Mikrofonbehörighet kommer att efterfrågas.",
+  "aiCustomerJoins": "AI-kunden ansluter till samtalet.",
+  "endAnytime": "Du kan avsluta samtalet när som helst.",
+  "startCall": "Starta övningssamtal",
+
+  "profileVersion": "Profil v{version}",
+
+  "readyToPractice": "Redo att öva",
+  "lastScenarioPerformance": "Din senaste prestation i {scenario}",
+  "needsMostImprovement": "behöver förbättras mest",
+  "chooseFocusTitle": "Välj fokus för den här övningen",
+  "recommendedByAI": "Rekommenderat av AI",
+  "basedOnLastScenario": "Baserat på din tidigare prestation i {scenario}.",
+  "takesThreeMinutes": "Tar cirka 3 minuter",
+  "practiceSessionTitle": "Övningssession",
+  "practiceSessionDescription": "Använd sessionen för att träna och förbättra dina säljfärdigheter.",
+
+  "scenarioNames": {
+    "coldCall": "Kallsamtal",
+    "hotCall": "Uppföljningssamtal",
+    "directSales": "Direktförsäljning",
+    "meeting": "Möte"
   },
+
+  "focusAreas": {
+    "discovery": "Behovsanalys",
+    "handlingObjections": "Hantera invändningar",
+    "valueProposition": "Värdeerbjudande",
+    "closing": "Avslut"
+  }
+},
   "Call": {
     "eyebrow": "Liveövning",
     "title": "Live övningssamtal",

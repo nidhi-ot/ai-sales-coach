@@ -33,10 +33,10 @@ def first_row(data: Any) -> dict[str, Any] | None:
     return None
 
 
-def _get_business_language(supabase, business_id: str) -> str:
+def _get_business_context(supabase, business_id: str) -> dict[str, str]:
     result = (
         supabase.table("business_profiles")
-        .select("language")
+        .select("name, language")
         .eq("id", business_id)
         .limit(1)
         .execute()
@@ -44,7 +44,16 @@ def _get_business_language(supabase, business_id: str) -> str:
 
     business = first_row(result.data)
 
-    return str(business.get("language") or "en") if business else "en"
+    if not business:
+        return {
+            "name": "",
+            "language": "en",
+        }
+
+    return {
+        "name": str(business.get("name") or ""),
+        "language": str(business.get("language") or "en"),
+    }
 
 
 def _clean_optional_text(value: str | None) -> str | None:
@@ -197,20 +206,21 @@ async def register(data: RegisterRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Unable to create account") from exc
 
     account = first_row(account_result.data)
-    business_language = _get_business_language(supabase, str(business_id))
+    business_context = _get_business_context(supabase, str(business_id))
 
     return {
         "message": "Registration successful",
         "user_id": auth_result.user.id,
         "rep_id": auth_result.user.id,
         "business_id": business_id,
+        "business_name": business_context["name"],
         "full_name": data.full_name,
         "email": data.email,
         "phone_number": data.phone_number,
         "employee_id": employee_id,
         "role": role,
         "account": account,
-        "business_language": business_language,
+        "business_language": business_context["language"],
     }
 
 
@@ -278,20 +288,24 @@ async def login(data: LoginRequest) -> dict[str, Any]:
     if not account:
         raise HTTPException(status_code=404, detail="Salesperson account not found")
 
-    business_language = _get_business_language(supabase, str(account["business_id"]))
+    business_context = _get_business_context(
+    supabase,
+    str(account["business_id"]),
+)
 
     return {
-        "message": "Login successful",
-        "user_id": auth_result.user.id,
-        "access_token": auth_result.session.access_token if auth_result.session else None,
-        "rep_id": auth_result.user.id,
-        "email": auth_result.user.email,
-        "full_name": account["full_name"],
-        "phone_number": account["phone_number"],
-        "employee_id": account["employee_id"],
-        "business_id": account["business_id"],
-        "role": account["role"],
-        "business_language": business_language,
+    "message": "Login successful",
+    "user_id": auth_result.user.id,
+    "access_token": auth_result.session.access_token if auth_result.session else None,
+    "rep_id": auth_result.user.id,
+    "email": auth_result.user.email,
+    "full_name": account["full_name"],
+    "phone_number": account["phone_number"],
+    "employee_id": account["employee_id"],
+    "business_id": account["business_id"],
+    "business_name": business_context["name"],
+    "role": account["role"],
+    "business_language": business_context["language"],
     }
 
 

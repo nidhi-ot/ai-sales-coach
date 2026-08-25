@@ -1,54 +1,74 @@
 {
   "PracticeSetup": {
-    "eyebrow": "Practice Setup",
-    "title": "Let's get you ready",
-    "loading": "Loading practice setup...",
-    "subtitle": "Choose the customer context and focus area before starting your AI practice call.",
-    "businessContext": "Business Context",
-    "businessContextDescription": "Choose what type of customer the AI should act as.",
-    "todaysFocus": "Today's Focus",
-    "todaysFocusDescription": "Choose what the AI customer should challenge you on.",
-    "recommendedFocus": "AI Recommended Focus",
-    "recommendationDescription": "This recommendation is based on your latest practice profile. You can still choose a different focus manually.",
-    "practiceSummary": "Practice Summary",
-    "businessContextLabel": "Business Context",
-    "focusAreaLabel": "Focus Area",
-    "difficulty": "Difficulty",
-    "estimatedTime": "Estimated Time",
-    "medium": "Medium",
-    "threeMinutes": "3 min",
-    "whatHappensNext": "What happens next?",
-    "microphonePermission": "Microphone permission will be requested.",
-    "aiCustomerJoins": "The AI customer will join the call.",
-    "endAnytime": "You can end the call anytime.",
-    "startCall": "Start Practice Call →",
-    "profileVersion": "Profile v{version}",
-    "aiRecommendedInline": "AI recommended",
-    "businessContexts": {
-      "apartmentAssociation": {
-        "title": "Apartment Association",
-        "description": "A residential property manager responsible for stair cleaning."
-      },
-      "officeBuilding": {
-        "title": "Office Building",
-        "description": "An office manager looking for reliable cleaning service."
-      },
-      "hotel": {
-        "title": "Hotel",
-        "description": "A hotel manager focused on cleanliness and guest experience."
-      },
-      "retailStore": {
-        "title": "Retail Store",
-        "description": "A store owner who wants a clean customer-facing space."
-      }
-    },
-    "focusAreas": {
-      "discovery": "Discovery",
-      "handlingObjections": "Handling Objections",
-      "valueProposition": "Value Proposition",
-      "closing": "Closing"
-    }
+  "greeting": "Hi {name}",
+  "eyebrow": "Practice Setup",
+  "title": "Let's get you ready",
+  "loading": "Loading practice setup...",
+  "subtitle": "Choose your focus area before starting your AI practice call.",
+
+  "scenarioReadyTitle": "Let's get you ready for your {scenario}",
+  "scenarioReadyWithHistory": "Review your previous performance and focus on improving your weakest area.",
+  "scenarioReadyWithoutHistory": "Let's get you started with your first practice session for this scenario.",
+
+  "loadingPreviousPerformance": "Loading your previous performance...",
+  "basedOnPrevious": "Based on your previous {scenario}",
+  "weakestArea": "Weakest area",
+  "thisCallTargets": "This practice will focus on improving your {area} skills.",
+
+  "noScenarioHistory": "No previous {scenario} history yet",
+  "firstScenarioDescription": "Complete this practice call to build your first personalized recommendation.",
+
+  "todaysFocus": "Today's Focus",
+  "todaysFocusDescription": "Choose what the AI customer should challenge you on.",
+  "focusDescriptionWithHistory": "You can keep the recommended focus or choose a different one.",
+  "focusDescriptionNoHistory": "Choose a focus area to get started.",
+
+  "recommendedFocus": "AI Recommended Focus",
+  "recommendationDescription": "This recommendation is based on your previous performance for this scenario.",
+  "recommendedTip": "Focusing on {area} is currently recommended based on your previous performance.",
+  "aiRecommended": "AI recommended",
+  "aiRecommendedInline": "AI recommended",
+
+  "practiceSummary": "Practice Summary",
+  "scenarioLabel": "Scenario",
+  "focusAreaLabel": "Focus Area",
+  "difficulty": "Difficulty",
+  "estimatedTime": "Estimated Time",
+  "medium": "Medium",
+  "threeMinutes": "3 min",
+
+  "whatHappensNext": "What happens next?",
+  "microphonePermission": "Microphone permission will be requested.",
+  "aiCustomerJoins": "The AI customer will join the call.",
+  "endAnytime": "You can end the call anytime.",
+  "startCall": "Start Practice Call",
+
+  "profileVersion": "Profile v{version}",
+
+  "readyToPractice": "Ready to practice",
+  "lastScenarioPerformance": "Your last {scenario} performance",
+  "needsMostImprovement": "needs the most improvement",
+  "chooseFocusTitle": "Choose your focus for this practice",
+  "recommendedByAI": "Recommended by AI",
+  "basedOnLastScenario": "Based on your previous {scenario} performance.",
+  "takesThreeMinutes": "Takes about 3 minutes",
+  "practiceSessionTitle": "Practice session",
+  "practiceSessionDescription": "Use this session to practise and improve your sales skills.",
+
+  "scenarioNames": {
+    "coldCall": "Cold Call",
+    "hotCall": "Hot Call",
+    "directSales": "Direct Sales",
+    "meeting": "Meeting"
   },
+
+  "focusAreas": {
+    "discovery": "Discovery",
+    "handlingObjections": "Handling Objections",
+    "valueProposition": "Value Proposition",
+    "closing": "Closing"
+  }
+},
   "Call": {
     "eyebrow": "Live Practice",
     "title": "Live Practice Call",

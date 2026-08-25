@@ -28,12 +28,12 @@ export default function ScenariosPage() {
       description: t("items.hotCall.description"),
     },
     {
-      id: "directsales",
-      title: t("items.directSales.title"),
-      icon: "🛒",
-      label: t("items.directSales.label"),
-      description: t("items.directSales.description"),
-    },
+  id: "direct_sales",
+  title: t("items.directSales.title"),
+  icon: "🛒",
+  label: t("items.directSales.label"),
+  description: t("items.directSales.description"),
+},
     {
       id: "meeting",
       title: t("items.meeting.title"),
