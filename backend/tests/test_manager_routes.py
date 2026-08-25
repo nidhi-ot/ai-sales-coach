@@ -208,6 +208,237 @@ class ManagerRouteTests(unittest.TestCase):
         self.assertEqual(len(scorecards), 1)
         self.assertEqual(scorecards[0]["id"], "scorecard-shared")
 
+    def test_manager_only_sees_sessions_with_shared_scorecards(self):
+        fake_supabase = self._make_fake_supabase(["business-789"])
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "manager-123",
+                    "full_name": "Test Manager",
+                    "phone_number": "0700000001",
+                    "business_id": "business-789",
+                    "role": "manager",
+                },
+                {
+                    "id": "rep-123",
+                    "full_name": "Test Rep",
+                    "phone_number": "0700000000",
+                    "business_id": "business-789",
+                    "role": "rep",
+                },
+            ]
+        )
+
+        fake_supabase.store["sessions"].update(
+            {
+                "session-shared": {
+                    "id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "scenario": "cold_call",
+                    "started_at": "2026-08-10T10:00:00Z",
+                    "ended_at": "2026-08-10T10:05:00Z",
+                    "duration_seconds": 300,
+                    "status": "completed",
+                },
+                "session-private": {
+                    "id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "scenario": "objection_handling",
+                    "started_at": "2026-08-11T10:00:00Z",
+                    "ended_at": "2026-08-11T10:05:00Z",
+                    "duration_seconds": 300,
+                    "status": "completed",
+                },
+            }
+        )
+        fake_supabase.store["scorecards"].extend(
+            [
+                {
+                    "id": "scorecard-shared",
+                    "session_id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
+                },
+                {
+                    "id": "scorecard-private",
+                    "session_id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": False,
+                },
+            ]
+        )
+        self._set_current_user("manager-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
+        ):
+            rep_scoped = self.client.get("/api/v1/manager/reps/rep-123/sessions")
+            business_scoped = self.client.get(
+                "/api/v1/manager/business/business-789/reps/rep-123/sessions"
+            )
+
+        for response in (rep_scoped, business_scoped):
+            self.assertEqual(response.status_code, 200)
+            sessions = response.json()["sessions"]
+            self.assertEqual(len(sessions), 1)
+            self.assertEqual(sessions[0]["id"], "session-shared")
+
+    def test_manager_team_progress_only_uses_shared_scorecards(self):
+        fake_supabase = self._make_fake_supabase(["business-789"])
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "manager-123",
+                    "full_name": "Test Manager",
+                    "phone_number": "0700000001",
+                    "business_id": "business-789",
+                    "role": "manager",
+                },
+                {
+                    "id": "rep-123",
+                    "full_name": "Test Rep",
+                    "phone_number": "0700000000",
+                    "business_id": "business-789",
+                    "role": "rep",
+                },
+            ]
+        )
+        fake_supabase.store["scorecards"].extend(
+            [
+                {
+                    "id": "scorecard-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
+                    "rapport_score": 10,
+                    "needs_discovery_score": 8,
+                    "objection_handling_score": 6,
+                    "closing_score": 4,
+                },
+                {
+                    "id": "scorecard-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": False,
+                    "rapport_score": 1,
+                    "needs_discovery_score": 2,
+                    "objection_handling_score": 3,
+                    "closing_score": 4,
+                },
+            ]
+        )
+        self._set_current_user("manager-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.get("/api/v1/manager/business/business-789/progress")
+
+        self.assertEqual(response.status_code, 200)
+        progress = response.json()["progress"]
+        self.assertEqual(progress["rapport"], {"average": 10.0, "count": 1})
+        self.assertEqual(progress["discovery"], {"average": 8.0, "count": 1})
+        self.assertEqual(progress["objection_handling"], {"average": 6.0, "count": 1})
+        self.assertEqual(progress["closing"], {"average": 4.0, "count": 1})
+
+    def test_manager_team_overview_only_uses_shared_data(self):
+        fake_supabase = self._make_fake_supabase(["business-789"])
+
+        fake_supabase.store["salesperson_accounts"].extend(
+            [
+                {
+                    "id": "manager-123",
+                    "full_name": "Test Manager",
+                    "phone_number": "0700000001",
+                    "business_id": "business-789",
+                    "role": "manager",
+                },
+                {
+                    "id": "rep-123",
+                    "full_name": "Test Rep",
+                    "phone_number": "0700000000",
+                    "business_id": "business-789",
+                    "role": "rep",
+                },
+            ]
+        )
+
+        fake_supabase.store["sessions"].update(
+            {
+                "session-shared": {
+                    "id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "scenario": "cold_call",
+                    "started_at": "2026-08-10T10:00:00Z",
+                    "status": "completed",
+                },
+                "session-private": {
+                    "id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "scenario": "objection_handling",
+                    "started_at": "2026-08-11T10:00:00Z",
+                    "status": "completed",
+                },
+            }
+        )
+
+        fake_supabase.store["scorecards"].extend(
+            [
+                {
+                    "id": "scorecard-shared",
+                    "session_id": "session-shared",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
+                    "overall_score": 8,
+                    "rapport_score": 8,
+                    "needs_discovery_score": 7,
+                    "objection_handling_score": 6,
+                    "closing_score": 5,
+                },
+                {
+                    "id": "scorecard-private",
+                    "session_id": "session-private",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": False,
+                    "overall_score": 2,
+                    "rapport_score": 1,
+                    "needs_discovery_score": 2,
+                    "objection_handling_score": 3,
+                    "closing_score": 4,
+                },
+            ]
+        )
+
+        self._set_current_user("manager-123")
+
+        with (
+            patch("app.api.deps.get_supabase", return_value=fake_supabase),
+            patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
+        ):
+            response = self.client.get(
+                "/api/v1/manager/business/business-789/team"
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        reps = response.json()["reps"]
+        self.assertEqual(len(reps), 1)
+
+        rep = reps[0]
+
+        self.assertEqual(rep["sessions"], 1)
+        self.assertEqual(rep["last_practice"], "2026-08-10T10:00:00Z")
+
     def test_manager_only_sees_transcripts_from_shared_sessions(self):
         fake_supabase = self._make_fake_supabase(["business-789"])
         fake_supabase.store["salesperson_accounts"].extend(

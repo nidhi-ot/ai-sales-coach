@@ -21,6 +21,20 @@ def _first_row(data: Any) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+def _shared_session_ids_for_rep(rep_id: str) -> list[str]:
+    shared_scorecards = _row_dicts(
+        get_supabase()
+        .table("scorecards")
+        .select("session_id")
+        .eq("rep_id", rep_id)
+        .eq("shared_with_manager", True)
+        .execute()
+        .data
+    )
+
+    return [str(row["session_id"]) for row in shared_scorecards if row.get("session_id")]
+
+
 def _ensure_rep_in_business(rep_id: str, business_id: str) -> None:
     rep = _first_row(
         get_supabase()
@@ -81,14 +95,20 @@ async def get_business_team_overview(
     for rep in reps:
         rep_id = rep["id"]
 
-        sessions = _row_dicts(
-            supabase.table("sessions")
-            .select("id, started_at")
-            .eq("rep_id", rep_id)
-            .order("started_at", desc=True)
-            .execute()
-            .data
-        )
+        shared_session_ids = _shared_session_ids_for_rep(rep_id)
+
+        if shared_session_ids:
+            sessions = _row_dicts(
+                supabase.table("sessions")
+                .select("id, started_at")
+                .eq("rep_id", rep_id)
+                .in_("id", shared_session_ids)
+                .order("started_at", desc=True)
+                .execute()
+                .data
+            )
+        else:
+            sessions = []
 
         session_count = len(sessions)
         last_practice = sessions[0]["started_at"] if sessions else None
@@ -99,6 +119,7 @@ async def get_business_team_overview(
                 "rapport_score, needs_discovery_score, " "objection_handling_score, closing_score"
             )
             .eq("rep_id", rep_id)
+            .eq("shared_with_manager", True)
             .execute()
             .data
         )
@@ -181,11 +202,17 @@ async def get_manager_rep_sessions(
 ):
     _ensure_rep_in_business(rep_id, current_account.business_id)
 
+    session_ids = _shared_session_ids_for_rep(rep_id)
+
+    if not session_ids:
+        return {"sessions": []}
+
     sessions = _row_dicts(
         get_supabase()
         .table("sessions")
         .select("id, scenario, started_at, ended_at, duration_seconds, status")
         .eq("rep_id", rep_id)
+        .in_("id", session_ids)
         .order("started_at", desc=True)
         .execute()
         .data
@@ -280,6 +307,7 @@ async def get_manager_team_progress(
             "rapport_score," "needs_discovery_score," "objection_handling_score," "closing_score"
         )
         .in_("rep_id", rep_ids)
+        .eq("shared_with_manager", True)
         .execute()
         .data
     )
@@ -315,11 +343,17 @@ async def get_manager_business_rep_sessions(
 
     _ensure_rep_in_business(rep_id, business_id)
 
+    session_ids = _shared_session_ids_for_rep(rep_id)
+
+    if not session_ids:
+        return {"sessions": []}
+
     sessions = _row_dicts(
         get_supabase()
         .table("sessions")
         .select("id, scenario, started_at, ended_at, duration_seconds, status")
         .eq("rep_id", rep_id)
+        .in_("id", session_ids)
         .order("started_at", desc=True)
         .execute()
         .data
