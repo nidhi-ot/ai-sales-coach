@@ -52,6 +52,7 @@ export default function LoginPage() {
       localStorage.setItem("access_token", data.access_token || "");
       localStorage.setItem("rep_id", data.rep_id || data.user_id);
       localStorage.setItem("business_id", data.business_id);
+      localStorage.setItem("business_name", data.business_name || "");
       applyBusinessLanguage(data.business_language);
       localStorage.setItem("full_name", data.full_name || "Sales Rep");
       localStorage.setItem("email", data.email || "");
