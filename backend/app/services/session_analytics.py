@@ -1,8 +1,9 @@
 import json
+import logging
 from typing import Any, Literal
 
 from openai import AsyncOpenAI
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from app.config import settings
 from app.db.client import get_supabase
@@ -21,6 +22,8 @@ LEARNING_DIMENSIONS: tuple[LearningDimension, ...] = (
     "objection_handling",
     "closing",
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ProfileLearningAnalysis(BaseModel):
@@ -357,27 +360,56 @@ Return only valid JSON:
   "evidence": ["specific evidence from scorecards or transcripts"]
 }}"""
 
-    response = await client.chat.completions.create(
-        model=settings.openai_profile_model,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an expert sales coach. Identify the rep's next learning focus "
-                    "from historical scorecards and transcript evidence. Return valid JSON only."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
-        max_completion_tokens=700,
-    )
+    last_error: Exception | None = None
 
-    content = response.choices[0].message.content
+    for attempt in range(2):
+        response = await client.chat.completions.create(
+            model=settings.openai_profile_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an expert sales coach. Identify the rep's next learning focus "
+                        "from historical scorecards and transcript evidence. "
+                        "Return valid JSON only."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        prompt
+                        if attempt == 0
+                        else (
+                            f"{prompt}\n\nYour previous response was invalid. "
+                            "Return only valid JSON matching the requested schema."
+                        )
+                    ),
+                },
+            ],
+            max_completion_tokens=700,
+        )
 
-    if content is None:
-        raise ValueError("GPT returned empty profile analysis")
+        content = response.choices[0].message.content
 
-    return _parse_profile_learning_analysis(content)
+        if content is None:
+            last_error = ValueError("GPT returned empty profile analysis")
+            logger.warning(
+                "GPT profile analysis returned empty content on attempt %s",
+                attempt + 1,
+            )
+            continue
+
+        try:
+            return _parse_profile_learning_analysis(content)
+        except (json.JSONDecodeError, ValidationError, ValueError) as exc:
+            last_error = exc
+            logger.warning(
+                "GPT profile analysis returned invalid JSON on attempt %s",
+                attempt + 1,
+                exc_info=True,
+            )
+
+    raise ValueError(f"GPT returned invalid profile analysis JSON: {last_error}") from last_error
 
 
 async def create_next_salesperson_profile(
@@ -432,7 +464,10 @@ async def create_next_salesperson_profile(
                 history=history,
             )
         except Exception:
-            pass
+            logger.exception(
+                "AI profile analysis failed for session %s; using deterministic fallback",
+                session_id,
+            )
 
     weakest_dimension = analysis.weakest_dimension
 
