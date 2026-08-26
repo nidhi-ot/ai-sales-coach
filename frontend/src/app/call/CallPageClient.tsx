@@ -23,6 +23,13 @@ type TranscriptEntry = {
   timestamp_offset_ms: number;
 };
 
+type EndSessionResponse = {
+  session?: {
+    status?: string;
+  };
+  score_card_status?: string | null;
+};
+
 type RealtimeEventPayload = {
   type?: string;
   transcript?: unknown;
@@ -52,6 +59,7 @@ export default function CallPage() {
   const [status, setStatus] = useState<CallStatus>("ready");
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionWasAbandoned, setSessionWasAbandoned] = useState(false);
   const [openaiSessionId, setOpenaiSessionId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [maxCallSeconds, setMaxCallSeconds] = useState<number | null>(null);
@@ -261,13 +269,14 @@ export default function CallPage() {
       );
     }
 
-    return response.json();
+    return (await response.json()) as EndSessionResponse;
   }
 
   async function startCall() {
     setStatus("connecting");
     setError("");
     setSessionId(null);
+    setSessionWasAbandoned(false);
     setOpenaiSessionId(null);
     setElapsedSeconds(0);
     setMaxCallSeconds(null);
@@ -476,14 +485,19 @@ export default function CallPage() {
 
         const entries = [...transcriptBufferRef.current];
 
-        await endBackendSession(
+        const endResult = await endBackendSession(
           sessionIdToEnd,
           endedAt,
           durationSeconds,
           endReason,
           entries
         );
-        localStorage.setItem("last_session_id", sessionIdToEnd);
+        const wasAbandoned = endResult.session?.status === "abandoned";
+        setSessionWasAbandoned(wasAbandoned);
+
+        if (!wasAbandoned) {
+          localStorage.setItem("last_session_id", sessionIdToEnd);
+        }
       } catch (error) {
         console.error(error);
         setError(
@@ -689,7 +703,7 @@ export default function CallPage() {
                 : status === "holding"
                   ? "⏸️"
                   : status === "ended"
-                    ? "✅"
+                    ? sessionWasAbandoned ? "💤" : "✅"
                     : status === "failed"
                       ? "⚠️"
                       : "🤖"}
@@ -701,7 +715,8 @@ export default function CallPage() {
               {status === "active" && t("activeTitle")}
               {status === "holding" && t("holdingTitle")}
               {status === "ending" && t("endingTitle")}
-              {status === "ended" && t("endedTitle")}
+              {status === "ended" &&
+                (sessionWasAbandoned ? t("abandonedTitle") : t("endedTitle"))}
               {status === "failed" && t("failedTitle")}
             </h2>
 
@@ -711,13 +726,19 @@ export default function CallPage() {
               {status === "active" && t("activeDescription")}
               {status === "holding" && t("holdingDescription")}
               {status === "ending" && t("endingDescription")}
-              {status === "ended" && (error || t("endedDescription"))}
+              {status === "ended" &&
+                (error ||
+                  (sessionWasAbandoned
+                    ? t("abandonedDescription")
+                    : t("endedDescription")))}
               {status === "failed" && error}
             </p>
 
-            {status === "ended" && (
+            {status === "ended" && !error && (
               <div style={savedBoxStyle}>
-                ✅ {t("savedSuccess")}
+                {sessionWasAbandoned
+                  ? `💤 ${t("abandonedNotice")}`
+                  : `✅ ${t("savedSuccess")}`}
               </div>
             )}
           </div>
@@ -764,16 +785,18 @@ export default function CallPage() {
 
             {status === "ended" && (
               <>
-                <button
-                  onClick={() =>
-                    sessionId
-                      ? router.replace(`/scorecards?session_id=${sessionId}`)
-                      : router.replace("/history")
-                  }
-                  style={primaryButton}
-                >
-                  {t("viewScorecard")}
-                </button>
+                {!sessionWasAbandoned && (
+                  <button
+                    onClick={() =>
+                      sessionId
+                        ? router.replace(`/scorecards?session_id=${sessionId}`)
+                        : router.replace("/history")
+                    }
+                    style={primaryButton}
+                  >
+                    {t("viewScorecard")}
+                  </button>
+                )}
 
                 <button onClick={() => router.push("/history")} style={secondaryButton}>
                   {t("goToHistory")}

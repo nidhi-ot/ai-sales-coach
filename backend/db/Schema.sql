@@ -247,7 +247,7 @@ CREATE TABLE sessions (
   business_id UUID REFERENCES business_profiles(id),
   scenario TEXT NOT NULL CHECK (scenario IN ('cold_call', 'hot_call', 'directsales', 'meeting')),
   profile_version INTEGER, -- Which profile version was used for this call
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'error')),
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'abandoned', 'error')),
   started_at TIMESTAMPTZ DEFAULT NOW(),
   ended_at TIMESTAMPTZ,
   duration_seconds INTEGER,

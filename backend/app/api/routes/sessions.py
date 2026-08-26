@@ -274,11 +274,24 @@ async def end_session(
             transcript_result = supabase.table("transcripts").insert(cast(Any, inserts)).execute()
             transcript_entries_saved = len(_row_dicts(transcript_result.data))
 
+    has_transcript = transcript_entries_saved > 0 or bool(existing_transcript_keys)
+
+    if not has_transcript:
+        stored_transcript = (
+            supabase.table("transcripts")
+            .select("id")
+            .eq("session_id", session_id)
+            .limit(1)
+            .execute()
+        )
+        has_transcript = bool(_row_dicts(stored_transcript.data))
+
     duration_seconds = _validated_duration_seconds(data.duration_seconds)
+    session_status = "completed" if has_transcript else "abandoned"
 
     supabase.table("sessions").update(
         {
-            "status": "completed",
+            "status": session_status,
             "ended_at": data.ended_at.isoformat(),
             "duration_seconds": duration_seconds,
         }
@@ -291,6 +304,14 @@ async def end_session(
         raise HTTPException(status_code=404, detail="Session not found")
 
     updated_session = updated_rows[0]
+
+    if not has_transcript:
+        return {
+            "session": updated_session,
+            "transcript_entries_saved": transcript_entries_saved,
+            "score_card_status": None,
+            "score_card": None,
+        }
 
     score_card = await mark_scorecard_processing(session_id)
     background_tasks.add_task(run_scorecard_pipeline, session_id)
@@ -446,6 +467,7 @@ async def get_rep_sessions(
         supabase.table("sessions")
         .select("id, scenario, started_at, duration_seconds, status")
         .eq("rep_id", rep_id)
+        .neq("status", "abandoned")
         .order("started_at", desc=True)
         .limit(limit)
         .execute()
