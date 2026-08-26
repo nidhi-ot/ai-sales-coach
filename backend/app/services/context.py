@@ -7,6 +7,7 @@ from app.services.scenarios import (
     ScenarioConfig,
     get_business_scenario_config,
     normalize_framework,
+    get_persona_variation_instruction,
 )
 
 DEFAULT_METRIC_SCORES: dict[str, int | float] = {
@@ -22,6 +23,7 @@ def assemble_call_context(
     rep_profile: dict[str, Any] | None,
     business_profile: dict[str, Any] | None,
     scenario: ScenarioSlug,
+    recent_learning_history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     profile = rep_profile or {}
     business = business_profile or DEFAULT_BUSINESS_PROFILE
@@ -48,6 +50,7 @@ def assemble_call_context(
         framework=framework,
         language=business_language,
         scenario_config=scenario_config,
+        recent_learning_history=recent_learning_history,
     )
 
     return {
@@ -144,6 +147,7 @@ def _build_system_instruction(
     framework: str,
     language: str,
     scenario_config: ScenarioConfig,
+    recent_learning_history: list[dict[str, Any]] | None = None,
 ) -> str:
     framework_dimensions = ", ".join(FRAMEWORK_DIMENSIONS[framework])
     success_conditions = "\n".join(
@@ -154,6 +158,11 @@ def _build_system_instruction(
     buyer_profiles = _format_bullets(business_context["buyer_profiles"])
     common_objections = _format_bullets(business_context["common_objections"])
     language_instruction = _language_instruction(language)
+    recent_call_context = _recent_call_context_instruction(recent_learning_history)
+    persona_variation = get_persona_variation_instruction(
+        scenario_config.slug,
+        recent_learning_history,
+    )
 
     return f"""You are the AI customer in a sales training simulation for {business_name}.
 
@@ -187,6 +196,8 @@ Scenario:
 - Difficulty rule: {scenario_config.difficulty_notes}
 - Likely objections you may use:
 {objections}
+{persona_variation}
+{recent_call_context}
 
 Buyer reasoning:
 - Think through the decision like a real buyer with budget, authority, need, timing, internal
@@ -207,6 +218,58 @@ Conversation guardrails:
 unresolved concern.
 """
 
+def _recent_call_context_instruction(history: list[dict[str, Any]] | None) -> str:
+    if not history:
+        return ""
+
+    call_sections = []
+
+    for index, call in enumerate(history[:3], start=1):
+        scorecard = call.get("scorecard") if isinstance(call.get("scorecard"), dict) else {}
+        transcript = call.get("transcript") if isinstance(call.get("transcript"), list) else []
+
+        scores = []
+        for label, field in (
+            ("overall", "overall_score"),
+            ("rapport", "rapport_score"),
+            ("discovery", "needs_discovery_score"),
+            ("objection_handling", "objection_handling_score"),
+            ("closing", "closing_score"),
+        ):
+            if scorecard.get(field) is not None:
+                scores.append(f"{label}={scorecard[field]}")
+
+        turns = []
+        for turn in transcript[:8]:
+            if not isinstance(turn, dict):
+                continue
+
+            text = " ".join(str(turn.get("text") or "").split())
+            if not text:
+                continue
+
+            speaker = str(turn.get("speaker") or "unknown")
+            turns.append(f"- {speaker}: {text[:240]}")
+
+        call_sections.append(
+            "\n".join(
+                [
+                    f"Call {index}: {call.get('scenario') or 'unknown'}",
+                    f"Scores: {', '.join(scores) if scores else 'no scorecard available'}",
+                    "Transcript excerpt:",
+                    "\n".join(turns) if turns else "- No transcript excerpt available.",
+                ]
+            )
+        )
+
+    return (
+        "Recent practice history:\n"
+        "- Use these recent calls privately to avoid making practice feel repetitive.\n"
+        "- Do not quote or reveal this history directly to the salesperson.\n"
+        "- Vary your questions, objections, and emphasis based on what happened before.\n\n"
+        + "\n\n".join(call_sections)
+        + "\n"
+    )
 
 def _format_bullets(items: Any) -> str:
     if not isinstance(items, list | tuple):

@@ -1,12 +1,38 @@
-from typing import Any
+import json
+from typing import Any, Literal
 
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field, field_validator
+
+from app.config import settings
 from app.db.client import get_supabase
+
 
 DIMENSION_FIELDS = {
     "objection_handling": "objection_handling_score",
     "discovery": "needs_discovery_score",
     "closing": "closing_score",
 }
+
+
+LearningDimension = Literal["rapport", "discovery", "objection_handling", "closing"]
+
+
+class ProfileLearningAnalysis(BaseModel):
+    weakest_dimension: LearningDimension
+    reasoning_summary: str
+    evidence: list[str] = Field(default_factory=list)
+
+    @field_validator("evidence", mode="before")
+    @classmethod
+    def _coerce_evidence(cls, value: Any) -> list[str]:
+        if value is None:
+            return []
+
+        if not isinstance(value, list):
+            return [str(value)]
+
+        return [str(item) for item in value if item is not None]
 
 
 def _row_dicts(data: Any) -> list[dict[str, Any]]:
@@ -141,6 +167,92 @@ def get_recent_sessions(rep_id: str, limit: int = 5) -> list[dict[str, Any]]:
 
     return recent_sessions
 
+def get_recent_learning_history(
+    rep_id: str,
+    business_id: str,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Load recent completed calls with scorecards and transcripts for learning analysis."""
+    bounded_limit = max(5, min(limit, 15))
+    supabase = get_supabase()
+
+    session_rows = _row_dicts(
+        supabase.table("sessions")
+        .select("id, scenario, started_at, duration_seconds")
+        .eq("rep_id", rep_id)
+        .eq("business_id", business_id)
+        .eq("status", "completed")
+        .order("started_at", desc=True)
+        .limit(bounded_limit)
+        .execute()
+        .data
+    )
+
+    session_ids = [str(row["id"]) for row in session_rows if row.get("id")]
+
+    if not session_ids:
+        return []
+
+    scorecard_rows = _row_dicts(
+        supabase.table("scorecards")
+        .select(
+            "session_id, overall_score, rapport_score, needs_discovery_score, "
+            "objection_handling_score, closing_score, strengths, improvement_areas, "
+            "feedback_summary, moments"
+        )
+        .in_("session_id", session_ids)
+        .execute()
+        .data
+    )
+
+    scorecards_by_session = {
+        str(row["session_id"]): row for row in scorecard_rows if row.get("session_id")
+    }
+
+    transcript_rows = _row_dicts(
+        supabase.table("transcripts")
+        .select("session_id, speaker, text, timestamp_offset_ms")
+        .in_("session_id", session_ids)
+        .order("timestamp_offset_ms")
+        .execute()
+        .data
+    )
+
+    transcripts_by_session: dict[str, list[dict[str, Any]]] = {
+        session_id: [] for session_id in session_ids
+    }
+
+    for row in transcript_rows:
+        session_id = str(row.get("session_id") or "")
+
+        if session_id not in transcripts_by_session:
+            continue
+
+        transcripts_by_session[session_id].append(
+            {
+                "speaker": row.get("speaker"),
+                "text": str(row.get("text") or ""),
+                "timestamp_offset_ms": row.get("timestamp_offset_ms"),
+            }
+        )
+
+    history = []
+
+    for session in session_rows:
+        session_id = str(session["id"])
+
+        history.append(
+            {
+                "session_id": session_id,
+                "scenario": session.get("scenario"),
+                "started_at": session.get("started_at"),
+                "duration_seconds": session.get("duration_seconds"),
+                "scorecard": scorecards_by_session.get(session_id, {}),
+                "transcript": transcripts_by_session.get(session_id, []),
+            }
+        )
+
+    return history
 
 def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
     """Get progress for each dimensions from the scorecard"""
@@ -172,6 +284,91 @@ def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
         }
 
     return dimensions
+
+
+def _deterministic_profile_analysis(metrics: dict[str, Any]) -> ProfileLearningAnalysis:
+    valid_scores = {
+        key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))
+    }
+
+    weakest_dimension = (
+        min(valid_scores.items(), key=lambda item: item[1])[0]
+        if valid_scores
+        else "objection_handling"
+    )
+
+    evidence = [f"{key}={score:g}" for key, score in valid_scores.items()]
+
+    return ProfileLearningAnalysis(
+        weakest_dimension=weakest_dimension,
+        reasoning_summary="Selected the lowest available score from the latest scorecard.",
+        evidence=evidence,
+    )
+
+
+def _parse_profile_learning_analysis(response_text: str) -> ProfileLearningAnalysis:
+    response_text = response_text.strip()
+
+    if response_text.startswith("```json"):
+        response_text = response_text[7:]
+    elif response_text.startswith("```"):
+        response_text = response_text[3:]
+
+    if response_text.endswith("```"):
+        response_text = response_text[:-3]
+
+    return ProfileLearningAnalysis.model_validate(json.loads(response_text.strip()))
+
+
+async def _request_ai_profile_analysis(
+    *,
+    scorecard: dict[str, Any],
+    history: list[dict[str, Any]],
+) -> ProfileLearningAnalysis:
+    if not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY not configured in settings")
+
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+
+    prompt = f"""Analyze this sales rep's recent practice history.
+
+Choose the single weakest skill to focus next. Use exactly one of:
+rapport, discovery, objection_handling, closing
+
+Current scorecard:
+{json.dumps(scorecard, default=str)}
+
+Recent call history:
+{json.dumps(history, default=str)}
+
+Return only valid JSON:
+{{
+  "weakest_dimension": "rapport|discovery|objection_handling|closing",
+  "reasoning_summary": "short explanation",
+  "evidence": ["specific evidence from scorecards or transcripts"]
+}}"""
+
+    response = await client.chat.completions.create(
+        model=settings.openai_profile_model,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert sales coach. Identify the rep's next learning focus "
+                    "from historical scorecards and transcript evidence. Return valid JSON only."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        max_completion_tokens=700,
+    )
+
+    content = response.choices[0].message.content
+
+    if content is None:
+        raise ValueError("GPT returned empty profile analysis")
+
+    return _parse_profile_learning_analysis(content)
 
 
 async def create_next_salesperson_profile(
@@ -216,15 +413,19 @@ async def create_next_salesperson_profile(
         "closing": scorecard.get("closing_score"),
     }
 
-    valid_scores = {
-        key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))
-    }
+    analysis = _deterministic_profile_analysis(metrics)
 
-    weakest_dimension = (
-        min(valid_scores.items(), key=lambda item: item[1])[0]
-        if valid_scores
-        else "objection_handling"
-    )
+    if settings.ai_profile_update_enabled:
+        try:
+            history = get_recent_learning_history(rep_id, business_id)
+            analysis = await _request_ai_profile_analysis(
+                scorecard=scorecard,
+                history=history,
+            )
+        except Exception:
+            pass
+
+    weakest_dimension = analysis.weakest_dimension
 
     latest_rows = _row_dicts(
         supabase.table("salesperson_profiles")

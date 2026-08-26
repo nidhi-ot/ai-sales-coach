@@ -322,6 +322,61 @@ SCENARIOS: dict[ScenarioSlug, ScenarioConfig] = {
 }
 
 
+PERSONA_VARIANTS: dict[ScenarioSlug, tuple[str, ...]] = {
+    ScenarioSlug.cold_call: (
+        "Be especially time-poor and impatient; make the rep earn permission to continue.",
+        "Be analytical and numbers-driven; ask for proof, adoption evidence, and business impact.",
+        "Be change-cautious; focus on whether managers and reps will actually use the product.",
+    ),
+    ScenarioSlug.hot_call: (
+        "Be practical and implementation-minded; ask how rollout would work day to day.",
+        "Be ROI-focused; press for measurable outcomes before agreeing to a next step.",
+        "Be stakeholder-aware; ask what your VP or leadership team would need to see.",
+    ),
+    ScenarioSlug.directsales: (
+        "Be commercially disciplined; push on pricing, procurement, and decision timing.",
+        "Be rollout-risk focused; test whether the rep has a credible adoption plan.",
+        "Be decisive but proof-oriented; reward clear answers and resist vague closing attempts.",
+    ),
+    ScenarioSlug.meeting: (
+        "Be strategic and executive-level; care about priorities, tradeoffs, and urgency.",
+        "Be process-oriented; ask about stakeholders, decision criteria, and next-step ownership.",
+        "Be skeptical of change; press on whether this is worth prioritizing this quarter.",
+    ),
+}
+
+
+def get_persona_variation_instruction(
+    scenario: ScenarioSlug | str,
+    recent_learning_history: list[dict[str, Any]] | None = None,
+) -> str:
+    scenario_slug = ScenarioSlug(scenario)
+    variants = PERSONA_VARIANTS.get(scenario_slug, ())
+
+    if not variants:
+        return ""
+
+    seed_parts = [scenario_slug.value]
+
+    if recent_learning_history:
+        latest = recent_learning_history[0]
+        if isinstance(latest, dict):
+            seed_parts.append(str(latest.get("session_id") or ""))
+            seed_parts.append(str(latest.get("started_at") or ""))
+        seed_parts.append(str(len(recent_learning_history)))
+    else:
+        seed_parts.append("first-call")
+
+    seed = "|".join(seed_parts)
+    variant = variants[sum(ord(char) for char in seed) % len(variants)]
+
+    return f"""Persona variation:
+- {variant}
+- Keep the scenario objective, business context, language, and learning focus unchanged.
+- Let this variation shape your tone, objections, and what details you volunteer.
+"""
+
+
 FRAMEWORK_DIMENSIONS: dict[str, tuple[str, ...]] = {
     "BANT": ("Budget", "Authority", "Need", "Timeline"),
     "MEDDIC": (
