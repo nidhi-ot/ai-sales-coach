@@ -180,13 +180,13 @@ export default function SessionDetailsPage() {
                 <button disabled style={{ ...secondaryButtonStyle, opacity: 0.6 }}>
                   {t("processingScorecard")}
                 </button>
-              ) : sessionId ? (
-                <button
-                  onClick={() => router.push(`/scorecards?session_id=${sessionId}`)}
-                  style={secondaryButtonStyle}
-                >
-                  {t("viewScorecard")}
-                </button>
+              ) : sessionId && details?.scorecard_status === "generated" ? (
+              <button
+                onClick={() => router.push(`/scorecards?session_id=${sessionId}`)}
+                style={secondaryButtonStyle}
+            >
+              {t("viewScorecard")}
+              </button>
               ) : null}
 
               <button onClick={() => router.push("/history")} style={primaryButtonStyle}>
