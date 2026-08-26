@@ -425,9 +425,7 @@ class ManagerRouteTests(unittest.TestCase):
             patch("app.api.deps.get_supabase", return_value=fake_supabase),
             patch("app.api.routes.manager.get_supabase", return_value=fake_supabase),
         ):
-            response = self.client.get(
-                "/api/v1/manager/business/business-789/team"
-            )
+            response = self.client.get("/api/v1/manager/business/business-789/team")
 
         self.assertEqual(response.status_code, 200)
 
