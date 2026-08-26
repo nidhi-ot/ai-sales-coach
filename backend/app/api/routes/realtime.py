@@ -23,6 +23,7 @@ from app.services.scenarios import (
     UnsupportedScenarioError,
     build_learning_profile_instruction,
 )
+from app.services.session_analytics import get_recent_learning_history
 
 router = APIRouter()
 
@@ -102,10 +103,20 @@ async def create_realtime_session(
     business_profile = await get_business_profile(business_id, supabase=supabase)
 
     try:
+        recent_learning_history = get_recent_learning_history(
+            rep_id=str(config.rep_id),
+            business_id=business_id,
+            limit=3,
+        )
+    except Exception:
+        recent_learning_history = []
+
+    try:
         context = assemble_call_context(
             rep_profile=rep_profile_latest,
             business_profile=business_profile,
             scenario=config.scenario,
+            recent_learning_history=recent_learning_history,
         )
     except UnsupportedScenarioError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

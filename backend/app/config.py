@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_analysis_model: str = "gpt-4o-mini"
 
+    ai_profile_update_enabled: bool = False
+    openai_profile_model: str = "gpt-5.5"
+
     business_id: str = "aa1712fd-ad13-433b-a353-a047dedb74d0"
 
     model_config = SettingsConfigDict(
