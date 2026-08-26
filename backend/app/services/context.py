@@ -226,8 +226,10 @@ def _recent_call_context_instruction(history: list[dict[str, Any]] | None) -> st
     call_sections = []
 
     for index, call in enumerate(history[:3], start=1):
-        scorecard = call.get("scorecard") if isinstance(call.get("scorecard"), dict) else {}
-        transcript = call.get("transcript") if isinstance(call.get("transcript"), list) else []
+        raw_scorecard = call.get("scorecard")
+        scorecard: dict[Any, Any] = raw_scorecard if isinstance(raw_scorecard, dict) else {}
+        raw_transcript = call.get("transcript")
+        transcript: list[Any] = raw_transcript if isinstance(raw_transcript, list) else []
 
         scores = []
         for label, field in (
@@ -237,8 +239,9 @@ def _recent_call_context_instruction(history: list[dict[str, Any]] | None) -> st
             ("objection_handling", "objection_handling_score"),
             ("closing", "closing_score"),
         ):
-            if scorecard.get(field) is not None:
-                scores.append(f"{label}={scorecard[field]}")
+            score = scorecard.get(field)
+            if score is not None:
+                scores.append(f"{label}={score}")
 
         turns = []
         for turn in transcript[:8]:

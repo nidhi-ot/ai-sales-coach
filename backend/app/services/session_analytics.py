@@ -15,6 +15,12 @@ DIMENSION_FIELDS = {
 
 
 LearningDimension = Literal["rapport", "discovery", "objection_handling", "closing"]
+LEARNING_DIMENSIONS: tuple[LearningDimension, ...] = (
+    "rapport",
+    "discovery",
+    "objection_handling",
+    "closing",
+)
 
 
 class ProfileLearningAnalysis(BaseModel):
@@ -288,11 +294,13 @@ def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
 
 
 def _deterministic_profile_analysis(metrics: dict[str, Any]) -> ProfileLearningAnalysis:
-    valid_scores = {
-        key: float(value) for key, value in metrics.items() if isinstance(value, (int, float))
-    }
+    valid_scores: dict[LearningDimension, float] = {}
+    for key in LEARNING_DIMENSIONS:
+        value = metrics.get(key)
+        if isinstance(value, int | float):
+            valid_scores[key] = float(value)
 
-    weakest_dimension = (
+    weakest_dimension: LearningDimension = (
         min(valid_scores.items(), key=lambda item: item[1])[0]
         if valid_scores
         else "objection_handling"
