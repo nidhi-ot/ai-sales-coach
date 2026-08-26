@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.api.deps import CurrentAccount, get_current_account
 from app.main import app
 from tests.helpers import FakeSupabase
+from app.config import settings
 
 BUSINESS_ID = "00000000-0000-0000-0000-000000000789"
 OTHER_BUSINESS_ID = "00000000-0000-0000-0000-000000000999"
@@ -239,8 +240,10 @@ class AdminRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertTrue(
-            payload["registration_link"].startswith("http://127.0.0.1:3000/register?invite=")
-        )
+    payload["registration_link"].startswith(
+        f"{settings.frontend_url.rstrip('/')}/register?invite="
+    )
+)
 
     def test_admin_invite_rejects_out_of_bounds_expiry(self):
         fake_supabase = FakeSupabase(with_default_session=False)

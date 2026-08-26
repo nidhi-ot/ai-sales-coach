@@ -1,6 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
-
+from app.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -50,6 +50,7 @@ def create_app() -> FastAPI:
             "http://127.0.0.1:3002",
             "http://127.0.0.1:3003",
             "http://localhost:8080",
+            settings.frontend_url.rstrip("/"),
         ],
         allow_credentials=True,
         allow_methods=["*"],
