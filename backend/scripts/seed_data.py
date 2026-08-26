@@ -11,54 +11,56 @@ business = (
     supabase.table("business_profiles")
     .insert(
         {
-            "name": "AI Sales Coach",
+            "name": "Optimal Trappstadning",
             "framework": "BANT",
-            # New B1 fields
             "products": (
-                "AI-powered sales practice software where reps rehearse realistic "
-                "calls with buyer personas before speaking with live prospects"
+                "professional stairwell cleaning, entrance cleaning, floor care, and recurring "
+                "property cleaning services for apartment buildings and housing associations"
             ),
             "icp": (
-                "B2B SaaS companies with growing sales teams, onboarding pressure, "
-                "and sales managers who need scalable coaching"
+                "Swedish housing associations, property managers, and landlords responsible for "
+                "clean, safe, and well-maintained shared building spaces"
             ),
             "objections": (
-                "AI cant replace coaching, too expensive, my team wont adopt it, "
-                "we already use Gong or enablement tools"
+                "we already have a cleaning supplier, too expensive, residents have "
+                "not complained, we need board approval, we only review supplier "
+                "contracts once per year"
             ),
-            "language": "en",
-            # Existing context data (keep this)
+            "language": "sv",
             "context_data": {
                 "service": (
-                    "AI-powered sales practice software where reps rehearse realistic calls "
-                    "with buyer personas before speaking with live prospects"
+                    "recurring stairwell cleaning and property cleaning for Swedish "
+                    "apartment buildings, including entrances, stairs, railings, "
+                    "elevators, laundry-room areas, and floor care"
                 ),
                 "market": (
-                    "B2B SaaS and sales-led companies with growing teams, onboarding pressure, "
-                    "and stretched sales managers"
+                    "Swedish housing associations, property owners, and property "
+                    "managers who need reliable cleaning quality, fewer resident "
+                    "complaints, clear routines, and predictable supplier communication"
                 ),
                 "pricing": (
-                    "30-day pilot for 5 to 15 reps, then around $79 per rep per month "
-                    "plus a $499 per month manager workspace"
+                    "monthly recurring cleaning contract based on building size, "
+                    "cleaning frequency, "
+                    "floor count, and add-on services such as floor care or deep cleaning"
                 ),
                 "buyer_profiles": [
-                    "Head of Sales or VP Sales",
-                    "Sales Enablement Leader",
-                    "Founder-led SaaS Team",
+                    "BRF board member responsible for supplier contracts",
+                    "property manager handling daily building operations",
+                    "landlord or owner of smaller apartment buildings",
                 ],
                 "common_objections": [
-                    "AI cant replace coaching",
+                    "we already have a cleaning supplier",
                     "too expensive",
-                    "my team wont adopt it",
-                    "we already use call recording or enablement tools",
-                    "I do not trust AI to sound like our real buyers",
-                    "we do not have time to set this up",
+                    "residents have not complained",
+                    "we need board approval",
+                    "we only review supplier contracts once per year",
+                    "we are worried switching suppliers will create extra work",
                 ],
                 "value_props": [
-                    "Reps practice realistic calls before live pipeline is at risk",
-                    "AI buyers stay in character across a full call",
-                    "Managers create repeatable coaching moments without joining every role-play",
-                    "Custom personas reflect the team's ICP and real objections",
+                    "cleaner stairwells and shared spaces residents notice",
+                    "reliable routines with clear communication when something changes",
+                    "reduced complaints and less follow-up work for the board or property manager",
+                    "flexible recurring cleaning plans matched to building size and traffic",
                 ],
             },
         }
@@ -93,4 +95,75 @@ print(f"Test rep ID: {rep_id}")
 )
 
 print("Created initial profile: version 0")
+(
+    supabase.table("scenario_configs")
+    .insert(
+        [
+            {
+                "business_id": business_id,
+                "scenario_slug": "cold_call",
+                "title": "Cold Call",
+                "objective": (
+                    "Earn attention from a Swedish housing-association buyer and book "
+                    "a cleaning walkthrough or introductory meeting."
+                ),
+                "persona_notes": (
+                    "Sara Andersson is a practical BRF board member. She is busy, careful with "
+                    "supplier changes, and only becomes interested if the rep connects the call "
+                    "to stairwell cleanliness, resident complaints, supplier "
+                    "reliability, or board workload."
+                ),
+            },
+            {
+                "business_id": business_id,
+                "scenario_slug": "hot_call",
+                "title": "Hot Call",
+                "objective": (
+                    "Guide an interested property-management buyer toward a walkthrough, quote, "
+                    "or board discussion for Optimal Trappstadning."
+                ),
+                "persona_notes": (
+                    "Johan Berg manages several apartment buildings. He is open to learning more, "
+                    "but worries about switching effort, cleaning consistency, "
+                    "budget fit, and whether "
+                    "the board will see a clear reason to compare suppliers."
+                ),
+            },
+            {
+                "business_id": business_id,
+                "scenario_slug": "directsales",
+                "title": "Direct Sales",
+                "objective": (
+                    "Handle final commercial concerns and earn a clear cleaning-service commitment "
+                    "or approved quote process."
+                ),
+                "persona_notes": (
+                    "Emma Karlsson chairs a BRF board that is close to a decision. "
+                    "She wants practical answers about monthly cost, switching from "
+                    "the current supplier, quality follow-up, "
+                    "contract timing, and what happens after approval."
+                ),
+            },
+            {
+                "business_id": business_id,
+                "scenario_slug": "meeting",
+                "title": "Meeting",
+                "objective": (
+                    "Run a structured supplier-evaluation meeting and secure a "
+                    "walkthrough, quote review, "
+                    "or board-ready proposal."
+                ),
+                "persona_notes": (
+                    "Daniel Svensson is a board chair evaluating cleaning quality "
+                    "for shared spaces. He cares about resident satisfaction, "
+                    "reliable routines, budget, contract timing, "
+                    "and avoiding extra work for the board."
+                ),
+            },
+        ]
+    )
+    .execute()
+)
+
+print("Created Optimal Trappstadning scenario configs")
 print(f"\nSeed data created! Use rep_id={rep_id} for testing.")

@@ -13,11 +13,12 @@ class AssembleCallContextTests(unittest.TestCase):
                 "metric_scores": {"discovery": 4},
             },
             business_profile={
-                "name": "AI Sales Coach",
+                "name": "Optimal Trappstadning",
                 "framework": "BANT",
+                "language": "sv",
                 "context_data": {},
-                "products": "AI sales coaching",
-                "icp": "Sales teams",
+                "products": "stairwell cleaning and property cleaning",
+                "icp": "Swedish housing associations and property managers",
                 "objections": "Too expensive",
             },
             scenario=ScenarioSlug.cold_call,
@@ -54,11 +55,12 @@ class AssembleCallContextTests(unittest.TestCase):
         base_kwargs = {
             "rep_profile": {"version": 1, "weakest_dimension": "discovery"},
             "business_profile": {
-                "name": "AI Sales Coach",
+                "name": "Optimal Trappstadning",
                 "framework": "BANT",
+                "language": "sv",
                 "context_data": {},
-                "products": "AI sales coaching",
-                "icp": "Sales teams",
+                "products": "stairwell cleaning and property cleaning",
+                "icp": "Swedish housing associations and property managers",
                 "objections": "Too expensive",
             },
             "scenario": ScenarioSlug.cold_call,
@@ -76,6 +78,29 @@ class AssembleCallContextTests(unittest.TestCase):
         self.assertIn("Persona variation:", first["system_instruction"])
         self.assertIn("Persona variation:", second["system_instruction"])
         self.assertNotEqual(first["system_instruction"], second["system_instruction"])
+
+    def test_system_instruction_uses_optimal_persona_and_opening_rules(self):
+        for scenario in ScenarioSlug:
+            with self.subTest(scenario=scenario.value):
+                context = assemble_call_context(
+                    rep_profile=None,
+                    business_profile=None,
+                    scenario=scenario,
+                )
+
+                instruction = context["system_instruction"]
+
+                self.assertIn("Optimal Trappstadning", instruction)
+                self.assertIn("Answer the phone neutrally and briefly", instruction)
+                self.assertIn("Let the rep speak first", instruction)
+                self.assertIn("Do not open with an objection", instruction)
+                self.assertIn("Keep normal customer replies to 1-2 sentences per turn", instruction)
+                self.assertIn("Raise only one objection at a time", instruction)
+                self.assertIn("Do not stack multiple objections", instruction)
+                self.assertIn("Hallå, det är kunden.", instruction)
+                self.assertNotIn("Nimbus", instruction)
+                self.assertNotIn("Northstar", instruction)
+                self.assertNotIn("Sarah", instruction)
 
 
 if __name__ == "__main__":
