@@ -157,6 +157,106 @@ class SessionEndRouteTests(unittest.TestCase):
         processing_mock.assert_awaited_once_with("session-123")
         pipeline_mock.assert_awaited_once_with("session-123")
 
+    def test_end_without_any_transcript_marks_session_abandoned_and_skips_scoring(self):
+        fake_supabase = FakeSupabase()
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.api.routes.sessions.mark_scorecard_processing",
+                new=AsyncMock(),
+            ) as processing_mock,
+            patch(
+                "app.api.routes.sessions.run_scorecard_pipeline",
+                new=AsyncMock(),
+            ) as pipeline_mock,
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:00:15Z",
+                    "duration_seconds": 15,
+                    "end_reason": "manual",
+                    "entries": [],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["session"]["status"], "abandoned")
+        self.assertEqual(payload["transcript_entries_saved"], 0)
+        self.assertIsNone(payload["score_card_status"])
+        self.assertIsNone(payload["score_card"])
+        self.assertEqual(fake_supabase.store["scorecards"], [])
+        processing_mock.assert_not_awaited()
+        pipeline_mock.assert_not_awaited()
+
+    def test_end_with_only_duplicate_entries_still_scores_stored_transcript(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["transcripts"].append(
+            {
+                "id": "transcript-1",
+                "session_id": "session-123",
+                "speaker": "rep",
+                "text": "Already saved",
+                "timestamp_offset_ms": 1000,
+            }
+        )
+        fake_scorecard = {"session_id": "session-123", "status": "processing"}
+
+        with (
+            patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase),
+            patch(
+                "app.api.routes.sessions.mark_scorecard_processing",
+                new=AsyncMock(return_value=fake_scorecard),
+            ) as processing_mock,
+            patch(
+                "app.api.routes.sessions.run_scorecard_pipeline",
+                new=AsyncMock(),
+            ) as pipeline_mock,
+        ):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/end",
+                json={
+                    "ended_at": "2026-06-25T10:01:00Z",
+                    "duration_seconds": 60,
+                    "end_reason": "manual",
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Duplicate payload",
+                            "timestamp_offset_ms": 1000,
+                        }
+                    ],
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["session"]["status"], "completed")
+        self.assertEqual(payload["transcript_entries_saved"], 0)
+        self.assertEqual(payload["score_card_status"], "processing")
+        processing_mock.assert_awaited_once_with("session-123")
+        pipeline_mock.assert_awaited_once_with("session-123")
+
+    def test_rep_history_excludes_abandoned_sessions(self):
+        fake_supabase = FakeSupabase()
+        fake_supabase.store["sessions"]["session-abandoned"] = {
+            "id": "session-abandoned",
+            "rep_id": "rep-456",
+            "business_id": BUSINESS_ID,
+            "scenario": "cold_call",
+            "status": "abandoned",
+            "started_at": "2026-06-25T11:00:00+00:00",
+            "duration_seconds": 5,
+        }
+
+        with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
+            response = self.client.get("/api/v1/sessions/rep/rep-456")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([row["id"] for row in response.json()], ["session-123"])
+
     def test_transcript_batch_skips_duplicate_session_timestamp_speaker_keys(self):
         fake_supabase = FakeSupabase()
         fake_supabase.store["transcripts"].append(

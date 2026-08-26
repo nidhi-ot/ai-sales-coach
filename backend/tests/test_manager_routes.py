@@ -251,6 +251,16 @@ class ManagerRouteTests(unittest.TestCase):
                     "duration_seconds": 300,
                     "status": "completed",
                 },
+                "session-abandoned": {
+                    "id": "session-abandoned",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "scenario": "cold_call",
+                    "started_at": "2026-08-12T10:00:00Z",
+                    "ended_at": "2026-08-12T10:00:05Z",
+                    "duration_seconds": 5,
+                    "status": "abandoned",
+                },
             }
         )
         fake_supabase.store["scorecards"].extend(
@@ -268,6 +278,13 @@ class ManagerRouteTests(unittest.TestCase):
                     "rep_id": "rep-123",
                     "business_id": "business-789",
                     "shared_with_manager": False,
+                },
+                {
+                    "id": "scorecard-abandoned",
+                    "session_id": "session-abandoned",
+                    "rep_id": "rep-123",
+                    "business_id": "business-789",
+                    "shared_with_manager": True,
                 },
             ]
         )

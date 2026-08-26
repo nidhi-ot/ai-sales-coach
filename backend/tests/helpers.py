@@ -38,6 +38,7 @@ class FakeTable:
         self.name = name
         self.store = store
         self.filters: dict[str, Any] = {}
+        self.not_filters: dict[str, Any] = {}
         self.in_filters: dict[str, set[Any]] = {}
         self.insert_payload: Any = None
         self.update_payload: dict[str, Any] | None = None
@@ -50,6 +51,10 @@ class FakeTable:
 
     def eq(self, key: str, value: Any) -> "FakeTable":
         self.filters[key] = value
+        return self
+
+    def neq(self, key: str, value: Any) -> "FakeTable":
+        self.not_filters[key] = value
         return self
 
     def is_(self, key: str, value: Any) -> "FakeTable":
@@ -86,8 +91,10 @@ class FakeTable:
         return table.values() if isinstance(table, dict) else table
 
     def _matches(self, row: dict[str, Any]) -> bool:
-        return all(row.get(k) == v for k, v in self.filters.items()) and all(
-            row.get(k) in values for k, values in self.in_filters.items()
+        return (
+            all(row.get(k) == v for k, v in self.filters.items())
+            and all(row.get(k) != v for k, v in self.not_filters.items())
+            and all(row.get(k) in values for k, values in self.in_filters.items())
         )
 
     def _selected_rows(self) -> list[dict[str, Any]]:
