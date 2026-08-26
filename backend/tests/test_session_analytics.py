@@ -1,21 +1,24 @@
-import unittest
 import json
-
+import unittest
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, patch
+
 from app.services import session_analytics
 from app.services.session_analytics import (
     ProfileLearningAnalysis,
+    _request_ai_profile_analysis,
     create_next_salesperson_profile,
     get_recent_learning_history,
-    _request_ai_profile_analysis,
 )
 from tests.helpers import FakeSupabase
 
 
 class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
-    
-    def test_get_recent_learning_history_returns_completed_calls_with_scorecards_and_transcripts(self):
+
+    def test_get_recent_learning_history_returns_completed_calls_with_scorecards_and_transcripts(
+        self,
+    ):
         fake_supabase = FakeSupabase(with_default_session=False)
         business_id = "22222222-2222-2222-2222-222222222222"
 
@@ -92,7 +95,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
             [turn["text"] for turn in history[0]["transcript"]],
             ["Need proof.", "What metrics matter?"],
         )
-    
+
     async def test_create_next_profile_uses_ai_analysis_when_enabled(self):
         fake_supabase = FakeSupabase()
         scorecard = {
@@ -128,7 +131,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
             "22222222-2222-2222-2222-222222222222",
         )
         ai_mock.assert_awaited_once_with(scorecard=scorecard, history=history)
-    
+
     async def test_create_next_profile_falls_back_when_ai_analysis_fails(self):
         fake_supabase = FakeSupabase()
         scorecard = {
@@ -154,7 +157,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(profile["weakest_dimension"], "discovery")
         self.assertEqual(len(fake_supabase.store["salesperson_profiles"]), 1)
-    
+
     async def test_create_next_profile_skips_ai_analysis_when_disabled(self):
         fake_supabase = FakeSupabase()
         scorecard = {
@@ -221,9 +224,7 @@ class CreateNextSalespersonProfileTests(unittest.IsolatedAsyncioTestCase):
                 history=[
                     {
                         "session_id": "session-1",
-                        "transcript": [
-                            {"speaker": "rep", "text": "Let me show you our platform."}
-                        ],
+                        "transcript": [{"speaker": "rep", "text": "Let me show you our platform."}],
                     }
                 ],
             )

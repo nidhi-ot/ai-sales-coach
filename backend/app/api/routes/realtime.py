@@ -101,7 +101,7 @@ async def create_realtime_session(
         supabase=supabase,
     )
     business_profile = await get_business_profile(business_id, supabase=supabase)
-    
+
     try:
         recent_learning_history = get_recent_learning_history(
             rep_id=str(config.rep_id),

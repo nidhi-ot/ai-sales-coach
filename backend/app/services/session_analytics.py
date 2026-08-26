@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, field_validator
 from app.config import settings
 from app.db.client import get_supabase
 
-
 DIMENSION_FIELDS = {
     "objection_handling": "objection_handling_score",
     "discovery": "needs_discovery_score",
@@ -167,6 +166,7 @@ def get_recent_sessions(rep_id: str, limit: int = 5) -> list[dict[str, Any]]:
 
     return recent_sessions
 
+
 def get_recent_learning_history(
     rep_id: str,
     business_id: str,
@@ -253,6 +253,7 @@ def get_recent_learning_history(
         )
 
     return history
+
 
 def get_dimension_progress(rep_id: str) -> dict[str, dict[str, Any]]:
     """Get progress for each dimensions from the scorecard"""

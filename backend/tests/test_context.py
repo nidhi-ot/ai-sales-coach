@@ -76,6 +76,7 @@ class AssembleCallContextTests(unittest.TestCase):
         self.assertIn("Persona variation:", first["system_instruction"])
         self.assertIn("Persona variation:", second["system_instruction"])
         self.assertNotEqual(first["system_instruction"], second["system_instruction"])
-        
+
+
 if __name__ == "__main__":
     unittest.main()

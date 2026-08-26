@@ -6,8 +6,8 @@ from app.services.scenarios import (
     FRAMEWORK_DIMENSIONS,
     ScenarioConfig,
     get_business_scenario_config,
-    normalize_framework,
     get_persona_variation_instruction,
+    normalize_framework,
 )
 
 DEFAULT_METRIC_SCORES: dict[str, int | float] = {
@@ -218,6 +218,7 @@ Conversation guardrails:
 unresolved concern.
 """
 
+
 def _recent_call_context_instruction(history: list[dict[str, Any]] | None) -> str:
     if not history:
         return ""
@@ -270,6 +271,7 @@ def _recent_call_context_instruction(history: list[dict[str, Any]] | None) -> st
         + "\n\n".join(call_sections)
         + "\n"
     )
+
 
 def _format_bullets(items: Any) -> str:
     if not isinstance(items, list | tuple):
