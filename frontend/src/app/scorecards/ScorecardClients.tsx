@@ -194,7 +194,11 @@ export default function ScorecardsClients() {
     return () => window.clearTimeout(timeoutId);
   }, [sessionId, scorecard?.status, pollCount, loadScorecard]);
 
-  const overallScore = scorecard?.overall_score ?? null;
+  const isGenerated = scorecard?.status === "generated";
+
+  const overallScore = isGenerated
+  ? scorecard?.overall_score ?? null
+  : null;
   const frameworkScoreGroup = buildFrameworkMetrics(scorecard?.framework_scores);
   const frameworkScoreMetrics: ScoreMetric[] = frameworkScoreGroup.metrics.map((metric) => ({
     ...metric,
