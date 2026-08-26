@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -19,6 +20,8 @@ FILLER_WORDS = {
     "you know",
 }
 
+logger = logging.getLogger(__name__)
+
 SCORECARD_STATUS_PROCESSING = "processing"
 SCORECARD_STATUS_GENERATED = "generated"
 SCORECARD_STATUS_FAILED = "failed"
@@ -27,6 +30,7 @@ PROCESSING_FEEDBACK_SUMMARY = "Analysis processing."
 FAILED_FEEDBACK_SUMMARY = (
     "Analysis failed. Reprocess this scorecard after transcripts are available."
 )
+MIN_TRANSCRIPT_WORDS_FOR_ANALYSIS = 10
 
 
 def _row_dicts(data: Any) -> list[dict[str, Any]]:
@@ -265,6 +269,10 @@ async def analyze_transcript(session_id: str) -> dict[str, Any]:
     rep_words = _word_count(rep_text)
     ai_words = _word_count(ai_text)
     total_words = rep_words + ai_words
+
+    if rep_words == 0 or ai_words == 0 or total_words < MIN_TRANSCRIPT_WORDS_FOR_ANALYSIS:
+        raise ValueError("Transcript is too short for scorecard analysis")
+
     talk_percentage = round((rep_words / total_words) * 100, 2) if total_words else 0.0
 
     duration_seconds = session.get("duration_seconds")
@@ -339,14 +347,18 @@ async def run_scorecard_pipeline(session_id: str) -> dict[str, Any] | None:
     try:
         scorecard = await analyze_transcript(session_id)
     except Exception as exc:
-        await mark_scorecard_failed(session_id, str(exc))
-        return None
+        logger.exception("Scorecard analysis failed for session %s", session_id)
+        try:
+            return await mark_scorecard_failed(session_id, str(exc))
+        except Exception:
+            logger.exception("Failed to mark scorecard failed for session %s", session_id)
+            raise
 
     try:
         await create_next_salesperson_profile(session_id, scorecard)
     except Exception:
         # Profile generation is downstream learning-loop work. A valid scorecard
         # should remain generated even if profile versioning needs a later retry.
-        pass
+        logger.exception("Failed to create next salesperson profile for session %s", session_id)
 
     return scorecard

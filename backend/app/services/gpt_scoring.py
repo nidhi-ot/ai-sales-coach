@@ -1,10 +1,13 @@
 import json
+import logging
 from typing import Any
 
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class ScorecardFeedback(BaseModel):
@@ -264,8 +267,12 @@ async def _request_valid_feedback(
         )
 
         content = response.choices[0].message.content
-        if content is None:
-            last_error = ValueError("GPT returned empty response")
+        if content is None or not content.strip():
+            last_error = ValueError("GPT returned empty scorecard response")
+            logger.warning(
+                "GPT scorecard analysis returned empty content on attempt %s",
+                attempt + 1,
+            )
             continue
 
         try:
@@ -274,8 +281,13 @@ async def _request_valid_feedback(
             return feedback
         except (json.JSONDecodeError, ValidationError, ValueError) as exc:
             last_error = exc
+            logger.warning(
+                "GPT scorecard analysis returned invalid JSON on attempt %s",
+                attempt + 1,
+                exc_info=True,
+            )
 
-    raise ValueError(f"GPT returned invalid scorecard JSON: {last_error}") from last_error
+    raise ValueError("GPT returned invalid scorecard JSON after 2 attempts") from last_error
 
 
 def _parse_feedback(response_text: str) -> ScorecardFeedback:
