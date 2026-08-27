@@ -18,7 +18,6 @@ from app.config import settings
 from app.services.sweeper import run_sweeper
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     sweeper_task = asyncio.create_task(run_sweeper())
