@@ -278,8 +278,9 @@ export default function HistoryPage() {
                         >
                           {t("retry")}
                         </button>
-                      ) : session.overall_score != null ? (
-                        `${session.overall_score}/10`
+                      ) : session.scorecard_status === "generated" &&
+                      session.overall_score != null ? (
+                       `${session.overall_score}/10`
                       ) : (
                         t("scorecardStatus.notScored")
                       )}

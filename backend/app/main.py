@@ -14,6 +14,7 @@ from app.api.routes import (
     scorecards,
     sessions,
 )
+from app.config import settings
 from app.services.sweeper import run_sweeper
 
 
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
             "http://127.0.0.1:3002",
             "http://127.0.0.1:3003",
             "http://localhost:8080",
+            settings.frontend_url.rstrip("/"),
         ],
         allow_credentials=True,
         allow_methods=["*"],
