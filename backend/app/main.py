@@ -1,6 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
-from app.config import settings
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,7 +14,9 @@ from app.api.routes import (
     scorecards,
     sessions,
 )
+from app.config import settings
 from app.services.sweeper import run_sweeper
+
 
 
 @asynccontextmanager
