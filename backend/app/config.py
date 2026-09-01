@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    max_call_seconds: int = 360
+    max_call_seconds: int = 600
     max_call_grace_seconds: int = 30
     abandoned_call_seconds: int = 90
     sweeper_interval_seconds: int = 30
