@@ -328,13 +328,15 @@
   "tabs": {
     "businessProfile": "Företagsprofil",
     "scenarioOverrides": "Scenarioanpassningar",
-    "invites": "Inbjudningar"
+    "invites": "Inbjudningar",
+    "accessRequests": "Åtkomstförfrågningar"
   },
 
   "tabDescriptions": {
     "businessProfile": "Företagskontext",
     "scenarioOverrides": "AI-personans beteende",
-    "invites": "Teamåtkomst"
+    "invites": "Teamåtkomst",
+    "accessRequests": "Förfrågningar från webbplatsen"
   },
 
   "common": {
@@ -401,6 +403,22 @@
     "empty": "Skapa en inbjudan för att generera en registreringslänk.",
     "expires": "Upphör",
     "inviteId": "Inbjudnings-ID"
+  },
+
+  "accessRequests": {
+    "title": "Åtkomstförfrågningar",
+    "description": "Förfrågningar som skickats från webbplatsen. Notiser skickas till nidhi@optimaltrappstadning.se när SMTP är konfigurerat.",
+    "loading": "Laddar åtkomstförfrågningar...",
+    "empty": "Inga åtkomstförfrågningar har skickats ännu.",
+    "refresh": "Uppdatera",
+    "loadError": "Det gick inte att ladda åtkomstförfrågningarna.",
+    "updateError": "Det gick inte att uppdatera åtkomstförfrågan.",
+    "changeStatus": "Ändra status för förfrågan",
+    "status": {
+      "new": "Ny",
+      "reviewed": "Granskad",
+      "closed": "Stängd"
+    }
   },
 
   "roles": {
@@ -1085,8 +1103,12 @@
         "company": "Företag",
         "message": "Vad kan vi hjälpa dig med?"
       },
-      "mailtoNote": "När du skickar formuläret öppnas din e-postklient.",
-      "send": "Skicka",
+      "mailtoNote": "Din förfrågan skickas till vårt team.",
+      "deliveryNote": "Din förfrågan skickas säkert till vårt team och sparas för uppföljning.",
+      "send": "Begär åtkomst",
+      "sending": "Skickar...",
+      "success": "Tack! Vi har tagit emot din förfrågan. Vårt team kontaktar dig.",
+      "error": "Det gick inte att skicka din förfrågan. Försök igen.",
       "existingUser": "Har du redan ett konto? Logga in"
     },
     "footer": {

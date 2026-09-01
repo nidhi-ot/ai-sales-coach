@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     allow_open_signup: bool = False
 
+    access_request_recipient_email: str = "nidhi@optimaltrappstadning.se"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_use_tls: bool = True
+
     openai_api_key: str = ""
     openai_analysis_model: str = "gpt-4o-mini"
 

@@ -328,13 +328,15 @@
   "tabs": {
     "businessProfile": "Business Profile",
     "scenarioOverrides": "Scenario Overrides",
-    "invites": "Invites"
+    "invites": "Invites",
+    "accessRequests": "Access Requests"
   },
 
   "tabDescriptions": {
     "businessProfile": "Company context",
     "scenarioOverrides": "AI persona behavior",
-    "invites": "Team access"
+    "invites": "Team access",
+    "accessRequests": "Website enquiries"
   },
 
   "common": {
@@ -401,6 +403,22 @@
     "empty": "Create an invite to generate a registration link.",
     "expires": "Expires",
     "inviteId": "Invite ID"
+  },
+
+  "accessRequests": {
+    "title": "Access Requests",
+    "description": "Requests submitted from the public website. Notifications are sent to nidhi@optimaltrappstadning.se when SMTP is configured.",
+    "loading": "Loading access requests...",
+    "empty": "No access requests have been submitted yet.",
+    "refresh": "Refresh",
+    "loadError": "Could not load access requests.",
+    "updateError": "Could not update the access request.",
+    "changeStatus": "Change request status",
+    "status": {
+      "new": "New",
+      "reviewed": "Reviewed",
+      "closed": "Closed"
+    }
   },
 
   "roles": {
@@ -1085,8 +1103,12 @@
         "company": "Company",
         "message": "What can we help with?"
       },
-      "mailtoNote": "Sending this form opens your email client.",
-      "send": "Send",
+      "mailtoNote": "Your request will be sent to our team.",
+      "deliveryNote": "Your request is securely sent to our team and saved for follow-up.",
+      "send": "Request access",
+      "sending": "Sending...",
+      "success": "Thanks! Your request has been received. Our team will contact you.",
+      "error": "Could not send your request. Please try again.",
       "existingUser": "Existing user? Log in"
     },
     "footer": {

@@ -36,6 +36,17 @@ type ScenarioConfig = {
   persona_notes: string | null;
 };
 
+type AccessRequest = {
+  id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  message: string;
+  status: "new" | "reviewed" | "closed";
+  created_at: string | null;
+  reviewed_at: string | null;
+};
+
 const scenarios = ["cold_call", "hot_call", "directsales", "meeting"] as const;
 
 export default function AdminPage() {
@@ -56,12 +67,12 @@ function AdminPageContent()  {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  type AdminTab = "business" | "scenarios" | "invites";
+  type AdminTab = "business" | "scenarios" | "invites" | "requests";
 
   const tabFromUrl = searchParams.get("tab");
 
   const initialTab: AdminTab =
-  tabFromUrl === "scenarios" || tabFromUrl === "invites" || tabFromUrl === "business"
+  tabFromUrl === "scenarios" || tabFromUrl === "invites" || tabFromUrl === "requests" || tabFromUrl === "business"
     ? tabFromUrl
     : "business";
 
@@ -96,11 +107,15 @@ function AdminPageContent()  {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [inviteResult, setInviteResult] = useState<InviteResponse | null>(null);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [requestsError, setRequestsError] = useState("");
+  const [updatingRequestId, setUpdatingRequestId] = useState("");
 
   useEffect(() => {
   const tab = searchParams.get("tab");
 
-  if (tab === "business" || tab === "scenarios" || tab === "invites") {
+  if (tab === "business" || tab === "scenarios" || tab === "invites" || tab === "requests") {
     setActiveTab(tab);
   }
 }, [searchParams]);
@@ -115,6 +130,7 @@ function AdminPageContent()  {
 
     loadBusinessProfile();
     loadScenarioConfigs();
+    loadAccessRequests();
   }, [router]);
 
   useEffect(() => {
@@ -131,6 +147,54 @@ function AdminPageContent()  {
     () => inviteResult?.registration_link ?? "",
     [inviteResult]
   );
+
+  async function loadAccessRequests() {
+    setRequestsLoading(true);
+    setRequestsError("");
+    try {
+      const response = await authFetch(`${API_BASE_URL}/access-requests`);
+      if (!response.ok) {
+        throw new Error(t("accessRequests.loadError"));
+      }
+      setAccessRequests((await response.json()) as AccessRequest[]);
+    } catch (error) {
+      console.error(error);
+      setRequestsError(
+        error instanceof Error ? error.message : t("accessRequests.loadError")
+      );
+    } finally {
+      setRequestsLoading(false);
+    }
+  }
+
+  async function updateAccessRequestStatus(
+    requestId: string,
+    status: AccessRequest["status"]
+  ) {
+    setUpdatingRequestId(requestId);
+    setRequestsError("");
+    try {
+      const response = await authFetch(`${API_BASE_URL}/access-requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) {
+        throw new Error(t("accessRequests.updateError"));
+      }
+      const updated = (await response.json()) as AccessRequest;
+      setAccessRequests((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item))
+      );
+    } catch (error) {
+      console.error(error);
+      setRequestsError(
+        error instanceof Error ? error.message : t("accessRequests.updateError")
+      );
+    } finally {
+      setUpdatingRequestId("");
+    }
+  }
 
   async function loadBusinessProfile() {
     setProfileLoading(true);
@@ -406,6 +470,24 @@ function AdminPageContent()  {
             <span style={tabTextStyle}>
               <strong>{t("tabs.invites")}</strong>
               <small style={tabSmallTextStyle}>{t("tabDescriptions.invites")}</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("requests");
+              router.push("/admin?tab=requests");
+            }}
+            style={{
+              ...adminTabCardStyle,
+              ...(activeTab === "requests" ? activeAdminTabCardStyle : {}),
+            }}
+          >
+            <span style={tabIconBoxStyle}>📨</span>
+            <span style={tabTextStyle}>
+              <strong>{t("tabs.accessRequests")}</strong>
+              <small style={tabSmallTextStyle}>{t("tabDescriptions.accessRequests")}</small>
             </span>
           </button>
         </div>
@@ -706,6 +788,70 @@ function AdminPageContent()  {
             </section>
           </div>
         )}
+
+        {activeTab === "requests" && (
+          <section style={scenarioPanelStyle}>
+            <div style={sectionHeaderStyle}>
+              <div>
+                <h2 style={sectionTitleStyle}>{t("accessRequests.title")}</h2>
+                <p style={sectionSubtitleStyle}>{t("accessRequests.description")}</p>
+              </div>
+              <button type="button" onClick={loadAccessRequests} style={smallButtonStyle}>
+                {t("accessRequests.refresh")}
+              </button>
+            </div>
+
+            {requestsError && <p style={errorStyle}>{requestsError}</p>}
+            {requestsLoading ? (
+              <p style={mutedStyle}>{t("accessRequests.loading")}</p>
+            ) : accessRequests.length === 0 ? (
+              <p style={mutedStyle}>{t("accessRequests.empty")}</p>
+            ) : (
+              <div style={requestListStyle}>
+                {accessRequests.map((request) => (
+                  <article key={request.id} style={requestCardStyle}>
+                    <div style={requestHeaderStyle}>
+                      <div>
+                        <h3 style={requestNameStyle}>{request.name}</h3>
+                        <a href={`mailto:${request.email}`} style={requestEmailStyle}>
+                          {request.email}
+                        </a>
+                        {request.company && <p style={requestCompanyStyle}>{request.company}</p>}
+                      </div>
+                      <span style={requestStatusStyle(request.status)}>
+                        {t(`accessRequests.status.${request.status}`)}
+                      </span>
+                    </div>
+                    <p style={requestMessageStyle}>{request.message}</p>
+                    <div style={requestFooterStyle}>
+                      <span style={mutedStyle}>
+                        {request.created_at
+                          ? new Date(request.created_at).toLocaleString()
+                          : "-"}
+                      </span>
+                      <select
+                        value={request.status}
+                        disabled={updatingRequestId === request.id}
+                        onChange={(event) =>
+                          updateAccessRequestStatus(
+                            request.id,
+                            event.target.value as AccessRequest["status"]
+                          )
+                        }
+                        style={requestSelectStyle}
+                        aria-label={t("accessRequests.changeStatus")}
+                      >
+                        <option value="new">{t("accessRequests.status.new")}</option>
+                        <option value="reviewed">{t("accessRequests.status.reviewed")}</option>
+                        <option value="closed">{t("accessRequests.status.closed")}</option>
+                      </select>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </AppShell>
   );
@@ -946,10 +1092,54 @@ const adminTwoColumnStyle: React.CSSProperties = {
 
 const tabsStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
   gap: "18px",
   marginBottom: "24px",
 };
+
+const requestListStyle: React.CSSProperties = { display: "grid", gap: "16px" };
+const requestCardStyle: React.CSSProperties = {
+  border: "1px solid #e5e7eb",
+  borderRadius: "18px",
+  padding: "20px",
+  background: "#fff",
+};
+const requestHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: "16px",
+};
+const requestNameStyle: React.CSSProperties = { margin: "0 0 4px", color: "#101828" };
+const requestEmailStyle: React.CSSProperties = { color: "#006b4f", fontWeight: 700 };
+const requestCompanyStyle: React.CSSProperties = { margin: "5px 0 0", color: "#667085" };
+const requestMessageStyle: React.CSSProperties = {
+  margin: "18px 0",
+  color: "#344054",
+  lineHeight: 1.6,
+  whiteSpace: "pre-wrap",
+};
+const requestFooterStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "16px",
+  flexWrap: "wrap",
+};
+const requestSelectStyle: React.CSSProperties = {
+  padding: "9px 12px",
+  borderRadius: "10px",
+  border: "1px solid #d0d5dd",
+  background: "white",
+};
+const requestStatusStyle = (status: AccessRequest["status"]): React.CSSProperties => ({
+  padding: "6px 10px",
+  borderRadius: "999px",
+  fontSize: "12px",
+  fontWeight: 800,
+  color: status === "new" ? "#b54708" : status === "reviewed" ? "#175cd3" : "#475467",
+  background: status === "new" ? "#fffaeb" : status === "reviewed" ? "#eff8ff" : "#f2f4f7",
+});
 
 const adminTabCardStyle: React.CSSProperties = {
   border: "1px solid #e5e7eb",
