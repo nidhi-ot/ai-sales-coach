@@ -82,8 +82,30 @@ staying at the intended skill level.
                                                         criteria,
                                                         outcomes, aligned
                                                         next step
-  -----------------------------------------------------------------------
 
+   13               Cold Call         Edge - Silence    Minimal rep participation,
+                                                        no meaningful discovery
+
+  14                Meeting           Edge - Silence     Customer carries meeting,
+                                                         rep provides little input
+
+  15                Cold Call         Edge - Hostile      Professional handling of
+                                                          hostile customer
+
+  16                Direct Sales      Edge - Hostile      Composure under strong
+                                                          commercial resistance
+
+  17                Hot Call          Edge - Instant Yes  Avoid over-rewarding easy
+                                                          customer agreement
+
+  18                Direct Sales      Edge - Instant Yes  Confirm business case
+                                                          despite easy close
+
+  19                Cold Call         Edge - Rambling     Redirect off-topic customer
+                                                          and maintain call purpose
+
+  20                Meeting           Edge - Rambling     Maintain meeting structure
+                                                          despite topic drift
 ------------------------------------------------------------------------
 
 # Cold Call
@@ -694,6 +716,308 @@ a clearly owned next step.
 
 ------------------------------------------------------------------------
 
+## Test 13 - Cold Call / Rep Silence
+
+### Purpose
+
+Verify that the system handles a call where the representative provides very little useful input and does not reward silence as acceptable sales behavior.
+
+### Rep behavior
+
+- Give only a minimal opening.
+- Provide very short answers.
+- Ask no meaningful discovery questions.
+- Do not explain value clearly.
+- Do not attempt a proper next step.
+
+### Suggested rep turns
+
+**Opening**
+
+> Hi, this is Bharathi from Optimal Trappstädning.
+
+Wait for the AI customer to respond.
+
+Then answer only briefly, for example:
+
+> Yes.
+
+Wait for the response.
+
+> Okay.
+
+Wait for the response.
+
+> I understand.
+
+End the call without developing the conversation.
+
+### Expected signal
+
+The system should identify very weak engagement, little or no discovery, weak value communication, and no meaningful close. The representative should not receive a strong score simply because the customer spoke most of the time.
+
+------------------------------------------------------------------------
+
+## Test 14 - Meeting / Rep Silence
+
+### Purpose
+
+Verify that a meeting with almost no representative participation is scored poorly even if the AI customer provides useful information.
+
+### Rep behavior
+
+- Do not set an agenda.
+- Ask almost no questions.
+- Let the customer carry the meeting.
+- Give only short acknowledgements.
+- Do not summarize needs or establish a next step.
+
+### Suggested rep turns
+
+**Opening**
+
+> Thanks for meeting with me.
+
+Wait for the AI customer to respond.
+
+Then use only minimal responses such as:
+
+> Okay.
+
+Wait for the response.
+
+> I see.
+
+Wait for the response.
+
+> Right.
+
+End the meeting without clarifying priorities, stakeholders, success criteria, or next steps.
+
+### Expected signal
+
+The system should recognize missing agenda setting, weak discovery, poor meeting leadership, and no owned next step. Customer participation should not artificially increase the representative's score.
+
+------------------------------------------------------------------------
+
+## Test 15 - Cold Call / Hostile Customer
+
+### Purpose
+
+Verify that the representative is evaluated fairly when the customer is impatient or hostile, and that strong objection handling can still be recognized.
+
+### Rep behavior
+
+- Stay calm and professional.
+- Do not argue with the customer.
+- Acknowledge the resistance.
+- Ask one short question to understand whether there is any relevant problem.
+- Respect the customer's time and exit appropriately if there is no opening.
+
+### Suggested rep turns
+
+**Opening**
+
+> Hi, I know this is an unexpected call. I’m Bharathi from Optimal Trappstädning. Can I take 30 seconds to explain why I called?
+
+If the customer responds aggressively or says they are not interested:
+
+> Understood. Before I let you go, can I ask one quick question — are you completely satisfied with the cleaning quality you have today?
+
+If the customer remains hostile:
+
+> That’s fair. I don’t want to waste your time. Thanks for taking the call.
+
+### Expected signal
+
+The system should not penalize the representative merely because the customer is hostile. It should recognize calm objection handling, professionalism, concise discovery, and an appropriate exit. The score should reflect the representative's behavior rather than the customer's attitude.
+
+------------------------------------------------------------------------
+
+## Test 16 - Direct Sales / Hostile Customer
+
+### Purpose
+
+Verify that late-stage selling remains appropriately scored when the buyer becomes confrontational about price, proof, or switching suppliers.
+
+### Rep behavior
+
+- Stay composed under pressure.
+- Clarify the buyer's main concern.
+- Avoid becoming defensive.
+- Address one concern at a time.
+- Do not force the close if the buyer is not ready.
+
+### Suggested rep turns
+
+**Opening**
+
+> Before we decide anything today, I want to make sure the proposal still addresses the problem you originally wanted to solve.
+
+If the customer responds with strong resistance about price:
+
+> I understand. Is the main concern the total cost, or that you are not yet convinced the improvement would justify the cost?
+
+Wait for the response.
+
+> That makes sense. We should only move forward if the value is clear enough to justify the change.
+
+If the customer remains hostile:
+
+> I don’t want to push you into a decision. The next useful step may be to clarify the evidence you need before reconsidering.
+
+### Expected signal
+
+The system should recognize composure, clarification of objections, commercial judgment, and avoidance of a premature close. A hostile buyer should not automatically cause a low score if the representative handles the situation well.
+
+------------------------------------------------------------------------
+
+## Test 17 - Hot Call / Instant-Yes Customer
+
+### Purpose
+
+Verify that the system does not over-reward a representative simply because the customer agrees quickly.
+
+### Rep behavior
+
+- Recognize the customer's interest.
+- Still confirm the reason for the interest.
+- Ask at least one discovery question.
+- Avoid skipping directly to a close.
+- Confirm what a useful next step should achieve.
+
+### Suggested rep turns
+
+**Opening**
+
+> Thanks for taking another call. Before we move forward, what made the solution interesting enough for you to continue the conversation?
+
+If the customer immediately says they want to proceed:
+
+> Great. Before we jump ahead, I want to make sure we are solving the right problem. What would you most want to improve with the cleaning service?
+
+Wait for the response.
+
+> That helps. If we move forward, what would make the next step useful for you?
+
+### Expected signal
+
+The system should not give a very high score just because the customer says yes quickly. Strong performance should still require relevant discovery, confirmation of value, and a meaningful next step.
+
+------------------------------------------------------------------------
+
+## Test 18 - Direct Sales / Instant-Yes Customer
+
+### Purpose
+
+Verify that late-stage scoring still rewards business judgment when the buyer is unusually easy to close.
+
+### Rep behavior
+
+- Do not rush immediately to approval.
+- Confirm the business case.
+- Check at least one practical concern such as timing, rollout, responsibility, or success criteria.
+- Confirm the commitment clearly.
+
+### Suggested rep turns
+
+**Opening**
+
+> It sounds like you are ready to move forward. Before we finalize anything, I want to confirm what success needs to look like for you.
+
+If the customer says there are no concerns:
+
+> Good to hear. Who will own the rollout internally, and what would you want to see in the first 30 to 60 days?
+
+Wait for the response.
+
+> Great. If we agree on those points, are you comfortable confirming the next step today?
+
+### Expected signal
+
+The system should recognize a good close only if the representative confirms the business case and practical next-step details. Easy customer agreement alone should not create an artificially high score.
+
+------------------------------------------------------------------------
+
+## Test 19 - Cold Call / Off-Topic Rambling
+
+### Purpose
+
+Verify that the representative can keep control of the conversation when the customer repeatedly drifts away from the sales topic.
+
+### Rep behavior
+
+- Listen briefly without interrupting aggressively.
+- Acknowledge the off-topic comment.
+- Redirect back to the purpose of the call.
+- Ask a relevant discovery question.
+- Keep the call concise.
+
+### Suggested rep turns
+
+**Opening**
+
+> Hi, I’m Bharathi from Optimal Trappstädning. I’ll keep it brief — I wanted to understand how you currently manage cleaning quality in your building.
+
+If the customer starts talking at length about an unrelated topic:
+
+> I understand. Just so I don’t take too much of your time, can I bring it back to the cleaning service for a moment?
+
+Wait for the response.
+
+> What is the biggest issue, if any, with the current cleaning setup?
+
+If the customer drifts off-topic again:
+
+> That makes sense. The reason I’m asking is to understand whether there is actually a relevant problem for us to help with.
+
+### Expected signal
+
+The system should recognize conversation control, concise redirection, and relevant discovery. It should not reward the representative for simply allowing the conversation to drift without purpose.
+
+------------------------------------------------------------------------
+
+## Test 20 - Meeting / Off-Topic Rambling
+
+### Purpose
+
+Verify that a representative can maintain structure in a meeting when the customer repeatedly introduces unrelated topics.
+
+### Rep behavior
+
+- Set a clear agenda.
+- Acknowledge unrelated comments without losing control.
+- Bring the conversation back to agreed priorities.
+- Summarize what is relevant.
+- Establish a clear next step.
+
+### Suggested rep turns
+
+**Opening**
+
+> Thanks for the time. I’d like to first understand your current cleaning priorities, then discuss whether there is a fit, and finish by agreeing on a next step if it makes sense.
+
+If the customer starts discussing unrelated issues:
+
+> That’s useful context. To make sure we use the time well, can we return to the cleaning priorities for a moment?
+
+Wait for the response.
+
+> Of the issues you mentioned, which one has the biggest impact on residents or staff today?
+
+If the conversation drifts again:
+
+> Let me summarize what I’ve heard so far and make sure we are still focused on the main issue.
+
+### Close
+
+> Based on what we discussed, would the right next step be a short follow-up where we review the cleaning needs and agree on what should be measured?
+
+### Expected signal
+
+The system should recognize agenda setting, redirection, summarization, and ownership of the meeting. A rambling customer should not cause the representative to lose structure without affecting the score.
+
+-------------------------------------------------------------------------------------------------
 # Execution Notes
 
 For every test:
@@ -744,5 +1068,20 @@ For every test:
 
   11          Meeting     Medium                                 
 
-  12          Meeting     Strong                                 
-  --------------------------------------------------------------------------
+  12          Meeting     Strong
+
+  13          Cold Call    Edge - Silence
+
+  14          Meeting      Edge - Silence
+
+  15          Cold Call    Edge - Hostile
+
+  16          Direct Sales  Edge - Hostile
+
+  17          Hot Call      Edge - Instant Yes
+
+  18          Direct Sales  Edge - Instant Yes
+
+  19          Cold Call     Edge - Rambling
+
+  20          Meeting       Edge - Rambling
