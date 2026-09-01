@@ -170,11 +170,7 @@ async def update_access_request(
         datetime.now(timezone.utc).isoformat() if data.status != "new" else None
     )
     result = (
-        get_supabase()
-        .table("access_requests")
-        .update(update_data)
-        .eq("id", request_id)
-        .execute()
+        get_supabase().table("access_requests").update(update_data).eq("id", request_id).execute()
     )
     rows = _row_dicts(result.data)
     if not rows:
