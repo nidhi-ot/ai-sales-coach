@@ -297,6 +297,33 @@ class SessionEndRouteTests(unittest.TestCase):
         self.assertEqual(response.json()["inserted"], 1)
         self.assertEqual(len(fake_supabase.store["transcripts"]), 2)
 
+    def test_transcript_batch_redacts_pii_before_persistence(self):
+        fake_supabase = FakeSupabase()
+
+        with patch("app.api.routes.sessions.get_supabase", return_value=fake_supabase):
+            response = self.client.post(
+                "/api/v1/sessions/session-123/transcripts/batch",
+                json={
+                    "entries": [
+                        {
+                            "speaker": "rep",
+                            "text": "Ring mig på 070-123 45 67 eller anna@example.com",
+                            "timestamp_offset_ms": 2000,
+                        }
+                    ]
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["inserted"], 1)
+
+        saved = fake_supabase.store["transcripts"][-1]
+
+        self.assertEqual(
+            saved["text"],
+            "Ring mig på [PHONE] eller [EMAIL]",
+        )
+
     def test_heartbeat_updates_metadata_without_losing_existing_session_context(self):
         fake_supabase = FakeSupabase()
 

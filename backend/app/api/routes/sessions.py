@@ -14,6 +14,7 @@ from app.api.deps import (
 from app.config import settings
 from app.db.client import get_business_profile, get_supabase
 from app.models.agent import ScenarioSlug
+from app.services.pii import redact_pii
 from app.services.scenarios import get_scenario_config, normalize_framework
 from app.services.scorecards import mark_scorecard_processing, run_scorecard_pipeline
 from app.services.session_analytics import (
@@ -265,7 +266,7 @@ async def end_session(
                 {
                     "session_id": session_id,
                     "speaker": entry.speaker,
-                    "text": entry.text,
+                    "text": redact_pii(entry.text),
                     "timestamp_offset_ms": entry.timestamp_offset_ms,
                 }
             )
@@ -339,7 +340,7 @@ async def add_transcript_entry(
             {
                 "session_id": session_id,
                 "speaker": entry.speaker,
-                "text": entry.text,
+                "text": redact_pii(entry.text),
                 "timestamp_offset_ms": entry.timestamp_offset_ms,
             }
         )
@@ -405,7 +406,7 @@ async def add_transcript_batch(
             {
                 "session_id": session_id,
                 "speaker": entry.speaker,
-                "text": entry.text,
+                "text": redact_pii(entry.text),
                 "timestamp_offset_ms": entry.timestamp_offset_ms,
             }
         )
