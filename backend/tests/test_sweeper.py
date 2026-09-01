@@ -35,7 +35,7 @@ class SweeperTests(unittest.IsolatedAsyncioTestCase):
             ) as pipeline_mock,
         ):
             completed = await sweep_expired_sessions_once(
-                now=datetime(2026, 6, 25, 10, 7, 0, tzinfo=timezone.utc)
+                now=datetime(2026, 6, 25, 10, 11, 0, tzinfo=timezone.utc)
             )
 
         self.assertEqual(completed, 1)
