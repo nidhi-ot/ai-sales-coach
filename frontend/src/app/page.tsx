@@ -10,9 +10,12 @@ import {
   Phone,
 } from "lucide-react";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import RequestAccessForm from "../components/RequestAccessForm";
 
 export default async function HomePage() {
   const t = await getTranslations("Home");
+  const allowOpenSignup = process.env.NEXT_PUBLIC_ALLOW_OPEN_SIGNUP === "true";
+  const signupHref = allowOpenSignup ? "/register" : "#contact";
 
   const steps = [
     { number: "01", icon: "👤", title: t("steps.choose.title"), description: t("steps.choose.description") },
@@ -166,8 +169,8 @@ export default async function HomePage() {
             <Link href="/login" style={ghostButtonStyle}>
               {t("common.login")}
             </Link>
-            <Link href="/register" style={primaryButtonStyle}>
-              {t("common.createAccount")}
+            <Link href={signupHref} style={primaryButtonStyle}>
+              {allowOpenSignup ? t("common.createAccount") : t("common.requestAccess")}
             </Link>
           </nav>
 
@@ -186,8 +189,8 @@ export default async function HomePage() {
               <Link href="/login" style={mobileMenuLinkStyle}>
                 {t("common.login")}
               </Link>
-              <Link href="/register" style={mobileMenuPrimaryLinkStyle}>
-                {t("common.createAccount")}
+              <Link href={signupHref} style={mobileMenuPrimaryLinkStyle}>
+                {allowOpenSignup ? t("common.createAccount") : t("common.requestAccess")}
               </Link>
             </div>
           </details>
@@ -204,8 +207,8 @@ export default async function HomePage() {
             <p style={leadStyle}>{t("hero.description")}</p>
 
             <div style={heroActionsStyle}>
-              <Link href="/register" style={primaryButtonLargeStyle}>
-                {t("common.startPracticing")}
+              <Link href={signupHref} style={primaryButtonLargeStyle}>
+                {allowOpenSignup ? t("common.startPracticing") : t("common.requestAccess")}
               </Link>
               <Link href="/login" style={secondaryButtonLargeStyle}>
                 {t("common.login")}
@@ -371,47 +374,7 @@ export default async function HomePage() {
               <p style={contactTextStyle}>{t("contact.description")}</p>
             </div>
 
-            <form
-              action="mailto:hello@aisalescoach.app"
-              method="post"
-              encType="text/plain"
-              style={contactFormStyle}
-            >
-              <div style={contactFormRowStyle}>
-                <label style={contactLabelStyle}>
-                  {t("contact.fields.name")}
-                  <input name="name" style={contactInputStyle} />
-                </label>
-
-                <label style={contactLabelStyle}>
-                  {t("contact.fields.email")}
-                  <input name="email" type="email" style={contactInputStyle} />
-                </label>
-              </div>
-
-              <label style={contactLabelStyle}>
-                {t("contact.fields.company")}
-                <input name="company" style={contactInputStyle} />
-              </label>
-
-              <label style={contactLabelStyle}>
-                {t("contact.fields.message")}
-                <textarea name="message" rows={5} style={contactTextareaStyle} />
-              </label>
-
-              <p style={{ margin: 0, color: "#667085", fontSize: "13px" }}>
-                {t("contact.mailtoNote")}
-              </p>
-
-              <div style={contactActionsStyle}>
-                <button type="submit" style={contactSubmitButtonStyle}>
-                  {t("contact.send")}
-                </button>
-                <Link href="/login" style={secondaryButtonLargeStyle}>
-                  {t("contact.existingUser")}
-                </Link>
-              </div>
-            </form>
+            <RequestAccessForm />
           </div>
         </section>
 
@@ -1381,60 +1344,6 @@ const contactTextStyle = {
   maxWidth: "60ch",
   color: "#667085",
   lineHeight: 1.7,
-};
-
-const contactActionsStyle = {
-  display: "flex",
-  gap: "12px",
-  flexWrap: "wrap" as const,
-};
-
-const contactFormStyle = {
-  display: "grid",
-  gap: "18px",
-  width: "100%",
-  maxWidth: "650px",
-};
-
-const contactFormRowStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
-  gap: "16px",
-};
-
-const contactLabelStyle = {
-  display: "grid",
-  gap: "8px",
-  color: "#344054",
-  fontSize: "14px",
-  fontWeight: 700,
-};
-
-const contactInputStyle = {
-  width: "100%",
-  minHeight: "48px",
-  borderRadius: "14px",
-  boxSizing: "border-box" as const,
-  border: "1px solid rgba(148,163,184,0.55)",
-  background: "rgba(255,255,255,0.86)",
-  padding: "0 14px",
-  color: "#101828",
-  font: "inherit",
-  outlineColor: "#006b4f",
-};
-
-const contactTextareaStyle = {
-  ...contactInputStyle,
-  minHeight: "140px",
-  padding: "14px",
-  resize: "vertical" as const,
-};
-
-const contactSubmitButtonStyle = {
-  ...primaryButtonLargeStyle,
-  border: "none",
-  cursor: "pointer",
-  font: "inherit",
 };
 
 const contactButtonStyle = {

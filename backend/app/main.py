@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import (
+    access_requests,
     admin,
     agent,
     auth,
@@ -59,6 +60,11 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(
+        access_requests.router,
+        prefix="/api/v1/access-requests",
+        tags=["access-requests"],
+    )
     app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
     app.include_router(agent.router, prefix="/api/v1/agent", tags=["agent"])
     app.include_router(sessions.router, prefix="/api/v1/sessions", tags=["sessions"])

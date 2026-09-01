@@ -328,13 +328,15 @@
   "tabs": {
     "businessProfile": "Business Profile",
     "scenarioOverrides": "Scenario Overrides",
-    "invites": "Invites"
+    "invites": "Invites",
+    "accessRequests": "Access Requests"
   },
 
   "tabDescriptions": {
     "businessProfile": "Company context",
     "scenarioOverrides": "AI persona behavior",
-    "invites": "Team access"
+    "invites": "Team access",
+    "accessRequests": "Website enquiries"
   },
 
   "common": {
@@ -401,6 +403,22 @@
     "empty": "Create an invite to generate a registration link.",
     "expires": "Expires",
     "inviteId": "Invite ID"
+  },
+
+  "accessRequests": {
+    "title": "Access Requests",
+    "description": "Requests submitted from the public website. Notifications are sent to nidhi@optimaltrappstadning.se when SMTP is configured.",
+    "loading": "Loading access requests...",
+    "empty": "No access requests have been submitted yet.",
+    "refresh": "Refresh",
+    "loadError": "Could not load access requests.",
+    "updateError": "Could not update the access request.",
+    "changeStatus": "Change request status",
+    "status": {
+      "new": "New",
+      "reviewed": "Reviewed",
+      "closed": "Closed"
+    }
   },
 
   "roles": {
@@ -833,6 +851,7 @@
     "signIn": "Sign In",
     "newHere": "New here?",
     "createAccount": "Create an account",
+    "requestAccess": "Request access",
     "legal": "By continuing, you agree to our Terms of Service and Privacy Policy.",
     "promoTitle": "Practice calls. Get feedback. Improve faster.",
     "promoBody": "Train with realistic AI customer conversations and receive focused coaching after every session.",
@@ -855,7 +874,10 @@
     "phonePlaceholder": "Enter your phone number",
     "employeeIdLabel": "Employee ID",
     "employeeIdPlaceholder": "Optional employee ID",
-    "inviteMissing": "Invite token missing. This signup will only work if open signup is enabled.",
+    "checkingInvite": "Checking invitation...",
+    "inviteRequiredTitle": "Invitation required",
+    "inviteRequiredDescription": "Ask your administrator for an invitation link to create an account.",
+    "requestAccess": "Request access",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Create password",
     "confirmPasswordLabel": "Confirm Password",
@@ -951,6 +973,7 @@
     "common": {
       "login": "Log in",
       "createAccount": "Create account",
+      "requestAccess": "Request access",
       "startPracticing": "Start practicing →",
       "startPractice": "Start practice →"
     },
@@ -1080,8 +1103,12 @@
         "company": "Company",
         "message": "What can we help with?"
       },
-      "mailtoNote": "Sending this form opens your email client.",
-      "send": "Send",
+      "mailtoNote": "Your request will be sent to our team.",
+      "deliveryNote": "Your request is securely sent to our team and saved for follow-up.",
+      "send": "Request access",
+      "sending": "Sending...",
+      "success": "Thanks! Your request has been received. Our team will contact you.",
+      "error": "Could not send your request. Please try again.",
       "existingUser": "Existing user? Log in"
     },
     "footer": {

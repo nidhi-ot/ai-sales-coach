@@ -140,6 +140,9 @@ class FakeTable:
         if self.name == "invites":
             return self._execute_list_table("invites", "invite")
 
+        if self.name == "access_requests":
+            return self._execute_list_table("access_requests", "request")
+
         raise AssertionError(f"Unexpected table access: {self.name}")
 
     def _execute_list_table(self, table_name: str, id_prefix: str):
@@ -392,6 +395,7 @@ class FakeSupabase:
             "salesperson_accounts": [],
             "business_profiles": [],
             "invites": [],
+            "access_requests": [],
         }
         self.auth = SimpleNamespace(
             admin=SimpleNamespace(
