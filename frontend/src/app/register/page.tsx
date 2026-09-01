@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../lib/api";
 import { applyBusinessLanguage } from "../../lib/businessLanguage";
 
+const allowOpenSignup = process.env.NEXT_PUBLIC_ALLOW_OPEN_SIGNUP === "true";
+
 export default function RegisterPage() {
   const router = useRouter();
   const t = useTranslations("Register");
@@ -17,6 +19,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteToken, setInviteToken] = useState("");
+  const [inviteChecked, setInviteChecked] = useState(false);
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -25,7 +28,53 @@ export default function RegisterPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setInviteToken(params.get("invite") ?? "");
+    setInviteChecked(true);
   }, []);
+
+  if (!inviteChecked) {
+    return (
+      <main style={pageStyle}>
+        <section style={{ ...cardStyle, textAlign: "center" }}>
+          <p style={{ color: "#667085", margin: 0 }}>{t("checkingInvite")}</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!inviteToken && !allowOpenSignup) {
+    return (
+      <main style={pageStyle}>
+        <section style={{ ...cardStyle, textAlign: "center" }}>
+          <img
+            src="/logo.png"
+            alt={t("logoAlt")}
+            style={{ width: "110px", height: "110px", objectFit: "contain" }}
+          />
+          <h1 style={{ marginBottom: "12px" }}>{t("inviteRequiredTitle")}</h1>
+          <p style={{ color: "#667085", lineHeight: 1.6, marginBottom: "24px" }}>
+            {t("inviteRequiredDescription")}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/#contact")}
+            style={buttonStyle}
+          >
+            {t("requestAccess")}
+          </button>
+          <p style={{ marginTop: "22px", color: "#667085" }}>
+            {t("alreadyHaveAccount")}{" "}
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              style={linkButtonStyle}
+            >
+              {t("signIn")}
+            </button>
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   async function handleCreateAccount() {
     setError("");
@@ -157,12 +206,6 @@ export default function RegisterPage() {
           placeholder={t("employeeIdPlaceholder")}
           style={inputStyle}
         />
-
-        {!inviteToken && (
-          <p style={{ color: "#b54708", fontSize: "14px", marginTop: "-4px" }}>
-            {t("inviteMissing")}
-          </p>
-        )}
 
         <label style={labelStyle}>{t("passwordLabel")}</label>
         <input

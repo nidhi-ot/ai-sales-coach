@@ -833,6 +833,7 @@
     "signIn": "Sign In",
     "newHere": "New here?",
     "createAccount": "Create an account",
+    "requestAccess": "Request access",
     "legal": "By continuing, you agree to our Terms of Service and Privacy Policy.",
     "promoTitle": "Practice calls. Get feedback. Improve faster.",
     "promoBody": "Train with realistic AI customer conversations and receive focused coaching after every session.",
@@ -855,7 +856,10 @@
     "phonePlaceholder": "Enter your phone number",
     "employeeIdLabel": "Employee ID",
     "employeeIdPlaceholder": "Optional employee ID",
-    "inviteMissing": "Invite token missing. This signup will only work if open signup is enabled.",
+    "checkingInvite": "Checking invitation...",
+    "inviteRequiredTitle": "Invitation required",
+    "inviteRequiredDescription": "Ask your administrator for an invitation link to create an account.",
+    "requestAccess": "Request access",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Create password",
     "confirmPasswordLabel": "Confirm Password",
@@ -951,6 +955,7 @@
     "common": {
       "login": "Log in",
       "createAccount": "Create account",
+      "requestAccess": "Request access",
       "startPracticing": "Start practicing →",
       "startPractice": "Start practice →"
     },

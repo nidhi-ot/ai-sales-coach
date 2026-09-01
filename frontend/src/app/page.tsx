@@ -13,6 +13,8 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default async function HomePage() {
   const t = await getTranslations("Home");
+  const allowOpenSignup = process.env.NEXT_PUBLIC_ALLOW_OPEN_SIGNUP === "true";
+  const signupHref = allowOpenSignup ? "/register" : "#contact";
 
   const steps = [
     { number: "01", icon: "👤", title: t("steps.choose.title"), description: t("steps.choose.description") },
@@ -166,8 +168,8 @@ export default async function HomePage() {
             <Link href="/login" style={ghostButtonStyle}>
               {t("common.login")}
             </Link>
-            <Link href="/register" style={primaryButtonStyle}>
-              {t("common.createAccount")}
+            <Link href={signupHref} style={primaryButtonStyle}>
+              {allowOpenSignup ? t("common.createAccount") : t("common.requestAccess")}
             </Link>
           </nav>
 
@@ -186,8 +188,8 @@ export default async function HomePage() {
               <Link href="/login" style={mobileMenuLinkStyle}>
                 {t("common.login")}
               </Link>
-              <Link href="/register" style={mobileMenuPrimaryLinkStyle}>
-                {t("common.createAccount")}
+              <Link href={signupHref} style={mobileMenuPrimaryLinkStyle}>
+                {allowOpenSignup ? t("common.createAccount") : t("common.requestAccess")}
               </Link>
             </div>
           </details>
@@ -204,8 +206,8 @@ export default async function HomePage() {
             <p style={leadStyle}>{t("hero.description")}</p>
 
             <div style={heroActionsStyle}>
-              <Link href="/register" style={primaryButtonLargeStyle}>
-                {t("common.startPracticing")}
+              <Link href={signupHref} style={primaryButtonLargeStyle}>
+                {allowOpenSignup ? t("common.startPracticing") : t("common.requestAccess")}
               </Link>
               <Link href="/login" style={secondaryButtonLargeStyle}>
                 {t("common.login")}

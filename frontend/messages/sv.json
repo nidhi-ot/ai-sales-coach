@@ -833,6 +833,7 @@
     "signIn": "Logga in",
     "newHere": "Ny här?",
     "createAccount": "Skapa ett konto",
+    "requestAccess": "Begär åtkomst",
     "legal": "Genom att fortsätta godkänner du våra användarvillkor och vår integritetspolicy.",
     "promoTitle": "Öva samtal. Få feedback. Bli bättre snabbare.",
     "promoBody": "Träna med realistiska AI-kundsamtal och få fokuserad coachning efter varje session.",
@@ -855,7 +856,10 @@
     "phonePlaceholder": "Ange ditt telefonnummer",
     "employeeIdLabel": "Medarbetar-ID",
     "employeeIdPlaceholder": "Valfritt medarbetar-ID",
-    "inviteMissing": "Inbjudningstoken saknas. Registreringen fungerar bara om öppen registrering är aktiverad.",
+    "checkingInvite": "Kontrollerar inbjudan...",
+    "inviteRequiredTitle": "Inbjudan krävs",
+    "inviteRequiredDescription": "Be din administratör om en inbjudningslänk för att skapa ett konto.",
+    "requestAccess": "Begär åtkomst",
     "passwordLabel": "Lösenord",
     "passwordPlaceholder": "Skapa lösenord",
     "confirmPasswordLabel": "Bekräfta lösenord",
@@ -951,6 +955,7 @@
     "common": {
       "login": "Logga in",
       "createAccount": "Skapa konto",
+      "requestAccess": "Begär åtkomst",
       "startPracticing": "Börja öva →",
       "startPractice": "Starta övning →"
     },

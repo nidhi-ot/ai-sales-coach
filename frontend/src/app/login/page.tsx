@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { API_BASE_URL } from "../../lib/api";
 import { applyBusinessLanguage } from "../../lib/businessLanguage";
 
+const allowOpenSignup = process.env.NEXT_PUBLIC_ALLOW_OPEN_SIGNUP === "true";
+
 
 export default function LoginPage() {
   const t = useTranslations("Login");
@@ -195,10 +197,10 @@ export default function LoginPage() {
             {t("newHere")}{" "}
             <button
               type="button"
-              onClick={() => router.push("/register")}
+              onClick={() => router.push(allowOpenSignup ? "/register" : "/#contact")}
               style={linkButtonStyle}
             >
-              {t("createAccount")}
+              {allowOpenSignup ? t("createAccount") : t("requestAccess")}
             </button>
           </p>
 
