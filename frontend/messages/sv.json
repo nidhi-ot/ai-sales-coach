@@ -324,6 +324,48 @@
   "title": "Konfiguration av företagets AI",
   "subtitle": "Hantera företagsprofil, scenarioanpassningar och teaminbjudningar.",
   "manageMembers": "Hantera medlemmar",
+  "members": {
+    "eyebrow": "Admin",
+    "title": "Medlemshantering",
+    "subtitle": "Ändra roller, inaktivera personer som slutat och håll åtkomsten inom företaget.",
+    "backToInvites": "Tillbaka till inbjudningar",
+    "businessMembers": "Företagets medlemmar",
+    "description": "Ändra roller och inaktivera medlemmar utan att ta bort deras konto.",
+    "inviteMember": "Bjud in medlem",
+    "loading": "Laddar medlemmar...",
+    "empty": "Inga medlemmar hittades för detta företag.",
+    "confirmDelete": "Ta bort {name}? Detta kan inte ångras.",
+    "cannotDeleteSelf": "Du kan inte ta bort ditt eget konto",
+    "columns": {
+      "name": "Namn",
+      "email": "E-post",
+      "employeeId": "Anställnings-ID",
+      "role": "Roll",
+      "status": "Status",
+      "actions": "Åtgärder"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "actions": {
+      "deactivate": "Inaktivera",
+      "reactivate": "Återaktivera",
+      "save": "Spara",
+      "saving": "Sparar...",
+      "export": "Exportera",
+      "exporting": "Exporterar...",
+      "delete": "Ta bort",
+      "deleting": "Tar bort..."
+    },
+    "errors": {
+      "load": "Det gick inte att ladda medlemmar",
+      "export": "Det gick inte att exportera medlemmen",
+      "delete": "Det gick inte att ta bort medlemmen",
+      "update": "Det gick inte att uppdatera medlemmen",
+      "backendConnection": "Kunde inte ansluta till backend"
+    }
+  },
 
   "tabs": {
     "businessProfile": "Företagsprofil",
@@ -346,7 +388,8 @@
     "missing": "Saknas",
     "notConfigured": "Inte konfigurerad",
     "english": "Engelska",
-    "swedish": "Svenska"
+    "swedish": "Svenska",
+    "loading": "Laddar..."
   },
 
   "businessProfile": {
@@ -387,7 +430,13 @@
     "personaNotes": "Personanoteringar",
     "personaPlaceholder": "Hur ska AI-kunden bete sig?",
     "whyTitle": "Varför anpassa scenarier?",
-    "whyText": "Anpassningar hjälper AI-kundens beteende att bättre matcha er säljprocess och vanliga verkliga invändningar."
+    "whyText": "Anpassningar hjälper AI-kundens beteende att bättre matcha er säljprocess och vanliga verkliga invändningar.",
+    "scenarios": {
+      "cold_call": "Kallsamtal",
+      "hot_call": "Varmt samtal",
+      "directsales": "Direktförsäljning",
+      "meeting": "Möte"
+    }
   },
 
   "invites": {
@@ -1131,6 +1180,39 @@
         "title": "Företag",
         "about": "Om oss"
       }
+    }
+  },
+  "members": {
+    "eyebrow": "Admin",
+    "title": "Medlemshantering",
+    "subtitle": "Ändra roller, inaktivera personer som slutat och håll åtkomsten inom företaget.",
+    "backToInvites": "Tillbaka till inbjudningar",
+    "businessMembers": "Företagets medlemmar",
+    "description": "Ändra roller och inaktivera medlemmar utan att ta bort deras konto.",
+    "inviteMember": "Bjud in medlem",
+    "loading": "Laddar medlemmar...",
+    "empty": "Inga medlemmar hittades för detta företag.",
+    "columns": {
+      "name": "Namn",
+      "email": "E-post",
+      "employeeId": "Anställnings-ID",
+      "role": "Roll",
+      "status": "Status",
+      "actions": "Åtgärder"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "actions": {
+      "deactivate": "Inaktivera",
+      "reactivate": "Återaktivera",
+      "save": "Spara",
+      "saving": "Sparar...",
+      "export": "Exportera",
+      "exporting": "Exporterar...",
+      "delete": "Ta bort",
+      "deleting": "Tar bort..."
     }
   }
 }

@@ -324,6 +324,48 @@
   "title": "Business AI Configuration",
   "subtitle": "Manage your business profile, scenario overrides, and team invitations.",
   "manageMembers": "Manage Members",
+  "members": {
+    "eyebrow": "Admin",
+    "title": "Member management",
+    "subtitle": "Promote people, deactivate leavers, and keep access inside the business.",
+    "backToInvites": "Back to invites",
+    "businessMembers": "Business members",
+    "description": "Change roles and deactivate members without deleting their account.",
+    "inviteMember": "Invite member",
+    "loading": "Loading members...",
+    "empty": "No members found for this business.",
+    "confirmDelete": "Delete {name}? This cannot be undone.",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "employeeId": "Employee ID",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "save": "Save",
+      "saving": "Saving...",
+      "export": "Export",
+      "exporting": "Exporting...",
+      "delete": "Delete",
+      "deleting": "Deleting..."
+    },
+    "errors": {
+      "load": "Failed to load members",
+      "export": "Failed to export member",
+      "delete": "Failed to delete member",
+      "update": "Failed to update member",
+      "backendConnection": "Could not connect to backend"
+    }
+  },
 
   "tabs": {
     "businessProfile": "Business Profile",
@@ -346,7 +388,8 @@
     "missing": "Missing",
     "notConfigured": "Not configured",
     "english": "English",
-    "swedish": "Swedish"
+    "swedish": "Swedish",
+    "loading": "Loading..."
   },
 
   "businessProfile": {
@@ -387,7 +430,13 @@
     "personaNotes": "Persona Notes",
     "personaPlaceholder": "How should the AI customer behave?",
     "whyTitle": "Why override scenarios?",
-    "whyText": "Overrides help tailor the AI customer's behavior to match your sales motion and common real-world objections."
+    "whyText": "Overrides help tailor the AI customer's behavior to match your sales motion and common real-world objections.",
+    "scenarios": {
+      "cold_call": "Cold Call",
+      "hot_call": "Hot Call",
+      "directsales": "Direct Sales",
+      "meeting": "Meeting"
+    }
   },
 
   "invites": {
@@ -1131,6 +1180,39 @@
         "title": "Company",
         "about": "About"
       }
+    }
+  },
+  "members": {
+    "eyebrow": "Admin",
+    "title": "Member management",
+    "subtitle": "Promote people, deactivate leavers, and keep access inside the business.",
+    "backToInvites": "Back to invites",
+    "businessMembers": "Business members",
+    "description": "Change roles and deactivate members without deleting their account.",
+    "inviteMember": "Invite member",
+    "loading": "Loading members...",
+    "empty": "No members found for this business.",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "employeeId": "Employee ID",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "save": "Save",
+      "saving": "Saving...",
+      "export": "Export",
+      "exporting": "Exporting...",
+      "delete": "Delete",
+      "deleting": "Deleting..."
     }
   }
 }

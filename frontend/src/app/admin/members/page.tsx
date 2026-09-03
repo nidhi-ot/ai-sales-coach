@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AppShell from "../../../components/AppShell";
 import { removeMemberById } from "../../../lib/memberActions";
 import { API_BASE_URL, authFetch } from "../../../lib/api";
+import { useTranslations } from "next-intl";
 
 type AdminMember = {
   id: string;
@@ -44,6 +45,7 @@ function getErrorDetail(value: unknown, fallback: string): string {
 
 export default function AdminMembersPage() {
   const router = useRouter();
+  const t = useTranslations("Admin");
   const [members, setMembers] = useState<AdminMember[]>([]);
   const [drafts, setDrafts] = useState<Record<string, MemberDraft>>({});
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ export default function AdminMembersPage() {
         const data = raw ? (JSON.parse(raw) as unknown) : [];
 
         if (!response.ok) {
-          setError(getErrorDetail(data, "Failed to load members"));
+          setError(getErrorDetail(data, t("members.errors.load")));
           return;
         }
 
@@ -96,7 +98,7 @@ export default function AdminMembersPage() {
         setError(
           memberError instanceof Error
             ? memberError.message
-            : "Could not connect to backend"
+            : t("members.errors.backendConnection")
         );
       } finally {
         setLoading(false);
@@ -104,7 +106,7 @@ export default function AdminMembersPage() {
     }
 
     loadMembers();
-  }, [router]);
+  }, [router, t]);
 
   async function handleExport(member: AdminMember) {
     setExportingMemberId(member.id);
@@ -118,7 +120,7 @@ export default function AdminMembersPage() {
       const data = raw ? (JSON.parse(raw) as unknown) : {};
 
       if (!response.ok) {
-        setError(getErrorDetail(data, "Failed to export member"));
+        setError(getErrorDetail(data, t("members.errors.export")));
         return;
       }
 
@@ -144,7 +146,7 @@ export default function AdminMembersPage() {
       setError(
         memberError instanceof Error
           ? memberError.message
-          : "Could not connect to backend"
+          : t("members.errors.backendConnection")
       );
     } finally {
       setExportingMemberId(null);
@@ -152,7 +154,7 @@ export default function AdminMembersPage() {
   }
 
   async function handleDelete(member: AdminMember) {
-    if (!window.confirm(`Delete ${member.full_name}? This cannot be undone.`)) {
+    if (!window.confirm(t("members.confirmDelete", { name: member.full_name }))) {
       return;
     }
 
@@ -171,7 +173,7 @@ export default function AdminMembersPage() {
       const data = raw ? (JSON.parse(raw) as unknown) : {};
 
       if (!response.ok) {
-        setError(getErrorDetail(data, "Failed to delete member"));
+        setError(getErrorDetail(data, t("members.errors.delete")));
         return;
       }
 
@@ -191,7 +193,7 @@ export default function AdminMembersPage() {
       setError(
         memberError instanceof Error
           ? memberError.message
-          : "Could not connect to backend"
+          : t("members.errors.backendConnection")
       );
     } finally {
       setDeletingMemberId(null);
@@ -221,7 +223,7 @@ export default function AdminMembersPage() {
       const data = raw ? (JSON.parse(raw) as unknown) : {};
 
       if (!response.ok) {
-        setError(getErrorDetail(data, "Failed to update member"));
+        setError(getErrorDetail(data, t("members.errors.update")));
         return;
       }
 
@@ -248,7 +250,7 @@ export default function AdminMembersPage() {
       setError(
         memberError instanceof Error
           ? memberError.message
-          : "Could not connect to backend"
+          : t("members.errors.backendConnection")
       );
     } finally {
       setSavingMemberId(null);
@@ -259,10 +261,10 @@ export default function AdminMembersPage() {
     <AppShell>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <section style={heroStyle}>
-          <p style={eyebrowStyle}>Admin</p>
-          <h1 style={titleStyle}>Member management</h1>
+          <p style={eyebrowStyle}>{t("members.eyebrow")}</p>
+          <h1 style={titleStyle}>{t("members.title")}</h1>
           <p style={subtitleStyle}>
-            Promote people, deactivate leavers, and keep access inside the business.
+            {t("members.subtitle")}
           </p>
 
           <button
@@ -270,7 +272,7 @@ export default function AdminMembersPage() {
             onClick={() => router.push("/admin")}
             style={backButtonStyle}
           >
-            Back to invites
+            {t("members.backToInvites")}
           </button>
         </section>
 
@@ -279,9 +281,9 @@ export default function AdminMembersPage() {
         <section style={cardStyle}>
           <div style={headerRowStyle}>
             <div>
-              <h2 style={sectionTitleStyle}>Business members</h2>
+              <h2 style={sectionTitleStyle}>{t("members.businessMembers")}</h2>
               <p style={sectionSubtitleStyle}>
-                Change roles and deactivate members without deleting their account.
+                {t("members.description")}
               </p>
             </div>
 
@@ -290,25 +292,25 @@ export default function AdminMembersPage() {
               onClick={() => router.push("/admin")}
               style={secondaryButtonStyle}
             >
-              Invite member
+              {t("members.inviteMember")}
             </button>
           </div>
 
           {loading ? (
-            <p style={mutedTextStyle}>Loading members...</p>
+            <p style={mutedTextStyle}>{t("members.loading")}</p>
           ) : members.length === 0 ? (
-            <p style={mutedTextStyle}>No members found for this business.</p>
+            <p style={mutedTextStyle}>{t("members.empty")}</p>
           ) : (
             <div style={tableWrapStyle}>
               <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th style={thStyle}>Name</th>
-                    <th style={thStyle}>Email</th>
-                    <th style={thStyle}>Employee ID</th>
-                    <th style={thStyle}>Role</th>
-                    <th style={thStyle}>Status</th>
-                    <th style={thStyle}>Actions</th>
+                    <th style={thStyle}>{t("members.columns.name")}</th>
+                    <th style={thStyle}>{t("members.columns.email")}</th>
+                    <th style={thStyle}>{t("members.columns.employeeId")}</th>
+                    <th style={thStyle}>{t("members.columns.role")}</th>
+                    <th style={thStyle}>{t("members.columns.status")}</th>
+                    <th style={thStyle}>{t("members.columns.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -347,9 +349,9 @@ export default function AdminMembersPage() {
                             }
                             style={selectStyle}
                           >
-                            <option value="rep">Rep</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
+                            <option value="rep">{t("roles.rep")}</option>
+                            <option value="manager">{t("roles.manager")}</option>
+                            <option value="admin">{t("roles.admin")}</option>
                           </select>
                         </td>
                         <td style={tdStyle}>
@@ -361,7 +363,9 @@ export default function AdminMembersPage() {
                               borderColor: draft.is_active ? "#abefc6" : "#fecdca",
                             }}
                           >
-                            {draft.is_active ? "Active" : "Inactive"}
+                            {draft.is_active
+                              ? t("members.status.active")
+                              : t("members.status.inactive")}
                           </span>
                         </td>
                         <td style={tdStyle}>
@@ -379,7 +383,9 @@ export default function AdminMembersPage() {
                               }
                               style={toggleButtonStyle}
                             >
-                              {draft.is_active ? "Deactivate" : "Reactivate"}
+                              {draft.is_active
+                                ? t("members.actions.deactivate")
+                                : t("members.actions.reactivate")}
                             </button>
 
                             <button
@@ -388,7 +394,9 @@ export default function AdminMembersPage() {
                               disabled={savingMemberId === member.id}
                               style={saveButtonStyle}
                             >
-                              {savingMemberId === member.id ? "Saving..." : "Save"}
+                              {savingMemberId === member.id
+                                ? t("members.actions.saving")
+                                : t("members.actions.save")}
                             </button>
 
                             <button
@@ -398,8 +406,8 @@ export default function AdminMembersPage() {
                               style={exportButtonStyle}
                             >
                               {exportingMemberId === member.id
-                                ? "Exporting..."
-                                : "Export"}
+                                ? t("members.actions.exporting")
+                                : t("members.actions.export")}
                             </button>
 
                             <button
@@ -411,7 +419,7 @@ export default function AdminMembersPage() {
                               }
                               title={
                                 member.id === currentUserId
-                                  ? "You cannot delete your own account"
+                                  ? t("members.cannotDeleteSelf")
                                   : undefined
                               }
                               style={
@@ -420,7 +428,9 @@ export default function AdminMembersPage() {
                                   : dangerButtonStyle
                               }
                             >
-                              {deletingMemberId === member.id ? "Deleting..." : "Delete"}
+                              {deletingMemberId === member.id
+                                ? t("members.actions.deleting")
+                                : t("members.actions.delete")}
                             </button>
                           </div>
                         </td>
