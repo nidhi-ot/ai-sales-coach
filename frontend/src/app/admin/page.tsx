@@ -87,7 +87,7 @@ function AdminPageContent()  {
   const [products, setProducts] = useState("");
   const [icp, setIcp] = useState("");
   const [objections, setObjections] = useState("");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("");
   const [framework, setFramework] = useState("");
   const [frameworkWarning, setFrameworkWarning] = useState("");
 
@@ -113,12 +113,12 @@ function AdminPageContent()  {
   const [updatingRequestId, setUpdatingRequestId] = useState("");
 
   useEffect(() => {
-  const tab = searchParams.get("tab");
+    const tab = searchParams.get("tab");
 
-  if (tab === "business" || tab === "scenarios" || tab === "invites" || tab === "requests") {
-    setActiveTab(tab);
-  }
-}, [searchParams]);
+    if (tab === "business" || tab === "scenarios" || tab === "invites" || tab === "requests") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role") || "rep";
@@ -257,6 +257,7 @@ function AdminPageContent()  {
       setIcp(data.icp ?? "");
       setObjections(data.objections ?? "");
       setLanguage(data.language ?? "en");
+      router.refresh();
       setFramework(data.framework ?? "");
       setFrameworkWarning(data.framework_warning ?? "");
       setProfileSuccess(t("success.businessSaved"));
@@ -400,6 +401,38 @@ function AdminPageContent()  {
     }
   }
 
+  const loadingLabel = t("common.loading");
+
+  const aiLanguageLabel = profileLoading
+    ? loadingLabel
+    : language === "sv"
+      ? t("common.swedish")
+      : language === "en"
+        ? t("common.english")
+        : t("common.notConfigured");
+
+  const frameworkLabel = profileLoading
+    ? loadingLabel
+    : framework || t("common.notConfigured");
+
+  const productsLabel = profileLoading
+    ? loadingLabel
+    : products
+      ? t("common.configured")
+      : t("common.missing");
+
+  const icpLabel = profileLoading
+    ? loadingLabel
+    : icp
+      ? t("common.configured")
+      : t("common.missing");
+
+  const objectionsLabel = profileLoading
+    ? loadingLabel
+    : objections
+      ? t("common.configured")
+      : t("common.missing");
+
   return (
     <AppShell>
       <div style={{ maxWidth: "1180px", margin: "0 auto" }}>
@@ -440,9 +473,9 @@ function AdminPageContent()  {
           <button
             type="button"
             onClick={() => {
-  setActiveTab("scenarios");
-  router.push("/admin?tab=scenarios");
-}}
+              setActiveTab("scenarios");
+              router.push("/admin?tab=scenarios");
+            }}
             style={{
               ...adminTabCardStyle,
               ...(activeTab === "scenarios" ? activeAdminTabCardStyle : {}),
@@ -458,9 +491,9 @@ function AdminPageContent()  {
           <button
             type="button"
             onClick={() => {
-  setActiveTab("invites");
-  router.push("/admin?tab=invites");
-}}
+              setActiveTab("invites");
+              router.push("/admin?tab=invites");
+            }}
             style={{
               ...adminTabCardStyle,
               ...(activeTab === "invites" ? activeAdminTabCardStyle : {}),
@@ -573,21 +606,18 @@ function AdminPageContent()  {
               </div>
 
               <div style={aiSummaryStyle}>
-                <ConfigRow
-                  label={t("configuration.language")}
-                  value={language === "sv" ? t("common.swedish") : t("common.english")}
-                />
-                <ConfigRow label={t("configuration.framework")} value={framework || t("common.notConfigured")} />
-                <ConfigRow label={t("configuration.products")} value={products ? t("common.configured") : t("common.missing")} />
+                <ConfigRow label={t("configuration.language")} value={aiLanguageLabel} />
+                <ConfigRow label={t("configuration.framework")} value={frameworkLabel} />
+                <ConfigRow label={t("configuration.products")} value={productsLabel} />
                 <ConfigRow
                   label={t("configuration.icp")}
-                  value={icp ? t("common.configured") : t("common.missing")}
-                  danger={!icp}
+                  value={icpLabel}
+                  danger={!profileLoading && !icp}
                 />
                 <ConfigRow
                   label={t("configuration.objections")}
-                  value={objections ? t("common.configured") : t("common.missing")}
-                  danger={!objections}
+                  value={objectionsLabel}
+                  danger={!profileLoading && !objections}
                 />
               </div>
 
@@ -607,6 +637,9 @@ function AdminPageContent()  {
                   onChange={(e) => setLanguage(e.target.value)}
                   style={modernInputStyle}
                 >
+                  <option value="" disabled>
+                    {profileLoading ? t("businessProfile.loading") : t("common.notConfigured")}
+                  </option>
                   <option value="en">{t("common.english")}</option>
                   <option value="sv">{t("common.swedish")}</option>
                 </select>
