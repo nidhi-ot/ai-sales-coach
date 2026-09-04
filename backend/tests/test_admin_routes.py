@@ -4,9 +4,9 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.api.deps import CurrentAccount, get_current_account
+from app.config import settings
 from app.main import app
 from tests.helpers import FakeSupabase
-from app.config import settings
 
 BUSINESS_ID = "00000000-0000-0000-0000-000000000789"
 OTHER_BUSINESS_ID = "00000000-0000-0000-0000-000000000999"
